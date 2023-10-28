@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ffi';
+import 'package:flutter_filament/proxy_ffi.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
