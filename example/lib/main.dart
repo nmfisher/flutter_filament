@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -91,6 +92,7 @@ class _ExampleWidgetState extends State<ExampleWidget> {
   void _createController({String? uberArchivePath}) {
     _filamentController =
         FilamentControllerFFI(uberArchivePath: uberArchivePath);
+
     _filamentController!.pickResult.listen((entityId) {
       setState(() {
         picked = _filamentController!.getNameForEntity(entityId!);
@@ -109,7 +111,7 @@ class _ExampleWidgetState extends State<ExampleWidget> {
         }, "create FilamentController (default ubershader)"),
         _item(() {
           _createController(
-              uberArchivePath: Platform.isWindows
+              uberArchivePath: kIsWeb || Platform.isWindows
                   ? "assets/lit_opaque_32.uberz"
                   : Platform.isMacOS
                       ? "assets/lit_opaque_43.uberz"
@@ -368,9 +370,11 @@ class _ExampleWidgetState extends State<ExampleWidget> {
             if (_buster != null) {
               await _filamentController!.removeAsset(_buster!);
             }
-            _buster = await (_filamentController as FilamentControllerFFI)
-                .loadGltf("assets/BusterDrone/scene.gltf", "assets/BusterDrone",
-                    force: true);
+            _buster =
+                await (_filamentController as FilamentControllerFFI).loadGltf(
+              "assets/BusterDrone/scene.gltf",
+              "assets/BusterDrone",
+            );
             await _filamentController!.playAnimation(_buster!, 0, loop: true);
           }, "load buster")
         ]);
