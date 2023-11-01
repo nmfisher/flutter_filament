@@ -144,8 +144,9 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
       try {
         _pixelRatio = MediaQuery.of(context).devicePixelRatio;
         widget.controller.setDimensions(_rect, _pixelRatio);
-      } catch (err) {
+      } catch (err, st) {
         print("Fatal error : $err");
+        print(st);
         _error = err.toString();
       }
       setState(() {});

@@ -49,7 +49,7 @@ class FilamentGestureDetector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
-      throw Exception("TODO");
+      return child!;
     } else if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
       return FilamentGestureDetectorDesktop(
         controller: controller,

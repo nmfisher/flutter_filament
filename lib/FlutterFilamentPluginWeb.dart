@@ -3,8 +3,10 @@
 // package as the core of your plugin.
 // ignore: avoid_web_libraries_in_flutter
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'dart:ffi';
 
 /// A web implementation of the FlutterFilamentPlatform of the FlutterFilament plugin.
 class FlutterFilamentPluginWeb {

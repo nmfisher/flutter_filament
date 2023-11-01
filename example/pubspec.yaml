@@ -41,6 +41,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+    - assets/web/
     - assets/shapes/
     - assets/default_env/
     - assets/BusterDrone/

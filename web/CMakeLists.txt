@@ -3,30 +3,40 @@ cmake_minimum_required(VERSION 3.10)
 set(PROJECT_NAME "flutter_filament")
 project(${PROJECT_NAME})
 
-set(EMCC_CLAG)
+set(EMCC_CFLAGS "-Wno-missing-field-initializers -Wno-deprecated-literal-operator -fPIC -pthread ")
 
-EMCC_CFLAGS="-Wno-missing-field-initializers -Wno-deprecated-literal-operator -fPIC" ./build.sh -c -p webgl -i debug
+# emcc -O3 -s MAIN_MODULE=1 -s EXPORT_NAME=libopus -s MODULARIZE=1 ./.libs/libopus.a -o ./emc_out/libopus.js
 
-EMCC_CFLAGS="-I/Users/nickfisher/Documents/filament/libs/utils/include -I/Users/nickfisher/Documents/filament/libs/image/include -I/Users/nickfisher/Documents/filament/libs/math/include -I../../..//third_party/basisu/encoder/ -I../../..//third_party/libpng/ -I../../..//third_party/tinyexr/ -fPIC" emmake make
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -fPIC -Wno-unused-variable -Wno-unused-function")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -Wno-unused-variable -Wno-unused-function")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -stdlib=libc++ -fPIC -Wno-unused-variable -Wno-unused-function -pthread ")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fPIC -Wno-unused-variable -Wno-unused-function -pthread ")
 
 set(PLUGIN_NAME "flutter_filament_plugin")
 
 link_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib") 
 
-add_library(FILAMENT_SHADERS STATIC 
+include_directories(../ios/src)
+include_directories(../ios/include)
+include_directories(../ios/include/filament)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/internal)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/dart)
+
+add_library(filament_shaders STATIC 
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/include/material/image.c"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/include/material/unlit_opaque.c"  
 )
 
+add_library(dart_api STATIC "${CMAKE_CURRENT_SOURCE_DIR}/src/dart_api_dl.c")
+
 add_library(${PLUGIN_NAME} STATIC
-  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/AssetManager.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FilamentViewer.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FlutterFilamentApi.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/StreamBufferAdapter.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/TimeIt.cpp"
+  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/AssetManager.cpp"
+  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FilamentViewer.cpp"
+  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FlutterFilamentApi.cpp"
+  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/StreamBufferAdapter.cpp"
+  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/TimeIt.cpp"
+  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Manipulator.cpp"
+  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Bookmark.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/FlutterFilamentWebResourceLoader.cpp"
 )
 
 set_target_properties(${PLUGIN_NAME} PROPERTIES

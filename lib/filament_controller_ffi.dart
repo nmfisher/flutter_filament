@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -42,6 +43,29 @@ final class FooChar extends AbiSpecificInteger {
   const FooChar();
 }
 
+void foo() {
+  print("FOO IN DART");
+}
+
+void loadResourceToBuffer(Pointer<Void> out, Pointer<Void> length,
+    Pointer<Void> callback, Pointer<Void> userData) async {
+  print("CALL");
+  // _queue.add(Tuple4(out, length, callback, userData));
+  var bd = await rootBundle.load("assets/web/foo.txt");
+
+  var outPtrPtr = out.cast<Pointer<Uint8>>();
+  outPtrPtr.value = calloc<Uint8>(bd.lengthInBytes);
+  for (int i = 0; i < bd.lengthInBytes; i++) {
+    outPtrPtr.value.elementAt(i).value = bd.getUint8(i);
+  }
+  length.cast<Int32>().value = bd.lengthInBytes;
+  print("Set length to ${bd.lengthInBytes}");
+
+  var fnPtr =
+      Pointer<NativeFunction<Void Function()>>.fromAddress(callback.address);
+  fnPtr.asFunction<void Function()>();
+}
+
 // ignore: constant_identifier_names
 const FilamentEntity _FILAMENT_ASSET_ERROR = 0;
 
@@ -55,14 +79,14 @@ class FilamentControllerFFI extends FilamentController {
 
   double _pixelRatio = 1.0;
 
+  final _port = ReceivePort();
+
   // ignore: prefer_final_fields
   Pointer<Void> _assetManager = nullptr;
   // ignore: prefer_final_fields
-  final Pointer<Void> _viewer = nullptr;
+  Pointer<Void> _viewer = nullptr;
   // ignore: prefer_final_fields
   Pointer<Void> _driver = nullptr.cast<Void>();
-
-  late final NativeLibrary _lib;
 
   final String? uberArchivePath;
 
@@ -101,14 +125,32 @@ class FilamentControllerFFI extends FilamentController {
         await resize();
       });
     });
-    late DynamicLibrary dl;
+
     if (kIsWeb) {
-      dl = DynamicLibrary.executable();
+      // we need to have already loaded the wasm module before this class is instantiated
+      // see main.dart.js for details
+      // var dartFunctionPtr = Pointer.fromFunction<Void Function()>(foo);
+
+      // final completer = Completer<String>();
+      // void onResponse(Pointer<Utf8> responsePointer) {
+      //   completer.complete(responsePointer.toDartString());
+      //   calloc.free(responsePointer);
+      // }
+
+      // final callback = NativeCallable<HttpCallback>.listener(onResponse);
+
+      // _port.listen((msg) {
+      //   print("Got message from native : $msg");
+      // });
+
+      // flutter_filament_web_init_dart_api_dl(NativeApi.initializeApiDLData);
+      // flutter_filament_web_register_ports(_port.sendPort.nativePort);
+      // flutter_filament_web_set_load_resource_fn(nullptr);
     } else {
       if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
-        dl = DynamicLibrary.process();
+        DynamicLibrary.process();
       } else {
-        dl = DynamicLibrary.open("libflutter_filament_android.so");
+        DynamicLibrary.open("libflutter_filament_android.so");
       }
       if (Platform.isWindows) {
         _channel.invokeMethod("usesBackingWindow").then((result) {
@@ -116,7 +158,6 @@ class FilamentControllerFFI extends FilamentController {
         });
       }
     }
-    _lib = NativeLibrary(dl);
   }
 
   bool _rendering = false;
@@ -139,843 +180,11 @@ class FilamentControllerFFI extends FilamentController {
     throw UnimplementedError();
   }
 
-  // @override
-  // Future setRendering(bool render) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _rendering = render;
-  //   _lib.set_rendering_ffi(_viewer, render);
-  // }
-
-  // @override
-  // Future render() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.render_ffi(_viewer);
-  // }
-
-  // @override
-  // Future setFrameRate(int framerate) async {
-  //   _lib.set_frame_interval_ffi(1.0 / framerate);
-  // }
-
-  // @override
-  // Future setDimensions(Rect rect, double ratio) async {
-  //   this.rect.value = Rect.fromLTWH(rect.left, rect.top,
-  //       rect.width * _pixelRatio, rect.height * _pixelRatio);
-  //   _pixelRatio = ratio;
-  // }
-
-  // @override
-  // Future destroy() async {
-  //   await destroyViewer();
-  //   await destroyTexture();
-  // }
-
-  // @override
-  // Future destroyViewer() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var viewer = _viewer;
-
-  //   _viewer = null;
-
-  //   _assetManager = null;
-  //   _lib.destroy_filament_viewer_ffi(viewer!);
-  // }
-
-  // @override
-  // Future destroyTexture() async {
-  //   if (textureDetails.value != null) {
-  //     await _channel.invokeMethod(
-  //         "destroyTexture", textureDetails.value!.textureId);
-  //   }
-  //   print("Texture destroyed");
-  // }
-
-  // ///
-  // /// Called by `FilamentWidget`. You do not need to call this yourself.
-  // ///
-  // @override
-  // Future createViewer() async {
-  //   // if (rect.value == null) {
-  //   //   throw Exception(
-  //   //       "Dimensions have not yet been set by FilamentWidget. You need to wait for at least one frame after FilamentWidget has been inserted into the hierarchy");
-  //   // }
-  //   // if (_viewer != null) {
-  //   //   throw Exception(
-  //   //       "Viewer already exists, make sure you call destroyViewer first");
-  //   // }
-  //   // if (textureDetails.value != null) {
-  //   //   throw Exception(
-  //   //       "Texture already exists, make sure you call destroyTexture first");
-  //   // }
-
-  //   // var loader = Pointer<ResourceLoaderWrapper>.fromAddress(
-  //   //     await _channel.invokeMethod("getResourceLoaderWrapper"));
-  //   // if (loader == nullptr) {
-  //   //   throw Exception("Failed to get resource loader");
-  //   // }
-
-  //   // if (Platform.isWindows && requiresTextureWidget) {
-  //   //   _driver = Pointer<Void>.fromAddress(
-  //   //       await _channel.invokeMethod("getDriverPlatform"));
-  //   // }
-
-  //   // var renderCallbackResult = await _channel.invokeMethod("getRenderCallback");
-  //   // var renderCallback =
-  //   //     Pointer<NativeFunction<Void Function(Pointer<Void>)>>.fromAddress(
-  //   //         renderCallbackResult[0]);
-  //   // var renderCallbackOwner =
-  //   //     Pointer<Void>.fromAddress(renderCallbackResult[1]);
-
-  //   // var renderingSurface = await _createRenderingSurface();
-
-  //   // print("Got rendering surface");
-
-  //   // _viewer = _lib.create_filament_viewer_ffi(
-  //   //     Pointer<Void>.fromAddress(renderingSurface.sharedContext ?? 0),
-  //   //     _driver,
-  //   //     uberArchivePath?.toNativeUtf8().cast<Char>() ?? nullptr,
-  //   //     loader,
-  //   //     renderCallback,
-  //   //     renderCallbackOwner);
-  //   // print("Created viewer");
-  //   // if (_viewer.address == 0) {
-  //   //   throw Exception("Failed to create viewer. Check logs for details");
-  //   // }
-
-  //   // _assetManager = _lib.get_asset_manager(_viewer);
-
-  //   // _lib.create_swap_chain_ffi(_viewer, renderingSurface.surface,
-  //   //     rect.value!.width.toInt(), rect.value!.height.toInt());
-  //   // print("Created swap chain");
-  //   // if (renderingSurface.textureHandle != 0) {
-  //   //   print(
-  //   //       "Creating render target from native texture  ${renderingSurface.textureHandle}");
-  //   //   _lib.create_render_target_ffi(_viewer, renderingSurface.textureHandle,
-  //   //       rect.value!.width.toInt(), rect.value!.height.toInt());
-  //   // }
-
-  //   // textureDetails.value = TextureDetails(
-  //   //     textureId: renderingSurface.flutterTextureId!,
-  //   //     width: rect.value!.width.toInt(),
-  //   //     height: rect.value!.height.toInt());
-  //   // print("texture details ${textureDetails.value}");
-  //   // _lib.update_viewport_and_camera_projection_ffi(
-  //   //     _viewer, rect.value!.width.toInt(), rect.value!.height.toInt(), 1.0);
-  // }
-
-  // Future<RenderingSurface> _createRenderingSurface() async {
-  //   return RenderingSurface.from(await _channel.invokeMethod("createTexture", [
-  //     rect.value!.width,
-  //     rect.value!.height,
-  //     rect.value!.left,
-  //     rect.value!.top
-  //   ]));
-  // }
-
-  // ///
-  // /// When a FilamentWidget is resized, it will call the [resize] method below, which will tear down/recreate the swapchain.
-  // /// For "once-off" resizes, this is fine; however, this can be problematic for consecutive resizes
-  // /// (e.g. dragging to expand/contract the parent window on desktop, or animating the size of the FilamentWidget itself).
-  // /// It is too expensive to recreate the swapchain multiple times per second.
-  // /// We therefore add a timer to FilamentWidget so that the call to [resize] is delayed (e.g. 500ms).
-  // /// Any subsequent resizes before the delay window elapses will cancel the earlier call.
-  // ///
-  // /// The overall process looks like this:
-  // /// 1) the window is resized
-  // /// 2) (Windows only) the Flutter engine requests PixelBufferTexture to provide a new pixel buffer with a new size (we return an empty texture, blanking the Texture widget)
-  // /// 3) After Xms, [resize] is invoked
-  // /// 4) the viewer is instructed to stop rendering (synchronous)
-  // /// 5) the existing Filament swapchain is destroyed (synchronous)
-  // /// 6) (where a Texture widget is used), the Flutter texture is unregistered
-  // ///   a) this is asynchronous, but
-  // ///   b) *** SEE NOTE BELOW ON WINDOWS *** by passing the method channel result through to the callback, we make this synchronous from the Flutter side,
-  // ///    c) in this async callback, the glTexture is destroyed
-  // /// 7) (where a backing window is used), the window is resized
-  // /// 7) (where a Texture widget is used), a new Flutter/OpenGL texture is created (synchronous)
-  // /// 8) a new swapchain is created (synchronous)
-  // /// 9) if the viewer was rendering prior to the resize, the viewer is instructed to recommence rendering
-  // /// 10) (where a Texture widget is used) the new texture ID is pushed to the FilamentWidget
-  // /// 11) the FilamentWidget updates the Texture widget with the new texture.
-  // ///
-  // /// #### (Windows-only) ############################################################
-  // /// # As soon as the widget/window is resized, the PixelBufferTexture will be
-  // /// # requested to provide a new pixel buffer for the new size.
-  // /// # Even with zero delay to the call to [resize], this will be triggered *before*
-  // /// # we have had a chance to anything else (like tear down the swapchain).
-  // /// # On the backend, we deal with this by simply returning an empty texture as soon
-  // /// # as the size changes, and will rely on the followup call to [resize] to actually
-  // /// # destroy/recreate the pixel buffer and Flutter texture.
-  // ///
-  // /// NOTE RE ASYNC CALLBACK
-  // /// # The bigger problem is a race condition when resize is called multiple times in quick succession (e.g dragging to resize on Windows).
-  // /// # It looks like occasionally, the backend OpenGL texture is being destroyed while its corresponding swapchain is still active, causing a crash.
-  // /// # I'm not exactly sure how/where this is occurring, but something clearly isn't synchronized between destroy_swap_chain_ffi and
-  // /// # the asynchronous callback passed to FlutterTextureRegistrar::UnregisterTexture.
-  // /// # Theoretically this could occur if resize_2 starts before resize_1 completes, i.e.
-  // /// # 1) resize_1 destroys swapchain/texture and creates new texture
-  // /// # 2) resize_2 destroys swapchain/texture
-  // /// # 3) resize_1 creates new swapchain but texture isn't available, ergo crash
-  // /// #
-  // /// # I don't think this should happen if:
-  // /// # 1) we add a flag on the Flutter side to ensure only one call to destroy/recreate the swapchain/texture is active at any given time, and
-  // /// # 2) on the Flutter side, we are sure that calling destroyTexture only returns once the async callback on the native side has completed.
-  // /// # For (1), checking if textureId is null at the entrypoint should be sufficient.
-  // /// # For (2), we invoke flutter::MethodResult<flutter::EncodableValue>->Success in the UnregisterTexture callback.
-  // /// #
-  // /// # Maybe (2) doesn't actually make Flutter wait?
-  // /// #
-  // /// # The other possibility is that both (1) and (2) are fine and the issue is elsewhere.
-  // /// #
-  // /// # Either way, the current solution is to basically setup a double-buffer on resize.
-  // /// # When destroyTexture is called, the active texture isn't destroyed yet, it's only marked as inactive.
-  // /// # On subsequent calls to destroyTexture, the inactive texture is destroyed.
-  // /// # This seems to work fine.
-  // ///
-  // /// # Another option is to only use a single large (e.g. 4k) texture and simply crop whenever a resize is requested.
-  // /// # This might be preferable for other reasons (e.g. don't need to destroy/recreate the pixel buffer or swapchain).
-  // /// # Given we don't do this on other platforms, I'm OK to stick with the existing solution for the time being.
-  // /// ############################################################################
-  // ///
-  // bool _resizing = false;
-  // @override
-  // Future resize() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("Cannot resize without active viewer");
-  //   }
-
-  //   if (_resizing) {
-  //     throw Exception("Resize currently underway, ignoring");
-  //   }
-
-  //   _resizing = true;
-
-  //   _lib.set_rendering_ffi(_viewer, false);
-
-  //   if (!_usesBackingWindow) {
-  //     _lib.destroy_swap_chain_ffi(_viewer);
-  //   }
-
-  //   if (requiresTextureWidget) {
-  //     if (textureDetails.value != null) {
-  //       await _channel.invokeMethod(
-  //           "destroyTexture", textureDetails.value!.textureId);
-  //     }
-  //   } else if (Platform.isWindows) {
-  //     print("Resizing window with rect $rect");
-  //     await _channel.invokeMethod("resizeWindow", [
-  //       rect.value!.width,
-  //       rect.value!.height,
-  //       rect.value!.left,
-  //       rect.value!.top
-  //     ]);
-  //   }
-
-  //   var renderingSurface = await _createRenderingSurface();
-
-  //   if (_viewer.address == 0) {
-  //     throw Exception("Failed to create viewer. Check logs for details");
-  //   }
-
-  //   _assetManager = _lib.get_asset_manager(_viewer);
-
-  //   if (!_usesBackingWindow) {
-  //     _lib.create_swap_chain_ffi(_viewer, renderingSurface.surface,
-  //         rect.value!.width.toInt(), rect.value!.height.toInt());
-  //   }
-
-  //   if (renderingSurface.textureHandle != 0) {
-  //     print(
-  //         "Creating render target from native texture  ${renderingSurface.textureHandle}");
-  //     _lib.create_render_target_ffi(_viewer, renderingSurface.textureHandle,
-  //         rect.value!.width.toInt(), rect.value!.height.toInt());
-  //   }
-
-  //   textureDetails.value = TextureDetails(
-  //       textureId: renderingSurface.flutterTextureId!,
-  //       width: rect.value!.width.toInt(),
-  //       height: rect.value!.height.toInt());
-
-  //   _lib.update_viewport_and_camera_projection_ffi(
-  //       _viewer, rect.value!.width.toInt(), rect.value!.height.toInt(), 1.0);
-
-  //   await setRendering(_rendering);
-
-  //   _resizing = false;
-  // }
-
-  // @override
-  // Future clearBackgroundImage() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.clear_background_image_ffi(_viewer);
-  // }
-
-  // @override
-  // Future setBackgroundImage(String path, {bool fillHeight = false}) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_background_image_ffi(
-  //       _viewer, path.toNativeUtf8().cast<Char>(), fillHeight);
-  // }
-
-  // @override
-  // Future setBackgroundColor(Color color) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_background_color_ffi(
-  //       _viewer,
-  //       color.red.toDouble() / 255.0,
-  //       color.green.toDouble() / 255.0,
-  //       color.blue.toDouble() / 255.0,
-  //       color.alpha.toDouble() / 255.0);
-  // }
-
-  // @override
-  // Future setBackgroundImagePosition(double x, double y,
-  //     {bool clamp = false}) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_background_image_position_ffi(_viewer, x, y, clamp);
-  // }
-
-  // @override
-  // Future loadSkybox(String skyboxPath) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.load_skybox_ffi(_viewer, skyboxPath.toNativeUtf8().cast<Char>());
-  // }
-
-  // @override
-  // Future loadIbl(String lightingPath, {double intensity = 30000}) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.load_ibl_ffi(
-  //       _viewer, lightingPath.toNativeUtf8().cast<Char>(), intensity);
-  // }
-
-  // @override
-  // Future removeSkybox() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.remove_skybox_ffi(_viewer);
-  // }
-
-  // @override
-  // Future removeIbl() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // _lib.remove_ibl_ffi(_viewer);
-  // }
-
-  // @override
-  // Future<FilamentEntity> addLight(
-  //     int type,
-  //     double colour,
-  //     double intensity,
-  //     double posX,
-  //     double posY,
-  //     double posZ,
-  //     double dirX,
-  //     double dirY,
-  //     double dirZ,
-  //     bool castShadows) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var entity = _lib.add_light_ffi(_viewer, type, colour, intensity, posX,
-  //       posY, posZ, dirX, dirY, dirZ, castShadows);
-  //   return entity;
-  // }
-
-  // @override
-  // Future removeLight(FilamentEntity light) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.remove_light_ffi(_viewer, light);
-  // }
-
-  // @override
-  // Future clearLights() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.clear_lights_ffi(_viewer);
-  // }
-
-  // @override
-  // Future<FilamentEntity> loadGlb(String path, {bool unlit = false}) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   if (unlit) {
-  //     throw Exception("Not yet implemented");
-  //   }
-  //   var asset = _lib.load_glb_ffi(
-  //       _assetManager!, path.toNativeUtf8().cast<Char>(), unlit);
-  //   if (asset == _FILAMENT_ASSET_ERROR) {
-  //     throw Exception("An error occurred loading the asset at $path");
-  //   }
-  //   return asset;
-  // }
-
-  // @override
-  // Future<FilamentEntity> loadGltf(String path, String relativeResourcePath,
-  //     {bool force = false}) async {
-  //   if (Platform.isWindows && !force) {
-  //     throw Exception(
-  //         "loadGltf has a race condition on Windows which is likely to crash your program. If you really want to try, pass force=true to loadGltf");
-  //   }
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var asset = _lib.load_gltf_ffi(
-  //       _assetManager!,
-  //       path.toNativeUtf8().cast<Char>(),
-  //       relativeResourcePath.toNativeUtf8().cast<Char>());
-  //   if (asset == _FILAMENT_ASSET_ERROR) {
-  //     throw Exception("An error occurred loading the asset at $path");
-  //   }
-  //   return asset;
-  // }
-
-  // @override
-  // Future panStart(double x, double y) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.grab_begin(_viewer, x * _pixelRatio, y * _pixelRatio, true);
-  // }
-
-  // @override
-  // Future panUpdate(double x, double y) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.grab_update(_viewer, x * _pixelRatio, y * _pixelRatio);
-  // }
-
-  // @override
-  // Future panEnd() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.grab_end(_viewer);
-  // }
-
-  // @override
-  // Future rotateStart(double x, double y) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.grab_begin(_viewer, x * _pixelRatio, y * _pixelRatio, false);
-  // }
-
-  // @override
-  // Future rotateUpdate(double x, double y) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.grab_update(_viewer, x * _pixelRatio, y * _pixelRatio);
-  // }
-
-  // @override
-  // Future rotateEnd() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.grab_end(_viewer);
-  // }
-
-  // @override
-  // Future setMorphTargetWeights(
-  //     FilamentEntity asset, String meshName, List<double> weights) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var weightsPtr = calloc<Float>(weights.length);
-
-  //   for (int i = 0; i < weights.length; i++) {
-  //     weightsPtr.elementAt(i).value = weights[i];
-  //   }
-  //   _lib.set_morph_target_weights_ffi(_assetManager!, asset,
-  //       meshName.toNativeUtf8().cast<Char>(), weightsPtr, weights.length);
-  //   calloc.free(weightsPtr);
-  // }
-
-  // @override
-  // Future<List<String>> getMorphTargetNames(
-  //     FilamentEntity asset, String meshName) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var names = <String>[];
-  //   var count = _lib.get_morph_target_name_count_ffi(
-  //       _assetManager!, asset, meshName.toNativeUtf8().cast<Char>());
-  //   var outPtr = calloc<Char>(255);
-  //   for (int i = 0; i < count; i++) {
-  //     _lib.get_morph_target_name(_assetManager!, asset,
-  //         meshName.toNativeUtf8().cast<Char>(), outPtr, i);
-  //     names.add(outPtr.cast<Utf8>().toDartString());
-  //   }
-  //   calloc.free(outPtr);
-  //   return names.cast<String>();
-  // }
-
-  // @override
-  // Future<List<String>> getAnimationNames(FilamentEntity asset) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var animationCount = _lib.get_animation_count(_assetManager!, asset);
-  //   var names = <String>[];
-  //   var outPtr = calloc<Char>(255);
-  //   for (int i = 0; i < animationCount; i++) {
-  //     _lib.get_animation_name_ffi(_assetManager!, asset, outPtr, i);
-  //     names.add(outPtr.cast<Utf8>().toDartString());
-  //   }
-
-  //   return names;
-  // }
-
-  // @override
-  // Future<double> getAnimationDuration(
-  //     FilamentEntity asset, int animationIndex) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var duration =
-  //       _lib.get_animation_duration(_assetManager!, asset, animationIndex);
-
-  //   return duration;
-  // }
-
-  // @override
-  // Future setMorphAnimationData(
-  //     FilamentEntity entity, MorphAnimationData animation) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-
-  //   var dataPtr = calloc<Float>(animation.data.length);
-  //   for (int i = 0; i < animation.data.length; i++) {
-  //     dataPtr.elementAt(i).value = animation.data[i];
-  //   }
-
-  //   // the morph targets in [animation] might be a subset of those that actually exist in the mesh (and might not have the same order)
-  //   // we don't want to reorder the data (?? or do we? this is probably more efficient for the backend?)
-  //   // so let's get the actual list of morph targets from the mesh and pass the relevant indices to the native side.
-  //   var meshMorphTargets =
-  //       await getMorphTargetNames(entity, animation.meshName);
-
-  //   Pointer<Int32> idxPtr = calloc<Int32>(animation.morphTargets.length);
-  //   for (int i = 0; i < animation.numMorphTargets; i++) {
-  //     var index = meshMorphTargets.indexOf(animation.morphTargets[i]);
-  //     if (index == -1) {
-  //       calloc.free(dataPtr);
-  //       calloc.free(idxPtr);
-  //       throw Exception(
-  //           "Morph target ${animation.morphTargets[i]} is specified in the animation but could not be found in the mesh ${animation.meshName} under entity ${entity}");
-  //     }
-  //     idxPtr.elementAt(i).value = index;
-  //   }
-
-  //   _lib.set_morph_animation(
-  //       _assetManager!,
-  //       entity,
-  //       animation.meshName.toNativeUtf8().cast<Char>(),
-  //       dataPtr,
-  //       idxPtr,
-  //       animation.numMorphTargets,
-  //       animation.numFrames,
-  //       (animation.frameLengthInMs));
-  //   calloc.free(dataPtr);
-  //   calloc.free(idxPtr);
-  // }
-
-  // @override
-  // Future setBoneAnimation(
-  //     FilamentEntity asset, BoneAnimationData animation) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // var data = calloc<Float>(animation.frameData.length);
-  //   // int offset = 0;
-  //   // var numFrames = animation.frameData.length ~/ 7;
-  //   // var boneNames = calloc<Pointer<Char>>(1);
-  //   // boneNames.elementAt(0).value =
-  //   //     animation.boneName.toNativeUtf8().cast<Char>();
-
-  //   // var meshNames = calloc<Pointer<Char>>(animation.meshNames.length);
-  //   // for (int i = 0; i < animation.meshNames.length; i++) {
-  //   //   meshNames.elementAt(i).value =
-  //   //       animation.meshNames[i].toNativeUtf8().cast<Char>();
-  //   // }
-
-  //   // for (int i = 0; i < animation.frameData.length; i++) {
-  //   //   data.elementAt(offset).value = animation.frameData[i];
-  //   //   offset += 1;
-  //   // }
-
-  //   // await _channel.invokeMethod("setBoneAnimation", [
-  //   //   _assetManager!,
-  //   //   asset,
-  //   //   data,
-  //   //   numFrames,
-  //   //   1,
-  //   //   boneNames,
-  //   //   meshNames,
-  //   //   animation.meshNames.length,
-  //   //   animation.frameLengthInMs
-  //   // ]);
-  //   // calloc.free(data);
-  // }
-
-  // @override
-  // Future removeAsset(FilamentEntity asset) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // _lib.remove_asset_ffi(_viewer, asset);
-  // }
-
-  // @override
-  // Future clearAssets() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // _lib.clear_assets_ffi(_viewer);
-  // }
-
-  // @override
-  // Future zoomBegin() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // _lib.scroll_begin(_viewer);
-  // }
-
-  // @override
-  // Future zoomUpdate(double x, double y, double z) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // _lib.scroll_update(_viewer, x, y, z);
-  // }
-
-  // @override
-  // Future zoomEnd() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // _lib.scroll_end(_viewer);
-  // }
-
-  // @override
-  // Future playAnimation(FilamentEntity asset, int index,
-  //     {bool loop = false,
-  //     bool reverse = false,
-  //     bool replaceActive = true,
-  //     double crossfade = 0.0}) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // _lib.play_animation_ffi(
-  //   //     _assetManager, asset, index, loop, reverse, replaceActive, crossfade);
-  // }
-
-  // @override
-  // Future setAnimationFrame(
-  //     FilamentEntity asset, int index, int animationFrame) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_animation_frame(_assetManager!, asset, index, animationFrame);
-  // }
-
-  // @override
-  // Future stopAnimation(FilamentEntity asset, int animationIndex) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.stop_animation(_assetManager!, asset, animationIndex);
-  // }
-
-  // @override
-  // Future setCamera(FilamentEntity asset, String? name) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var result = _lib.set_camera(
-  //       _viewer, asset, name?.toNativeUtf8().cast<Char>() ?? nullptr);
-  //   if (!result) {
-  //     throw Exception("Failed to set camera");
-  //   }
-  // }
-
-  // @override
-  // Future setToneMapping(ToneMapper mapper) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-
-  //   _lib.set_tone_mapping_ffi(_viewer, mapper.index);
-  // }
-
-  // @override
-  // Future setPostProcessing(bool enabled) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-
-  //   _lib.set_post_processing_ffi(_viewer, enabled);
-  // }
-
-  // @override
-  // Future setBloom(double bloom) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_bloom_ffi(_viewer, bloom);
-  // }
-
-  // @override
-  // Future setCameraFocalLength(double focalLength) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_camera_focal_length(_viewer, focalLength);
-  // }
-
-  // @override
-  // Future setCameraFocusDistance(double focusDistance) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_camera_focus_distance(_viewer, focusDistance);
-  // }
-
-  // @override
-  // Future setCameraPosition(double x, double y, double z) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_camera_position(_viewer, x, y, z);
-  // }
-
-  // @override
-  // Future moveCameraToAsset(FilamentEntity asset) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.move_camera_to_asset(_viewer, asset);
-  // }
-
-  // @override
-  // Future setViewFrustumCulling(bool enabled) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_view_frustum_culling(_viewer, enabled);
-  // }
-
-  // @override
-  // Future setCameraExposure(
-  //     double aperture, double shutterSpeed, double sensitivity) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_camera_exposure(_viewer, aperture, shutterSpeed, sensitivity);
-  // }
-
-  // @override
-  // Future setCameraRotation(double rads, double x, double y, double z) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_camera_rotation(_viewer, rads, x, y, z);
-  // }
-
-  // @override
-  // Future setCameraModelMatrix(List<double> matrix) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   assert(matrix.length == 16);
-  //   var ptr = calloc<Float>(16);
-  //   for (int i = 0; i < 16; i++) {
-  //     ptr.elementAt(i).value = matrix[i];
-  //   }
-  //   _lib.set_camera_model_matrix(_viewer, ptr);
-  //   calloc.free(ptr);
-  // }
-
-  // @override
-  // Future setMaterialColor(FilamentEntity asset, String meshName,
-  //     int materialIndex, Color color) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var result = _lib.set_material_color(
-  //       _assetManager!,
-  //       asset,
-  //       meshName.toNativeUtf8().cast<Char>(),
-  //       materialIndex,
-  //       color.red.toDouble() / 255.0,
-  //       color.green.toDouble() / 255.0,
-  //       color.blue.toDouble() / 255.0,
-  //       color.alpha.toDouble() / 255.0);
-  //   if (result != 1) {
-  //     throw Exception("Failed to set material color");
-  //   }
-  // }
-
-  // @override
-  // Future transformToUnitCube(FilamentEntity asset) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.transform_to_unit_cube(_assetManager!, asset);
-  // }
-
-  // @override
-  // Future setPosition(FilamentEntity asset, double x, double y, double z) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_position(_assetManager!, asset, x, y, z);
-  // }
-
-  // @override
-  // Future setScale(FilamentEntity asset, double scale) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_scale(_assetManager!, asset, scale);
-  // }
-
-  // @override
-  // Future setRotation(
-  //     FilamentEntity asset, double rads, double x, double y, double z) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   _lib.set_rotation(_assetManager!, asset, rads, x, y, z);
-  // }
+  @override
+  Future clearAssets() {
+    // TODO: implement clearAssets
+    throw UnimplementedError();
+  }
 
   @override
   Future clearBackgroundImage() {
@@ -1070,6 +279,12 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
+  Future moveCameraToAsset(FilamentEntity entity) {
+    // TODO: implement moveCameraToAsset
+    throw UnimplementedError();
+  }
+
+  @override
   Future panEnd() {
     // TODO: implement panEnd
     throw UnimplementedError();
@@ -1090,6 +305,28 @@ class FilamentControllerFFI extends FilamentController {
   @override
   void pick(int x, int y) {
     // TODO: implement pick
+  }
+
+  @override
+  Future playAnimation(FilamentEntity entity, int index,
+      {bool loop = false,
+      bool reverse = false,
+      bool replaceActive = true,
+      double crossfade = 0.0}) {
+    // TODO: implement playAnimation
+    throw UnimplementedError();
+  }
+
+  @override
+  Future removeAsset(FilamentEntity entity) {
+    // TODO: implement removeAsset
+    throw UnimplementedError();
+  }
+
+  @override
+  Future removeIbl() {
+    // TODO: implement removeIbl
+    throw UnimplementedError();
   }
 
   @override
@@ -1141,6 +378,13 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
+  Future setAnimationFrame(
+      FilamentEntity entity, int index, int animationFrame) {
+    // TODO: implement setAnimationFrame
+    throw UnimplementedError();
+  }
+
+  @override
   Future setBackgroundColor(ui.Color color) {
     // TODO: implement setBackgroundColor
     throw UnimplementedError();
@@ -1159,52 +403,14 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
-  Future setBoneAnimation(FilamentEntity entity, BoneAnimationData animation) {
-    // TODO: implement setBoneAnimation
-    throw UnimplementedError();
-  }
-
-  @override
-  Future setDimensions(ui.Rect rect, double pixelRatio) {
-    // TODO: implement setDimensions
-    throw UnimplementedError();
-  }
-
-  @override
-  Future setFrameRate(int framerate) {
-    // TODO: implement setFrameRate
-    throw UnimplementedError();
-  }
-
-  @override
-  Future setMorphAnimationData(
-      FilamentEntity entity, MorphAnimationData animation) {
-    // TODO: implement setMorphAnimationData
-    throw UnimplementedError();
-  }
-
-  @override
-  Future setMorphTargetWeights(
-      FilamentEntity entity, String meshName, List<double> weights) {
-    // TODO: implement setMorphTargetWeights
-    throw UnimplementedError();
-  }
-
-  @override
-  Future setRendering(bool render) {
-    // TODO: implement setRendering
-    throw UnimplementedError();
-  }
-
-  @override
-  Future moveCameraToAsset(FilamentEntity entity) {
-    // TODO: implement moveCameraToAsset
-    throw UnimplementedError();
-  }
-
-  @override
   Future setBloom(double bloom) {
     // TODO: implement setBloom
+    throw UnimplementedError();
+  }
+
+  @override
+  Future setBoneAnimation(FilamentEntity entity, BoneAnimationData animation) {
+    // TODO: implement setBoneAnimation
     throw UnimplementedError();
   }
 
@@ -1252,9 +458,41 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
+  Future setDimensions(ui.Rect rect, double pixelRatio) {
+    // TODO: implement setDimensions
+    throw UnimplementedError();
+  }
+
+  @override
+  Future setFrameRate(int framerate) {
+    // TODO: implement setFrameRate
+    throw UnimplementedError();
+  }
+
+  @override
   Future setMaterialColor(FilamentEntity entity, String meshName,
       int materialIndex, ui.Color color) {
     // TODO: implement setMaterialColor
+    throw UnimplementedError();
+  }
+
+  @override
+  Future setMorphAnimationData(
+      FilamentEntity entity, MorphAnimationData animation) {
+    // TODO: implement setMorphAnimationData
+    throw UnimplementedError();
+  }
+
+  @override
+  Future setMorphTargetWeights(
+      FilamentEntity entity, String meshName, List<double> weights) {
+    // TODO: implement setMorphTargetWeights
+    throw UnimplementedError();
+  }
+
+  @override
+  Future setPosition(FilamentEntity entity, double x, double y, double z) {
+    // TODO: implement setPosition
     throw UnimplementedError();
   }
 
@@ -1265,27 +503,8 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
-  Future setToneMapping(ToneMapper mapper) {
-    // TODO: implement setToneMapping
-    throw UnimplementedError();
-  }
-
-  @override
-  Future setViewFrustumCulling(bool enabled) {
-    // TODO: implement setViewFrustumCulling
-    throw UnimplementedError();
-  }
-
-  @override
-  Future setAnimationFrame(
-      FilamentEntity entity, int index, int animationFrame) {
-    // TODO: implement setAnimationFrame
-    throw UnimplementedError();
-  }
-
-  @override
-  Future setPosition(FilamentEntity entity, double x, double y, double z) {
-    // TODO: implement setPosition
+  Future setRendering(bool render) {
+    // TODO: implement setRendering
     throw UnimplementedError();
   }
 
@@ -1303,6 +522,18 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
+  Future setToneMapping(ToneMapper mapper) {
+    // TODO: implement setToneMapping
+    throw UnimplementedError();
+  }
+
+  @override
+  Future setViewFrustumCulling(bool enabled) {
+    // TODO: implement setViewFrustumCulling
+    throw UnimplementedError();
+  }
+
+  @override
   Future stopAnimation(FilamentEntity entity, int animationIndex) {
     // TODO: implement stopAnimation
     throw UnimplementedError();
@@ -1315,29 +546,8 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
-  Future clearAssets() {
-    // TODO: implement clearAssets
-    throw UnimplementedError();
-  }
-
-  @override
-  Future playAnimation(FilamentEntity entity, int index,
-      {bool loop = false,
-      bool reverse = false,
-      bool replaceActive = true,
-      double crossfade = 0.0}) {
-    // TODO: implement playAnimation
-    throw UnimplementedError();
-  }
-
-  @override
-  Future removeAsset(FilamentEntity entity) {
-    // TODO: implement removeAsset
-    throw UnimplementedError();
-  }
-
-  @override
-  Future zoomBegin() async {
+  Future zoomBegin() {
+    // TODO: implement zoomBegin
     throw UnimplementedError();
   }
 
@@ -1353,18 +563,846 @@ class FilamentControllerFFI extends FilamentController {
     throw UnimplementedError();
   }
 
-  @override
-  Future removeIbl() async {
-    _lib.remove_ibl(_viewer);
-  }
+  // @override
+  // Future setRendering(bool render) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   _rendering = render;
+  //   set_rendering_ffi(_viewer, render);
+  // }
+
+  // @override
+  // Future render() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   render_ffi(_viewer);
+  // }
+
+  // @override
+  // Future setFrameRate(int framerate) async {
+  //   set_frame_interval_ffi(1.0 / framerate);
+  // }
+
+  // @override
+  // Future setDimensions(Rect rect, double ratio) async {
+  //   this.rect.value = Rect.fromLTWH(rect.left, rect.top,
+  //       rect.width * _pixelRatio, rect.height * _pixelRatio);
+  //   _pixelRatio = ratio;
+  // }
+
+  // @override
+  // Future destroy() async {
+  //   await destroyViewer();
+  //   await destroyTexture();
+  // }
+
+  // @override
+  // Future destroyViewer() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   var viewer = _viewer;
+
+  //   _viewer = nullptr;
+
+  //   _assetManager = nullptr;
+  //   destroy_filament_viewer_ffi(viewer);
+  // }
+
+  // @override
+  // Future destroyTexture() async {
+  //   if (textureDetails.value != null) {
+  //     await _channel.invokeMethod(
+  //         "destroyTexture", textureDetails.value!.textureId);
+  //   }
+  //   print("Texture destroyed");
+  // }
+
+  // ///
+  // /// Called by `FilamentWidget`. You do not need to call this yourself.
+  // ///
+  // @override
+  // Future createViewer() async {
+  //   if (rect.value == null) {
+  //     throw Exception(
+  //         "Dimensions have not yet been set by FilamentWidget. You need to wait for at least one frame after FilamentWidget has been inserted into the hierarchy");
+  //   }
+  //   if (_viewer != null) {
+  //     throw Exception(
+  //         "Viewer already exists, make sure you call destroyViewer first");
+  //   }
+  //   if (textureDetails.value != null) {
+  //     throw Exception(
+  //         "Texture already exists, make sure you call destroyTexture first");
+  //   }
+
+  //   var loader = Pointer<ResourceLoaderWrapper>.fromAddress(
+  //       await _channel.invokeMethod("getResourceLoaderWrapper"));
+  //   if (loader == nullptr) {
+  //     throw Exception("Failed to get resource loader");
+  //   }
+
+  //   if (Platform.isWindows && requiresTextureWidget) {
+  //     _driver = Pointer<Void>.fromAddress(
+  //         await _channel.invokeMethod("getDriverPlatform"));
+  //   }
+
+  //   var renderCallbackResult = await _channel.invokeMethod("getRenderCallback");
+  //   var renderCallback =
+  //       Pointer<NativeFunction<Void Function(Pointer<Void>)>>.fromAddress(
+  //           renderCallbackResult[0]);
+  //   var renderCallbackOwner =
+  //       Pointer<Void>.fromAddress(renderCallbackResult[1]);
+
+  //   var renderingSurface = await _createRenderingSurface();
+
+  //   print("Got rendering surface");
+
+  //   _viewer = create_filament_viewer_ffi(
+  //       Pointer<Void>.fromAddress(renderingSurface.sharedContext ?? 0),
+  //       _driver,
+  //       uberArchivePath?.toNativeUtf8().cast<Char>() ?? nullptr,
+  //       loader,
+  //       renderCallback,
+  //       renderCallbackOwner);
+  //   print("Created viewer");
+  //   if (_viewer.address == 0) {
+  //     throw Exception("Failed to create viewer. Check logs for details");
+  //   }
+
+  //   _assetManager = get_asset_manager(_viewer);
+
+  //   create_swap_chain_ffi(_viewer, renderingSurface.surface,
+  //       rect.value!.width.toInt(), rect.value!.height.toInt());
+  //   print("Created swap chain");
+  //   if (renderingSurface.textureHandle != 0) {
+  //     print(
+  //         "Creating render target from native texture  ${renderingSurface.textureHandle}");
+  //     create_render_target_ffi(_viewer, renderingSurface.textureHandle,
+  //         rect.value!.width.toInt(), rect.value!.height.toInt());
+  //   }
+
+  //   textureDetails.value = TextureDetails(
+  //       textureId: renderingSurface.flutterTextureId!,
+  //       width: rect.value!.width.toInt(),
+  //       height: rect.value!.height.toInt());
+  //   print("texture details ${textureDetails.value}");
+  //   update_viewport_and_camera_projection_ffi(
+  //       _viewer, rect.value!.width.toInt(), rect.value!.height.toInt(), 1.0);
+  // }
+
+  // Future<RenderingSurface> _createRenderingSurface() async {
+  //   return RenderingSurface.from(await _channel.invokeMethod("createTexture", [
+  //     rect.value!.width,
+  //     rect.value!.height,
+  //     rect.value!.left,
+  //     rect.value!.top
+  //   ]));
+  // }
+
+  // ///
+  // /// When a FilamentWidget is resized, it will call the [resize] method below, which will tear down/recreate the swapchain.
+  // /// For "once-off" resizes, this is fine; however, this can be problematic for consecutive resizes
+  // /// (e.g. dragging to expand/contract the parent window on desktop, or animating the size of the FilamentWidget itself).
+  // /// It is too expensive to recreate the swapchain multiple times per second.
+  // /// We therefore add a timer to FilamentWidget so that the call to [resize] is delayed (e.g. 500ms).
+  // /// Any subsequent resizes before the delay window elapses will cancel the earlier call.
+  // ///
+  // /// The overall process looks like this:
+  // /// 1) the window is resized
+  // /// 2) (Windows only) the Flutter engine requests PixelBufferTexture to provide a new pixel buffer with a new size (we return an empty texture, blanking the Texture widget)
+  // /// 3) After Xms, [resize] is invoked
+  // /// 4) the viewer is instructed to stop rendering (synchronous)
+  // /// 5) the existing Filament swapchain is destroyed (synchronous)
+  // /// 6) (where a Texture widget is used), the Flutter texture is unregistered
+  // ///   a) this is asynchronous, but
+  // ///   b) *** SEE NOTE BELOW ON WINDOWS *** by passing the method channel result through to the callback, we make this synchronous from the Flutter side,
+  // ///    c) in this async callback, the glTexture is destroyed
+  // /// 7) (where a backing window is used), the window is resized
+  // /// 7) (where a Texture widget is used), a new Flutter/OpenGL texture is created (synchronous)
+  // /// 8) a new swapchain is created (synchronous)
+  // /// 9) if the viewer was rendering prior to the resize, the viewer is instructed to recommence rendering
+  // /// 10) (where a Texture widget is used) the new texture ID is pushed to the FilamentWidget
+  // /// 11) the FilamentWidget updates the Texture widget with the new texture.
+  // ///
+  // /// #### (Windows-only) ############################################################
+  // /// # As soon as the widget/window is resized, the PixelBufferTexture will be
+  // /// # requested to provide a new pixel buffer for the new size.
+  // /// # Even with zero delay to the call to [resize], this will be triggered *before*
+  // /// # we have had a chance to anything else (like tear down the swapchain).
+  // /// # On the backend, we deal with this by simply returning an empty texture as soon
+  // /// # as the size changes, and will rely on the followup call to [resize] to actually
+  // /// # destroy/recreate the pixel buffer and Flutter texture.
+  // ///
+  // /// NOTE RE ASYNC CALLBACK
+  // /// # The bigger problem is a race condition when resize is called multiple times in quick succession (e.g dragging to resize on Windows).
+  // /// # It looks like occasionally, the backend OpenGL texture is being destroyed while its corresponding swapchain is still active, causing a crash.
+  // /// # I'm not exactly sure how/where this is occurring, but something clearly isn't synchronized between destroy_swap_chain_ffi and
+  // /// # the asynchronous callback passed to FlutterTextureRegistrar::UnregisterTexture.
+  // /// # Theoretically this could occur if resize_2 starts before resize_1 completes, i.e.
+  // /// # 1) resize_1 destroys swapchain/texture and creates new texture
+  // /// # 2) resize_2 destroys swapchain/texture
+  // /// # 3) resize_1 creates new swapchain but texture isn't available, ergo crash
+  // /// #
+  // /// # I don't think this should happen if:
+  // /// # 1) we add a flag on the Flutter side to ensure only one call to destroy/recreate the swapchain/texture is active at any given time, and
+  // /// # 2) on the Flutter side, we are sure that calling destroyTexture only returns once the async callback on the native side has completed.
+  // /// # For (1), checking if textureId is null at the entrypoint should be sufficient.
+  // /// # For (2), we invoke flutter::MethodResult<flutter::EncodableValue>->Success in the UnregisterTexture callback.
+  // /// #
+  // /// # Maybe (2) doesn't actually make Flutter wait?
+  // /// #
+  // /// # The other possibility is that both (1) and (2) are fine and the issue is elsewhere.
+  // /// #
+  // /// # Either way, the current solution is to basically setup a double-buffer on resize.
+  // /// # When destroyTexture is called, the active texture isn't destroyed yet, it's only marked as inactive.
+  // /// # On subsequent calls to destroyTexture, the inactive texture is destroyed.
+  // /// # This seems to work fine.
+  // ///
+  // /// # Another option is to only use a single large (e.g. 4k) texture and simply crop whenever a resize is requested.
+  // /// # This might be preferable for other reasons (e.g. don't need to destroy/recreate the pixel buffer or swapchain).
+  // /// # Given we don't do this on other platforms, I'm OK to stick with the existing solution for the time being.
+  // /// ############################################################################
+  // ///
+  // bool _resizing = false;
+  // @override
+  // Future resize() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("Cannot resize without active viewer");
+  //   }
+
+  //   if (_resizing) {
+  //     throw Exception("Resize currently underway, ignoring");
+  //   }
+
+  //   _resizing = true;
+
+  //   set_rendering_ffi(_viewer, false);
+
+  //   if (!_usesBackingWindow) {
+  //     destroy_swap_chain_ffi(_viewer);
+  //   }
+
+  //   if (requiresTextureWidget) {
+  //     if (textureDetails.value != null) {
+  //       await _channel.invokeMethod(
+  //           "destroyTexture", textureDetails.value!.textureId);
+  //     }
+  //   } else if (Platform.isWindows) {
+  //     print("Resizing window with rect $rect");
+  //     await _channel.invokeMethod("resizeWindow", [
+  //       rect.value!.width,
+  //       rect.value!.height,
+  //       rect.value!.left,
+  //       rect.value!.top
+  //     ]);
+  //   }
+
+  //   var renderingSurface = await _createRenderingSurface();
+
+  //   if (_viewer.address == 0) {
+  //     throw Exception("Failed to create viewer. Check logs for details");
+  //   }
+
+  //   _assetManager = get_asset_manager(_viewer);
+
+  //   if (!_usesBackingWindow) {
+  //     create_swap_chain_ffi(_viewer, renderingSurface.surface,
+  //         rect.value!.width.toInt(), rect.value!.height.toInt());
+  //   }
+
+  //   if (renderingSurface.textureHandle != 0) {
+  //     print(
+  //         "Creating render target from native texture  ${renderingSurface.textureHandle}");
+  //     create_render_target_ffi(_viewer, renderingSurface.textureHandle,
+  //         rect.value!.width.toInt(), rect.value!.height.toInt());
+  //   }
+
+  //   textureDetails.value = TextureDetails(
+  //       textureId: renderingSurface.flutterTextureId!,
+  //       width: rect.value!.width.toInt(),
+  //       height: rect.value!.height.toInt());
+
+  //   update_viewport_and_camera_projection_ffi(
+  //       _viewer, rect.value!.width.toInt(), rect.value!.height.toInt(), 1.0);
+
+  //   await setRendering(_rendering);
+
+  //   _resizing = false;
+  // }
+
+  // @override
+  // Future clearBackgroundImage() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   clear_background_image_ffi(_viewer);
+  // }
+
+  // @override
+  // Future setBackgroundImage(String path, {bool fillHeight = false}) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_background_image_ffi(
+  //       _viewer, path.toNativeUtf8().cast<Char>(), fillHeight);
+  // }
+
+  // @override
+  // Future setBackgroundColor(Color color) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_background_color_ffi(
+  //       _viewer,
+  //       color.red.toDouble() / 255.0,
+  //       color.green.toDouble() / 255.0,
+  //       color.blue.toDouble() / 255.0,
+  //       color.alpha.toDouble() / 255.0);
+  // }
+
+  // @override
+  // Future setBackgroundImagePosition(double x, double y,
+  //     {bool clamp = false}) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_background_image_position_ffi(_viewer, x, y, clamp);
+  // }
+
+  // @override
+  // Future loadSkybox(String skyboxPath) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   load_skybox_ffi(_viewer, skyboxPath.toNativeUtf8().cast<Char>());
+  // }
+
+  // @override
+  // Future loadIbl(String lightingPath, {double intensity = 30000}) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   load_ibl_ffi(_viewer, lightingPath.toNativeUtf8().cast<Char>(), intensity);
+  // }
+
+  // @override
+  // Future removeSkybox() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   remove_skybox_ffi(_viewer);
+  // }
+
+  // @override
+  // Future removeIbl() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   // remove_ibl_ffi(_viewer);
+  // }
+
+  // @override
+  // Future<FilamentEntity> addLight(
+  //     int type,
+  //     double colour,
+  //     double intensity,
+  //     double posX,
+  //     double posY,
+  //     double posZ,
+  //     double dirX,
+  //     double dirY,
+  //     double dirZ,
+  //     bool castShadows) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   var entity = add_light_ffi(_viewer, type, colour, intensity, posX, posY,
+  //       posZ, dirX, dirY, dirZ, castShadows);
+  //   return entity;
+  // }
+
+  // @override
+  // Future removeLight(FilamentEntity light) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   remove_light_ffi(_viewer, light);
+  // }
+
+  // @override
+  // Future clearLights() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   clear_lights_ffi(_viewer);
+  // }
+
+  // @override
+  // Future<FilamentEntity> loadGlb(String path, {bool unlit = false}) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   if (unlit) {
+  //     throw Exception("Not yet implemented");
+  //   }
+  //   var asset =
+  //       load_glb_ffi(_assetManager, path.toNativeUtf8().cast<Char>(), unlit);
+  //   if (asset == _FILAMENT_ASSET_ERROR) {
+  //     throw Exception("An error occurred loading the asset at $path");
+  //   }
+  //   return asset;
+  // }
+
+  // @override
+  // Future<FilamentEntity> loadGltf(String path, String relativeResourcePath,
+  //     {bool force = false}) async {
+  //   if (Platform.isWindows && !force) {
+  //     throw Exception(
+  //         "loadGltf has a race condition on Windows which is likely to crash your program. If you really want to try, pass force=true to loadGltf");
+  //   }
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   var asset = load_gltf_ffi(_assetManager, path.toNativeUtf8().cast<Char>(),
+  //       relativeResourcePath.toNativeUtf8().cast<Char>());
+  //   if (asset == _FILAMENT_ASSET_ERROR) {
+  //     throw Exception("An error occurred loading the asset at $path");
+  //   }
+  //   return asset;
+  // }
+
+  // @override
+  // Future panStart(double x, double y) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   grab_begin(_viewer, x * _pixelRatio, y * _pixelRatio, true);
+  // }
+
+  // @override
+  // Future panUpdate(double x, double y) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   grab_update(_viewer, x * _pixelRatio, y * _pixelRatio);
+  // }
+
+  // @override
+  // Future panEnd() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   grab_end(_viewer);
+  // }
+
+  // @override
+  // Future rotateStart(double x, double y) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   grab_begin(_viewer, x * _pixelRatio, y * _pixelRatio, false);
+  // }
+
+  // @override
+  // Future rotateUpdate(double x, double y) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   grab_update(_viewer, x * _pixelRatio, y * _pixelRatio);
+  // }
+
+  // @override
+  // Future rotateEnd() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   grab_end(_viewer);
+  // }
+
+  // @override
+  // Future setMorphTargetWeights(
+  //     FilamentEntity asset, String meshName, List<double> weights) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   var weightsPtr = calloc<Float>(weights.length);
+
+  //   for (int i = 0; i < weights.length; i++) {
+  //     weightsPtr.elementAt(i).value = weights[i];
+  //   }
+  //   set_morph_target_weights_ffi(_assetManager, asset,
+  //       meshName.toNativeUtf8().cast<Char>(), weightsPtr, weights.length);
+  //   calloc.free(weightsPtr);
+  // }
+
+  // @override
+  // Future<List<String>> getMorphTargetNames(
+  //     FilamentEntity asset, String meshName) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   var names = <String>[];
+  //   var count = get_morph_target_name_count_ffi(
+  //       _assetManager, asset, meshName.toNativeUtf8().cast<Char>());
+  //   var outPtr = calloc<Char>(255);
+  //   for (int i = 0; i < count; i++) {
+  //     get_morph_target_name(_assetManager, asset,
+  //         meshName.toNativeUtf8().cast<Char>(), outPtr, i);
+  //     names.add(outPtr.cast<Utf8>().toDartString());
+  //   }
+  //   calloc.free(outPtr);
+  //   return names.cast<String>();
+  // }
+
+  // @override
+  // Future<List<String>> getAnimationNames(FilamentEntity asset) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   var animationCount = get_animation_count(_assetManager, asset);
+  //   var names = <String>[];
+  //   var outPtr = calloc<Char>(255);
+  //   for (int i = 0; i < animationCount; i++) {
+  //     get_animation_name_ffi(_assetManager, asset, outPtr, i);
+  //     names.add(outPtr.cast<Utf8>().toDartString());
+  //   }
+
+  //   return names;
+  // }
+
+  // @override
+  // Future<double> getAnimationDuration(
+  //     FilamentEntity asset, int animationIndex) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   var duration = get_animation_duration(_assetManager, asset, animationIndex);
+
+  //   return duration;
+  // }
+
+  // @override
+  // Future setMorphAnimationData(
+  //     FilamentEntity entity, MorphAnimationData animation) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+
+  //   var dataPtr = calloc<Float>(animation.data.length);
+  //   for (int i = 0; i < animation.data.length; i++) {
+  //     dataPtr.elementAt(i).value = animation.data[i];
+  //   }
+
+  //   // the morph targets in [animation] might be a subset of those that actually exist in the mesh (and might not have the same order)
+  //   // we don't want to reorder the data (?? or do we? this is probably more efficient for the backend?)
+  //   // so let's get the actual list of morph targets from the mesh and pass the relevant indices to the native side.
+  //   var meshMorphTargets =
+  //       await getMorphTargetNames(entity, animation.meshName);
+
+  //   Pointer<Int> idxPtr = calloc<Int>(animation.morphTargets.length);
+  //   for (int i = 0; i < animation.numMorphTargets; i++) {
+  //     var index = meshMorphTargets.indexOf(animation.morphTargets[i]);
+  //     if (index == -1) {
+  //       calloc.free(dataPtr);
+  //       calloc.free(idxPtr);
+  //       throw Exception(
+  //           "Morph target ${animation.morphTargets[i]} is specified in the animation but could not be found in the mesh ${animation.meshName} under entity ${entity}");
+  //     }
+  //     idxPtr.elementAt(i).value = index;
+  //   }
+
+  //   set_morph_animation(
+  //       _assetManager,
+  //       entity,
+  //       animation.meshName.toNativeUtf8().cast<Char>(),
+  //       dataPtr,
+  //       idxPtr,
+  //       animation.numMorphTargets,
+  //       animation.numFrames,
+  //       (animation.frameLengthInMs));
+  //   calloc.free(dataPtr);
+  //   calloc.free(idxPtr);
+  // }
+
+  // @override
+  // Future setBoneAnimation(
+  //     FilamentEntity asset, BoneAnimationData animation) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   // var data = calloc<Float>(animation.frameData.length);
+  //   // int offset = 0;
+  //   // var numFrames = animation.frameData.length ~/ 7;
+  //   // var boneNames = calloc<Pointer<Char>>(1);
+  //   // boneNames.elementAt(0).value =
+  //   //     animation.boneName.toNativeUtf8().cast<Char>();
+
+  //   // var meshNames = calloc<Pointer<Char>>(animation.meshNames.length);
+  //   // for (int i = 0; i < animation.meshNames.length; i++) {
+  //   //   meshNames.elementAt(i).value =
+  //   //       animation.meshNames[i].toNativeUtf8().cast<Char>();
+  //   // }
+
+  //   // for (int i = 0; i < animation.frameData.length; i++) {
+  //   //   data.elementAt(offset).value = animation.frameData[i];
+  //   //   offset += 1;
+  //   // }
+
+  //   // await _channel.invokeMethod("setBoneAnimation", [
+  //   //   _assetManager,
+  //   //   asset,
+  //   //   data,
+  //   //   numFrames,
+  //   //   1,
+  //   //   boneNames,
+  //   //   meshNames,
+  //   //   animation.meshNames.length,
+  //   //   animation.frameLengthInMs
+  //   // ]);
+  //   // calloc.free(data);
+  // }
+
+  // @override
+  // Future removeAsset(FilamentEntity asset) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   // remove_asset_ffi(_viewer, asset);
+  // }
+
+  // @override
+  // Future clearAssets() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   // clear_assets_ffi(_viewer);
+  // }
+
+  // @override
+  // Future zoomBegin() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   // scroll_begin(_viewer);
+  // }
+
+  // @override
+  // Future zoomUpdate(double x, double y, double z) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   // scroll_update(_viewer, x, y, z);
+  // }
+
+  // @override
+  // Future zoomEnd() async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   // scroll_end(_viewer);
+  // }
+
+  // @override
+  // Future playAnimation(FilamentEntity asset, int index,
+  //     {bool loop = false,
+  //     bool reverse = false,
+  //     bool replaceActive = true,
+  //     double crossfade = 0.0}) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   // play_animation_ffi(
+  //   //     _assetManager, asset, index, loop, reverse, replaceActive, crossfade);
+  // }
+
+  // @override
+  // Future setAnimationFrame(
+  //     FilamentEntity asset, int index, int animationFrame) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_animation_frame(_assetManager, asset, index, animationFrame);
+  // }
+
+  // @override
+  // Future stopAnimation(FilamentEntity asset, int animationIndex) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   stop_animation(_assetManager, asset, animationIndex);
+  // }
+
+  // @override
+  // Future setCamera(FilamentEntity asset, String? name) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   var result = set_camera(
+  //       _viewer, asset, name?.toNativeUtf8().cast<Char>() ?? nullptr);
+  //   if (!result) {
+  //     throw Exception("Failed to set camera");
+  //   }
+  // }
+
+  // @override
+  // Future setToneMapping(ToneMapper mapper) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+
+  //   set_tone_mapping_ffi(_viewer, mapper.index);
+  // }
+
+  // @override
+  // Future setPostProcessing(bool enabled) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+
+  //   set_post_processing_ffi(_viewer, enabled);
+  // }
+
+  // @override
+  // Future setBloom(double bloom) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_bloom_ffi(_viewer, bloom);
+  // }
+
+  // @override
+  // Future setCameraFocalLength(double focalLength) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_camera_focal_length(_viewer, focalLength);
+  // }
+
+  // @override
+  // Future setCameraFocusDistance(double focusDistance) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_camera_focus_distance(_viewer, focusDistance);
+  // }
+
+  // @override
+  // Future setCameraPosition(double x, double y, double z) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_camera_position(_viewer, x, y, z);
+  // }
+
+  // @override
+  // Future moveCameraToAsset(FilamentEntity asset) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   move_camera_to_asset(_viewer, asset);
+  // }
+
+  // @override
+  // Future setViewFrustumCulling(bool enabled) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_view_frustum_culling(_viewer, enabled);
+  // }
+
+  // @override
+  // Future setCameraExposure(
+  //     double aperture, double shutterSpeed, double sensitivity) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_camera_exposure(_viewer, aperture, shutterSpeed, sensitivity);
+  // }
+
+  // @override
+  // Future setCameraRotation(double rads, double x, double y, double z) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_camera_rotation(_viewer, rads, x, y, z);
+  // }
+
+  // @override
+  // Future setCameraModelMatrix(List<double> matrix) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   assert(matrix.length == 16);
+  //   var ptr = calloc<Float>(16);
+  //   for (int i = 0; i < 16; i++) {
+  //     ptr.elementAt(i).value = matrix[i];
+  //   }
+  //   set_camera_model_matrix(_viewer, ptr);
+  //   calloc.free(ptr);
+  // }
+
+  // @override
+  // Future setMaterialColor(FilamentEntity asset, String meshName,
+  //     int materialIndex, Color color) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   var result = set_material_color(
+  //       _assetManager,
+  //       asset,
+  //       meshName.toNativeUtf8().cast<Char>(),
+  //       materialIndex,
+  //       color.red.toDouble() / 255.0,
+  //       color.green.toDouble() / 255.0,
+  //       color.blue.toDouble() / 255.0,
+  //       color.alpha.toDouble() / 255.0);
+  //   if (result != 1) {
+  //     throw Exception("Failed to set material color");
+  //   }
+  // }
+
+  // @override
+  // Future transformToUnitCube(FilamentEntity asset) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   transform_to_unit_cube(_assetManager, asset);
+  // }
+
+  // @override
+  // Future setPosition(FilamentEntity asset, double x, double y, double z) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_position(_assetManager, asset, x, y, z);
+  // }
+
+  // @override
+  // Future setScale(FilamentEntity asset, double scale) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_scale(_assetManager, asset, scale);
+  // }
+
+  // @override
+  // Future setRotation(
+  //     FilamentEntity asset, double rads, double x, double y, double z) async {
+  //   if (_viewer == nullptr) {
+  //     throw Exception("No viewer available, ignoring");
+  //   }
+  //   set_rotation(_assetManager, asset, rads, x, y, z);
+  // }
 
   // @override
   // Future hide(FilamentEntity asset, String meshName) async {
   //   if (_viewer == nullptr) {
   //     throw Exception("No viewer available, ignoring");
   //   }
-  //   if (_lib.hide_mesh(
-  //           _assetManager!, asset, meshName.toNativeUtf8().cast<Char>()) !=
+  //   if (hide_mesh(_assetManager, asset, meshName.toNativeUtf8().cast<Char>()) !=
   //       1) {}
   // }
 
@@ -1373,8 +1411,8 @@ class FilamentControllerFFI extends FilamentController {
   //   if (_viewer == nullptr) {
   //     throw Exception("No viewer available, ignoring");
   //   }
-  //   if (_lib.reveal_mesh(
-  //           _assetManager!, asset, meshName.toNativeUtf8().cast<Char>()) !=
+  //   if (reveal_mesh(
+  //           _assetManager, asset, meshName.toNativeUtf8().cast<Char>()) !=
   //       1) {
   //     throw Exception("Failed to reveal mesh $meshName");
   //   }
@@ -1382,7 +1420,7 @@ class FilamentControllerFFI extends FilamentController {
 
   // @override
   // String? getNameForEntity(FilamentEntity entity) {
-  //   final result = _lib.get_name_for_entity(_assetManager!, entity);
+  //   final result = get_name_for_entity(_assetManager, entity);
   //   if (result == nullptr) {
   //     return null;
   //   }
@@ -1397,7 +1435,7 @@ class FilamentControllerFFI extends FilamentController {
   //   final outPtr = calloc<EntityId>(1);
   //   outPtr.value = 0;
 
-  //   _lib.pick_ffi(_viewer, x, textureDetails.value!.height - y, outPtr);
+  //   pick_ffi(_viewer, x, textureDetails.value!.height - y, outPtr);
   //   int wait = 0;
   //   while (outPtr.value == 0) {
   //     await Future.delayed(const Duration(milliseconds: 50));

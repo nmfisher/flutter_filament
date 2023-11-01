@@ -5,7 +5,7 @@ homepage:
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
-  flutter: ">=3.16.0-0.2.pre"
+  flutter: ">=3.13.8"
 
 dependencies:
   flutter:
@@ -21,13 +21,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^1.0.0
-  ffigen: ^9.0.1
+  ffigen: #^9.0.1
+    path: /Users/nickfisher/Documents/ffigen
 
 ffigen:
   output: 'lib/generated_bindings.dart'
   headers:
     entry-points:
       - 'ios/include/FlutterFilamentFFIApi.h'
+  ffi-native:
+    assetId: 'libflutter_filament'
 
 flutter:
   plugin:
