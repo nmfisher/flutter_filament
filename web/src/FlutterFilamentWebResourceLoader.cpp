@@ -6,6 +6,7 @@
 #include <iostream>
 #include "dart/dart_api_dl.h"
 
+
 class PendingCall
 {
 public:
@@ -61,6 +62,7 @@ static Dart_Port _callback_port;
 extern "C"
 {
 
+
   FLUTTER_PLUGIN_EXPORT intptr_t flutter_filament_web_init_dart_api_dl(void* data) {
     return Dart_InitializeApiDL(data);
   }
@@ -70,18 +72,21 @@ extern "C"
   }
 
 
-  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_load_resource_fn(void *loadResource)
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_load_resource_fn(Dart_Handle lib,Dart_Handle name)
   {
-
     std::cout << "SETTING LOAD RESOURCE FN" << std::endl;
+    Dart_Invoke(lib, name, 0, nullptr);
+    
 
-    Dart_CObject dart_object;
-    dart_object.type = Dart_CObject_kBool;
-    dart_object.value.as_bool = true;
+    // Dart_CObject dart_object;
+    // dart_object.type = Dart_CObject_kBool;
+    // dart_object.value.as_bool = true;
     
-    const bool result = Dart_PostCObject_DL(_callback_port, &dart_object);
+    // const bool result = Dart_PostCObject_DL(_callback_port, &dart_object);
     
-    std::cout << "Callback to port success : " << result << std::endl;
+    // std::cout << "Got fn ptr " << loadResource << std::endl;
+
+    // foo();
     
     // auto fn = (void(*)())loadResource;
     // fn();

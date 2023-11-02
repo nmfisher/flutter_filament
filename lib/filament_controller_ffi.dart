@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -43,6 +42,7 @@ final class FooChar extends AbiSpecificInteger {
   const FooChar();
 }
 
+@pragma("wasm:export")
 void foo() {
   print("FOO IN DART");
 }
@@ -78,8 +78,6 @@ class FilamentControllerFFI extends FilamentController {
   bool get requiresTextureWidget => !_usesBackingWindow;
 
   double _pixelRatio = 1.0;
-
-  final _port = ReceivePort();
 
   // ignore: prefer_final_fields
   Pointer<Void> _assetManager = nullptr;
@@ -132,20 +130,22 @@ class FilamentControllerFFI extends FilamentController {
       // var dartFunctionPtr = Pointer.fromFunction<Void Function()>(foo);
 
       // final completer = Completer<String>();
-      // void onResponse(Pointer<Utf8> responsePointer) {
-      //   completer.complete(responsePointer.toDartString());
-      //   calloc.free(responsePointer);
+      // void onResponse() {
+      //   completer.complete("FOO");
       // }
 
-      // final callback = NativeCallable<HttpCallback>.listener(onResponse);
+      // final callback = NativeCallable<Void Function()>.listener(onResponse);
 
       // _port.listen((msg) {
       //   print("Got message from native : $msg");
       // });
 
-      // flutter_filament_web_init_dart_api_dl(NativeApi.initializeApiDLData);
+      flutter_filament_web_init_dart_api_dl(NativeApi.initializeApiDLData);
       // flutter_filament_web_register_ports(_port.sendPort.nativePort);
-      // flutter_filament_web_set_load_resource_fn(nullptr);
+      final fnptr = Pointer.fromFunction<Void Function()>(foo);
+      print("fnptr addr is ${fnptr.address}");
+      flutter_filament_web_set_load_resource_fn(
+          "package:flutter_filament/filament_controller_ffi.dart", "foo");
     } else {
       if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
         DynamicLibrary.process();
