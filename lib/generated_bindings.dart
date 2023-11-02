@@ -4,7 +4,7 @@
 // ignore_for_file: type=lint
 import 'dart:ffi' as ffi;
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>(
+@ffi.Native<ffi.Void Function(ffi.Handle, ffi.Handle)>(
     symbol: "_flutter_filament_web_set_load_resource_fn",
     assetId: "libflutter_filament")
 external void flutter_filament_web_set_load_resource_fn(
