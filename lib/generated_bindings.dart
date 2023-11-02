@@ -4,26 +4,25 @@
 // ignore_for_file: type=lint
 import 'dart:ffi' as ffi;
 
-@ffi.Native<ffi.Void Function(ffi.Handle, ffi.Handle)>(
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
     symbol: "_flutter_filament_web_set_load_resource_fn",
     assetId: "libflutter_filament")
 external void flutter_filament_web_set_load_resource_fn(
-    String lib, String name);
+    ffi.Pointer<ffi.Void> fn);
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: "_flutter_filament_web_init_dart_api_dl",
+@ffi.Native<ffi.IntPtr Function(ffi.Int32)>(
+    symbol: "_flutter_filament_web_allocate", assetId: "libflutter_filament")
+external int flutter_filament_web_allocate(int length);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer, ffi.Int32, ffi.Int32)>(
+    symbol: "_flutter_filament_web_set", assetId: "libflutter_filament")
+external void flutter_filament_web_set(ffi.Pointer ptr, int offset, int value);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer, ffi.Int32, ffi.Pointer)>(
+    symbol: "_flutter_filament_web_load_resource_callback",
     assetId: "libflutter_filament")
-external void flutter_filament_web_init_dart_api_dl(ffi.Pointer<ffi.Void> data);
-
-@ffi.Native<ffi.Void Function(ffi.Int64)>(
-    symbol: "_flutter_filament_web_register_ports",
-    assetId: "libflutter_filament")
-external void flutter_filament_web_register_ports(int port);
-
-
-
-
-
+external void flutter_filament_web_load_resource_callback(
+    ffi.Pointer data, int length, ffi.Pointer context);
 
 
 // @ffi.Native<

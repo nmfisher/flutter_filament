@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-FLUTTER_PLUGIN_EXPORT  void flutter_filament_web_set_load_resource_fn(Dart_Handle lib,Dart_Handle name);
+FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_load_resource_fn(void* fn);
 
 #ifdef __cplusplus
 }

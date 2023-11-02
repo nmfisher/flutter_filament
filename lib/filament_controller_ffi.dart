@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:js_interop';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:ffi/ffi.dart';
 import 'package:flutter/widgets.dart';
 import 'dart:ffi' as ffi;
 
@@ -42,28 +42,38 @@ final class FooChar extends AbiSpecificInteger {
   const FooChar();
 }
 
-@pragma("wasm:export")
-void foo() {
-  print("FOO IN DART");
-}
-
-void loadResourceToBuffer(Pointer<Void> out, Pointer<Void> length,
-    Pointer<Void> callback, Pointer<Void> userData) async {
+void _loadResourceToBuffer(Pointer context) async {
   print("CALL");
   // _queue.add(Tuple4(out, length, callback, userData));
   var bd = await rootBundle.load("assets/web/foo.txt");
 
-  var outPtrPtr = out.cast<Pointer<Uint8>>();
-  outPtrPtr.value = calloc<Uint8>(bd.lengthInBytes);
-  for (int i = 0; i < bd.lengthInBytes; i++) {
-    outPtrPtr.value.elementAt(i).value = bd.getUint8(i);
-  }
-  length.cast<Int32>().value = bd.lengthInBytes;
-  print("Set length to ${bd.lengthInBytes}");
+  var dataPtr = Pointer<Uint8>.fromAddress(
+      flutter_filament_web_allocate(bd.lengthInBytes));
+  print("dataPtr address is ${dataPtr.address}");
 
-  var fnPtr =
-      Pointer<NativeFunction<Void Function()>>.fromAddress(callback.address);
-  fnPtr.asFunction<void Function()>();
+  for (int i = 0; i < bd.lengthInBytes; i++) {
+    // print("Setting $i to ${bd.getUint8(i)}");
+    flutter_filament_web_set(dataPtr, i, bd.getUint8(i));
+    // dataPtr.elementAt(i).value = bd.getUint8(i);
+  }
+  flutter_filament_web_load_resource_callback(
+      dataPtr, bd.lengthInBytes, context);
+  // flutter_filament_web_set(out, 0, dataPtr.address);
+  // out.value = dataPtr;
+  // print("outPtr");
+  // flutter_filament_web_set(length, 0, bd.lengthInBytes);
+  // length.cast<Int32>().value = bd.lengthInBytes;
+  // print("Set length to ${bd.lengthInBytes}");
+
+  // var fnPtr =
+  //     Pointer<NativeFunction<Void Function()>>.fromAddress(callback.address);
+  // print("set fn ptr");
+  // fnPtr.asFunction<void Function()>();
+}
+
+@pragma("wasm:export")
+void loadResourceToBuffer(Pointer context) {
+  _loadResourceToBuffer(context);
 }
 
 // ignore: constant_identifier_names
@@ -140,12 +150,12 @@ class FilamentControllerFFI extends FilamentController {
       //   print("Got message from native : $msg");
       // });
 
-      flutter_filament_web_init_dart_api_dl(NativeApi.initializeApiDLData);
+      // flutter_filament_web_init_dart_api_dl(NativeApi.initializeApiDLData);
       // flutter_filament_web_register_ports(_port.sendPort.nativePort);
-      final fnptr = Pointer.fromFunction<Void Function()>(foo);
-      print("fnptr addr is ${fnptr.address}");
-      flutter_filament_web_set_load_resource_fn(
-          "package:flutter_filament/filament_controller_ffi.dart", "foo");
+      // final fnptr = Pointer.fromFunction<Void Function()>(foo);
+      // print("fnptr addr is ${fnptr.address}");
+      flutter_filament_web_set_load_resource_fn(nullptr);
+      // "package:flutter_filament/filament_controller_ffi.dart", "foo");
     } else {
       if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
         DynamicLibrary.process();

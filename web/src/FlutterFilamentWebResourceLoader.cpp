@@ -4,45 +4,37 @@
 #include <mutex>
 #include <future>
 #include <iostream>
-#include "dart/dart_api_dl.h"
 
 
 class PendingCall
 {
 public:
-  PendingCall(void **buffer, int32_t *length)
-      : response_buffer_(buffer), response_length_(length)
+  PendingCall()
   {
   }
   ~PendingCall() {}
 
-  void Complete()
-  {
-    notified_ = true;
-    cv_.notify_one();
-    std::cout << "COPLETED" << std::endl;
-    std::cout << "Got length " << *response_length_ << std::endl;
-    prom.set_value(69); // Notify future
-  }
-
   void Wait()
   {
-    // std::future<int> accumulate_future = prom.get_future();
-    // std::cout << accumulate_future.get() << std::endl;
+    std::future<int> accumulate_future = prom.get_future();
+    std::cout << accumulate_future.get() << std::endl;
 
     // std::unique_lock<std::mutex> lock(mutex_);
-    while (!notified_)
-    {
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-      //   cv_.wait(lock);
-    }
+    // while (!notified_)
+    // {
+      // std::this_thread::sleep_for(std::chrono::seconds(1));
+      // std::cout << "sleep" << std::endl;
+        // cv_.wait(lock); /
+    // }
   }
 
-  static void HandleResponse()//void *userData)
+  void HandleResponse(void* data, int32_t length)
   {
-    std::cout << "RESPONE HANDLED!" << std::endl;
-    // auto pendingCall = reinterpret_cast<PendingCall *>(userData);
-    // pendingCall->Complete();
+    std::cout << "GOT CALLBACK FOR DATA OF LENGTH" << length  << std::endl;
+    prom.set_value(69);
+    // std::cout << "data is " << (char*) data << std::endl;
+    // notified_ = true;
+    // cv_.notify_one();
   }
 
 private:
@@ -51,8 +43,6 @@ private:
   bool notified_ = false;
   std::promise<int> prom;
 
-  void **response_buffer_;
-  int32_t *response_length_;
 };
 
 static LoadFilamentResource _load_resource_callback = nullptr;
@@ -62,47 +52,41 @@ static Dart_Port _callback_port;
 extern "C"
 {
 
+  extern void loadResourceToBuffer(void* context);
 
-  FLUTTER_PLUGIN_EXPORT intptr_t flutter_filament_web_init_dart_api_dl(void* data) {
-    return Dart_InitializeApiDL(data);
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_load_resource_callback(void* data, int32_t length, void* context) {
+    ((PendingCall*)context)->HandleResponse(data, length);
   }
 
-  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_register_ports(Dart_Port callback_port) {
-    _callback_port = callback_port;
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set(char* ptr, int32_t offset, int32_t val) {
+    // std::cout << "setting offset " << offset << " to char "  << (char) val << " at address " << (void*)ptr << std::endl;
+    memset(ptr+offset, val, 1);
   }
 
+  FLUTTER_PLUGIN_EXPORT void* flutter_filament_web_allocate(int32_t size) {
+    char* allocated = (char*)calloc(size, 1);
+    // std::cout << "Allocated " << size << " bytes at address " << allocated << std::endl;
+    // allocated[0] = '7';
+    // std::cout << "Set val to " << allocated[0] << std::endl;
+    return allocated;
+  }
 
-  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_load_resource_fn(Dart_Handle lib,Dart_Handle name)
+  static std::thread* _t;
+
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_load_resource_fn(void* fn)
   {
-    std::cout << "SETTING LOAD RESOURCE FN" << std::endl;
-    Dart_Invoke(lib, name, 0, nullptr);
+
+    auto pendingCall = new PendingCall();
     
-
-    // Dart_CObject dart_object;
-    // dart_object.type = Dart_CObject_kBool;
-    // dart_object.value.as_bool = true;
-    
-    // const bool result = Dart_PostCObject_DL(_callback_port, &dart_object);
-    
-    // std::cout << "Got fn ptr " << loadResource << std::endl;
-
-    // foo();
-    
-    // auto fn = (void(*)())loadResource;
-    // fn();
-
-    // void** responseBuffer = nullptr;
-    // int32_t responseLength = 0;
-
-    // PendingCall pendingCall(responseBuffer, &responseLength);
-
-    // auto fn = (void(*)(void* data, int32_t* len, void* callback, void* userData))loadResource;
-
-    // fn((void*)responseBuffer, &responseLength, (void*)&(pendingCall.HandleResponse), &pendingCall);
-
-    // pendingCall.Wait();
-
-    // std::cout << "Got length " << responseLength << std::endl;
+   loadResourceToBuffer((void*)pendingCall);  
+    _t = new std::thread([=] {
+      
+      std::cout << "call finished " << std::endl;
+      pendingCall->Wait();
+      std::cout << "wait finished " << std::endl;
+      // std::cout << "call finished " << std::endl;
+      
+    });
 
     // _load_resource_callback = (LoadFilamentResource)callback;
   }
