@@ -24,7 +24,6 @@ external void flutter_filament_web_set(ffi.Pointer ptr, int offset, int value);
 external void flutter_filament_web_load_resource_callback(
     ffi.Pointer data, int length, ffi.Pointer context);
 
-
 // @ffi.Native<
 //         ffi.Pointer<ffi.Void> Function(
 //             ffi.Pointer<ffi.Void>,

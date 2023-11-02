@@ -14,73 +14,10 @@ import 'package:flutter_filament/animations/animation_data.dart';
 import 'package:flutter_filament/generated_bindings.dart';
 import 'package:flutter_filament/rendering_surface.dart';
 
-@AbiSpecificIntegerMapping({
-  Abi.androidArm: Uint8(),
-  Abi.androidArm64: Uint8(),
-  Abi.androidIA32: Int8(),
-  Abi.androidX64: Int8(),
-  Abi.androidRiscv64: Uint8(),
-  Abi.fuchsiaArm64: Uint8(),
-  Abi.fuchsiaX64: Int8(),
-  Abi.fuchsiaRiscv64: Uint8(),
-  Abi.iosArm: Int8(),
-  Abi.iosArm64: Int8(),
-  Abi.iosX64: Int8(),
-  Abi.linuxArm: Uint8(),
-  Abi.linuxArm64: Uint8(),
-  Abi.linuxIA32: Int8(),
-  Abi.linuxX64: Int8(),
-  Abi.linuxRiscv32: Uint8(),
-  Abi.linuxRiscv64: Uint8(),
-  Abi.macosArm64: Int8(),
-  Abi.macosX64: Int8(),
-  Abi.windowsArm64: Int8(),
-  Abi.windowsIA32: Int8(),
-  Abi.windowsX64: Int8(),
-})
-final class FooChar extends AbiSpecificInteger {
-  const FooChar();
-}
-
-void _loadResourceToBuffer(Pointer context) async {
-  print("CALL");
-  // _queue.add(Tuple4(out, length, callback, userData));
-  var bd = await rootBundle.load("assets/web/foo.txt");
-
-  var dataPtr = Pointer<Uint8>.fromAddress(
-      flutter_filament_web_allocate(bd.lengthInBytes));
-  print("dataPtr address is ${dataPtr.address}");
-
-  for (int i = 0; i < bd.lengthInBytes; i++) {
-    // print("Setting $i to ${bd.getUint8(i)}");
-    flutter_filament_web_set(dataPtr, i, bd.getUint8(i));
-    // dataPtr.elementAt(i).value = bd.getUint8(i);
-  }
-  flutter_filament_web_load_resource_callback(
-      dataPtr, bd.lengthInBytes, context);
-  // flutter_filament_web_set(out, 0, dataPtr.address);
-  // out.value = dataPtr;
-  // print("outPtr");
-  // flutter_filament_web_set(length, 0, bd.lengthInBytes);
-  // length.cast<Int32>().value = bd.lengthInBytes;
-  // print("Set length to ${bd.lengthInBytes}");
-
-  // var fnPtr =
-  //     Pointer<NativeFunction<Void Function()>>.fromAddress(callback.address);
-  // print("set fn ptr");
-  // fnPtr.asFunction<void Function()>();
-}
-
-@pragma("wasm:export")
-void loadResourceToBuffer(Pointer context) {
-  _loadResourceToBuffer(context);
-}
-
 // ignore: constant_identifier_names
 const FilamentEntity _FILAMENT_ASSET_ERROR = 0;
 
 class FilamentControllerFFI extends FilamentController {
-  final _dummy = FooChar();
   final _channel = const MethodChannel("app.polyvox.filament/event");
 
   bool _usesBackingWindow = false;
@@ -134,29 +71,7 @@ class FilamentControllerFFI extends FilamentController {
       });
     });
 
-    if (kIsWeb) {
-      // we need to have already loaded the wasm module before this class is instantiated
-      // see main.dart.js for details
-      // var dartFunctionPtr = Pointer.fromFunction<Void Function()>(foo);
-
-      // final completer = Completer<String>();
-      // void onResponse() {
-      //   completer.complete("FOO");
-      // }
-
-      // final callback = NativeCallable<Void Function()>.listener(onResponse);
-
-      // _port.listen((msg) {
-      //   print("Got message from native : $msg");
-      // });
-
-      // flutter_filament_web_init_dart_api_dl(NativeApi.initializeApiDLData);
-      // flutter_filament_web_register_ports(_port.sendPort.nativePort);
-      // final fnptr = Pointer.fromFunction<Void Function()>(foo);
-      // print("fnptr addr is ${fnptr.address}");
-      flutter_filament_web_set_load_resource_fn(nullptr);
-      // "package:flutter_filament/filament_controller_ffi.dart", "foo");
-    } else {
+    if (!kIsWeb) {
       if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
         DynamicLibrary.process();
       } else {
@@ -205,12 +120,6 @@ class FilamentControllerFFI extends FilamentController {
   @override
   Future clearLights() {
     // TODO: implement clearLights
-    throw UnimplementedError();
-  }
-
-  @override
-  Future createViewer() {
-    // TODO: implement createViewer
     throw UnimplementedError();
   }
 
@@ -630,87 +539,87 @@ class FilamentControllerFFI extends FilamentController {
   //   print("Texture destroyed");
   // }
 
-  // ///
-  // /// Called by `FilamentWidget`. You do not need to call this yourself.
-  // ///
-  // @override
-  // Future createViewer() async {
-  //   if (rect.value == null) {
-  //     throw Exception(
-  //         "Dimensions have not yet been set by FilamentWidget. You need to wait for at least one frame after FilamentWidget has been inserted into the hierarchy");
-  //   }
-  //   if (_viewer != null) {
-  //     throw Exception(
-  //         "Viewer already exists, make sure you call destroyViewer first");
-  //   }
-  //   if (textureDetails.value != null) {
-  //     throw Exception(
-  //         "Texture already exists, make sure you call destroyTexture first");
-  //   }
+  ///
+  /// Called by `FilamentWidget`. You do not need to call this yourself.
+  ///
+  @override
+  Future createViewer() async {
+    if (rect.value == null) {
+      throw Exception(
+          "Dimensions have not yet been set by FilamentWidget. You need to wait for at least one frame after FilamentWidget has been inserted into the hierarchy");
+    }
+    if (_viewer != nullptr) {
+      throw Exception(
+          "Viewer already exists, make sure you call destroyViewer first");
+    }
+    if (textureDetails.value != null) {
+      throw Exception(
+          "Texture already exists, make sure you call destroyTexture first");
+    }
 
-  //   var loader = Pointer<ResourceLoaderWrapper>.fromAddress(
-  //       await _channel.invokeMethod("getResourceLoaderWrapper"));
-  //   if (loader == nullptr) {
-  //     throw Exception("Failed to get resource loader");
-  //   }
+    var loader = Pointer<Void>.fromAddress(
+        await _channel.invokeMethod("getResourceLoaderWrapper"));
+    if (loader == nullptr) {
+      throw Exception("Failed to get resource loader");
+    }
 
-  //   if (Platform.isWindows && requiresTextureWidget) {
-  //     _driver = Pointer<Void>.fromAddress(
-  //         await _channel.invokeMethod("getDriverPlatform"));
-  //   }
+    if (Platform.isWindows && requiresTextureWidget) {
+      _driver = Pointer<Void>.fromAddress(
+          await _channel.invokeMethod("getDriverPlatform"));
+    }
 
-  //   var renderCallbackResult = await _channel.invokeMethod("getRenderCallback");
-  //   var renderCallback =
-  //       Pointer<NativeFunction<Void Function(Pointer<Void>)>>.fromAddress(
-  //           renderCallbackResult[0]);
-  //   var renderCallbackOwner =
-  //       Pointer<Void>.fromAddress(renderCallbackResult[1]);
+    var renderCallbackResult = await _channel.invokeMethod("getRenderCallback");
+    var renderCallback =
+        Pointer<NativeFunction<Void Function(Pointer<Void>)>>.fromAddress(
+            renderCallbackResult[0]);
+    var renderCallbackOwner =
+        Pointer<Void>.fromAddress(renderCallbackResult[1]);
 
-  //   var renderingSurface = await _createRenderingSurface();
+    var renderingSurface = await _createRenderingSurface();
 
-  //   print("Got rendering surface");
+    print("Got rendering surface");
 
-  //   _viewer = create_filament_viewer_ffi(
-  //       Pointer<Void>.fromAddress(renderingSurface.sharedContext ?? 0),
-  //       _driver,
-  //       uberArchivePath?.toNativeUtf8().cast<Char>() ?? nullptr,
-  //       loader,
-  //       renderCallback,
-  //       renderCallbackOwner);
-  //   print("Created viewer");
-  //   if (_viewer.address == 0) {
-  //     throw Exception("Failed to create viewer. Check logs for details");
-  //   }
+    // _viewer = create_filament_viewer_ffi(
+    //     Pointer<Void>.fromAddress(renderingSurface.sharedContext ?? 0),
+    //     _driver,
+    //     uberArchivePath?.toNativeUtf8().cast<Char>() ?? nullptr,
+    //     loader,
+    //     renderCallback,
+    //     renderCallbackOwner);
+    // print("Created viewer");
+    // if (_viewer.address == 0) {
+    //   throw Exception("Failed to create viewer. Check logs for details");
+    // }
 
-  //   _assetManager = get_asset_manager(_viewer);
+    // _assetManager = get_asset_manager(_viewer);
 
-  //   create_swap_chain_ffi(_viewer, renderingSurface.surface,
-  //       rect.value!.width.toInt(), rect.value!.height.toInt());
-  //   print("Created swap chain");
-  //   if (renderingSurface.textureHandle != 0) {
-  //     print(
-  //         "Creating render target from native texture  ${renderingSurface.textureHandle}");
-  //     create_render_target_ffi(_viewer, renderingSurface.textureHandle,
-  //         rect.value!.width.toInt(), rect.value!.height.toInt());
-  //   }
+    // create_swap_chain_ffi(_viewer, renderingSurface.surface,
+    //     rect.value!.width.toInt(), rect.value!.height.toInt());
+    // print("Created swap chain");
+    // if (renderingSurface.textureHandle != 0) {
+    //   print(
+    //       "Creating render target from native texture  ${renderingSurface.textureHandle}");
+    //   create_render_target_ffi(_viewer, renderingSurface.textureHandle,
+    //       rect.value!.width.toInt(), rect.value!.height.toInt());
+    // }
 
-  //   textureDetails.value = TextureDetails(
-  //       textureId: renderingSurface.flutterTextureId!,
-  //       width: rect.value!.width.toInt(),
-  //       height: rect.value!.height.toInt());
-  //   print("texture details ${textureDetails.value}");
-  //   update_viewport_and_camera_projection_ffi(
-  //       _viewer, rect.value!.width.toInt(), rect.value!.height.toInt(), 1.0);
-  // }
+    // textureDetails.value = TextureDetails(
+    //     textureId: renderingSurface.flutterTextureId!,
+    //     width: rect.value!.width.toInt(),
+    //     height: rect.value!.height.toInt());
+    // print("texture details ${textureDetails.value}");
+    // update_viewport_and_camera_projection_ffi(
+    //     _viewer, rect.value!.width.toInt(), rect.value!.height.toInt(), 1.0);
+  }
 
-  // Future<RenderingSurface> _createRenderingSurface() async {
-  //   return RenderingSurface.from(await _channel.invokeMethod("createTexture", [
-  //     rect.value!.width,
-  //     rect.value!.height,
-  //     rect.value!.left,
-  //     rect.value!.top
-  //   ]));
-  // }
+  Future<RenderingSurface> _createRenderingSurface() async {
+    return RenderingSurface.from(await _channel.invokeMethod("createTexture", [
+      rect.value!.width,
+      rect.value!.height,
+      rect.value!.left,
+      rect.value!.top
+    ]));
+  }
 
   // ///
   // /// When a FilamentWidget is resized, it will call the [resize] method below, which will tear down/recreate the swapchain.
