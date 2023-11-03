@@ -10,7 +10,7 @@ emmake make
 emcc --bind -std=c++17 -g -s ALLOW_TABLE_GROWTH=1 \
 -s EXPORT_NAME=libflutter_filament -sMAIN_MODULE -sMODULARIZE \
 -s ERROR_ON_UNDEFINED_SYMBOLS=0  -sEXPORTED_RUNTIME_METHODS=wasmExports,wasmTable \
--sFULL_ES3 -s ASSERTIONS -pthread -sPTHREAD_POOL_SIZE=1 -sALLOW_BLOCKING_ON_MAIN_THREAD=0 -sPROXY_TO_PTHREAD -sOFFSCREENCANVAS_SUPPORT -sOFFSCREEN_FRAMEBUFFER \
+-sFULL_ES3 -s ASSERTIONS -pthread -sPTHREAD_POOL_SIZE=1 -sALLOW_BLOCKING_ON_MAIN_THREAD=0 -sPROXY_TO_PTHREAD  \
 ./libflutter_filament_plugin.a  ./libdart_api.a -o ./libflutter_filament_web.js 
 cp libflutter_filament_web.* $BASE_DIR/example/assets/web 
 cd $BASE_DIR/example/ && flutter clean && flutter build web --wasm

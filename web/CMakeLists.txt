@@ -20,13 +20,10 @@ include_directories(../ios/include/filament)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/internal)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/dart)
 
 add_library(filament_shaders STATIC 
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/include/material/image.c"
 )
-
-add_library(dart_api STATIC "${CMAKE_CURRENT_SOURCE_DIR}/src/dart_api_dl.c")
 
 add_library(${PLUGIN_NAME} STATIC
   #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/AssetManager.cpp"

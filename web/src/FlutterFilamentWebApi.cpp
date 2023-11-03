@@ -49,8 +49,8 @@ extern "C"
 
   FLUTTER_PLUGIN_EXPORT int main() {
     std::cout << "main called, is main runtime thread " << emscripten_is_main_runtime_thread() << std::endl;
-        
-    return 0;
+    
+     return 0;
   }
 
   FLUTTER_PLUGIN_EXPORT void flutter_filament_web_load_resource_callback(void* data, int32_t length, void* context) {
@@ -67,25 +67,51 @@ extern "C"
   }
 
   static std::thread* _t;
+  
+  
+  double red = 0;
+  double green = 0;
+  double blue = 0;
+
+  EM_BOOL _looper(double time, void* userData) {
+      
+      if(green >= 1.0) {
+        if(red >= 1.0) {
+          blue += 0.01;
+        } else {
+          red += 0.01;
+        }
+      } else { 
+        green += 0.01;
+      }
+      glClearColor(red, green, blue, 1);
+      glClear(GL_COLOR_BUFFER_BIT);
+      if(green + red + blue >= 3.0) {
+        return EM_FALSE;
+      }
+      return EM_TRUE;
+  }
 
   FLUTTER_PLUGIN_EXPORT EMSCRIPTEN_WEBGL_CONTEXT_HANDLE  flutter_filament_web_create_gl_context() {
-        std::cout << "flutter_filament_web_create_gl_context called, is main runtime thread " << emscripten_is_main_runtime_thread() << std::endl;
-
+    std::cout << "flutter_filament_web_create_gl_context called, is main runtime thread " << emscripten_is_main_runtime_thread() << std::endl;
     EmscriptenWebGLContextAttributes attr;
     emscripten_webgl_init_context_attributes(&attr);
-    attr.explicitSwapControl = EM_TRUE;
+    attr.explicitSwapControl = EM_FALSE;
+    // attr.renderViaOffscreenBackBuffer = EM_TRUE;
+    // attr.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_DISALLOW;
     context = emscripten_webgl_create_context("#canvas", &attr);
-    emscripten_webgl_make_context_current(context);
-    double color = 0;
-    for(int i = 0; i < 100; ++i)
-    {
-      color += 0.01;
-      glClearColor(0, color, 0.0, 1);
-      glClear(GL_COLOR_BUFFER_BIT);
-      EMSCRIPTEN_RESULT r = emscripten_webgl_commit_frame();
-      double now = emscripten_get_now();
-      while(emscripten_get_now() - now < 100) /*no-op*/;
+        std::cout << "created context  " << context << std::endl;
+
+    auto success = emscripten_webgl_make_context_current(context);
+    if(success != EMSCRIPTEN_RESULT_SUCCESS) {
+      std::cout << "failed to make context current  " << std::endl;
+      return 0;
     }
+    emscripten_request_animation_frame_loop(_looper, nullptr);
+   
+    // std::cout << "currContext is " << currContext << std::endl;
+
+   
     return context;
   }
 
