@@ -4,6 +4,9 @@
 // ignore_for_file: type=lint
 import 'dart:ffi' as ffi;
 
+typedef EMSCRIPTEN_WEBGL_CONTEXT_HANDLE = ffi.Int;
+typedef EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART = int;
+
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
     symbol: "_flutter_filament_web_set_load_resource_fn",
     assetId: "libflutter_filament")
@@ -23,6 +26,12 @@ external void flutter_filament_web_set(ffi.Pointer ptr, int offset, int value);
     assetId: "libflutter_filament")
 external void flutter_filament_web_load_resource_callback(
     ffi.Pointer data, int length, ffi.Pointer context);
+
+@ffi.Native<EMSCRIPTEN_WEBGL_CONTEXT_HANDLE Function()>(
+    symbol: "_flutter_filament_web_create_gl_context",
+    assetId: "libflutter_filament")
+external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
+    flutter_filament_web_create_gl_context();
 
 // @ffi.Native<
 //         ffi.Pointer<ffi.Void> Function(

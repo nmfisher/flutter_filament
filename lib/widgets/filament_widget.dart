@@ -122,6 +122,7 @@ class _SizedFilamentWidget extends StatefulWidget {
 
 class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
   String? _error;
+  String? _stacktrace;
 
   late final AppLifecycleListener _appLifecycleListener;
 
@@ -148,6 +149,7 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
         print("Fatal error : $err");
         print(st);
         _error = err.toString();
+        _stacktrace = st.toString();
       }
       setState(() {});
     });
@@ -252,8 +254,9 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
       return Container(
           color: Colors.white,
           child: Column(children: [
-            const Text("A fatal error was encountered"),
-            Text(_error!)
+            const Text("A fatal error was encountered."),
+            Text(_error!),
+            !kReleaseMode ? Text(_stacktrace!) : Container()
           ]));
     }
 

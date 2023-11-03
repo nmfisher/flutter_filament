@@ -7,8 +7,6 @@
   let moduleInstance;
   try {
     var Module = {};
-    console.log("document is " + document);
-    Module['canvas'] = document.getElementById("canvas");
     
     Module['instantiateWasm'] = function(imports, successCallback) {
       imports["env"]["loadResourceToBuffer"] = (out, length, callback, userData) => { 

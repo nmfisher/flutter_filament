@@ -41,15 +41,13 @@
 </head>
 <body>
   <div style="height:30px;background:blue;width:100%"></div>
-  <div style="height:100px; width:100px" id="flutter_host"></div>
-  <canvas id="drawHere"></canvas>
+<div style="height:500px; width:500px" id="flutter_host"></div>
+  <canvas id="canvas"></canvas>
   <script src="assets/assets/web/libflutter_filament_web.js"></script>
 
   <script>
+    
     window.addEventListener('load', function(ev) {
-      // WebAssembly.instantiateStreaming(fetch("assets/web/libflutter_filament_web.wasm"), {}).then(
-  // (obj) => {
-// 
       // Download main.dart.js
       _flutter.loader.loadEntrypoint({
         serviceWorker: {
@@ -61,8 +59,7 @@
           });
         }
       });
-    // });
   });
-  </script>
+  </script> 
 </body>
 </html>

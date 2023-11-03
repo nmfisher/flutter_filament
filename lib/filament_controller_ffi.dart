@@ -377,12 +377,6 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
-  Future setDimensions(ui.Rect rect, double pixelRatio) {
-    // TODO: implement setDimensions
-    throw UnimplementedError();
-  }
-
-  @override
   Future setFrameRate(int framerate) {
     // TODO: implement setFrameRate
     throw UnimplementedError();
@@ -504,12 +498,12 @@ class FilamentControllerFFI extends FilamentController {
   //   set_frame_interval_ffi(1.0 / framerate);
   // }
 
-  // @override
-  // Future setDimensions(Rect rect, double ratio) async {
-  //   this.rect.value = Rect.fromLTWH(rect.left, rect.top,
-  //       rect.width * _pixelRatio, rect.height * _pixelRatio);
-  //   _pixelRatio = ratio;
-  // }
+  @override
+  Future setDimensions(Rect rect, double ratio) async {
+    this.rect.value = Rect.fromLTWH(rect.left, rect.top,
+        rect.width * _pixelRatio, rect.height * _pixelRatio);
+    _pixelRatio = ratio;
+  }
 
   // @override
   // Future destroy() async {

@@ -39,7 +39,6 @@ final class FooChar extends AbiSpecificInteger {
 }
 
 void _loadResourceToBuffer(Pointer context) async {
-  print("CALL");
   // _queue.add(Tuple4(out, length, callback, userData));
   var bd = await rootBundle.load("assets/web/foo.txt");
 
@@ -62,7 +61,9 @@ void loadResourceToBuffer(Pointer context) {
 class FlutterFilamentPluginWeb {
   final _dummy = FooChar();
 
-  FlutterFilamentPluginWeb() {}
+  FlutterFilamentPluginWeb() {
+    flutter_filament_web_create_gl_context();
+  }
   static void registerWith(Registrar registrar) {
     final MethodChannel channel = MethodChannel("app.polyvox.filament/event",
         const StandardMethodCodec(), registrar.messenger);
@@ -73,7 +74,7 @@ class FlutterFilamentPluginWeb {
   Future handleMethodCall(MethodCall call) async {
     switch (call.method) {
       case "createTexture":
-        return [0, 0, 0];
+        return [0, 0, 0, 0];
         // var flutterTextureId = platformMessage[0];
 
         // // void* on iOS (pointer to pixel buffer), Android (pointer to native window), null on macOS/Windows

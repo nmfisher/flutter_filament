@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 set(PROJECT_NAME "flutter_filament")
 project(${PROJECT_NAME})
 
-set(EMCC_CFLAGS "-Wno-missing-field-initializers -Wno-deprecated-literal-operator -fPIC -pthread ")
+set(EMCC_CFLAGS "-Wno-missing-field-initializers -Wno-deprecated-literal-operator -fPIC -pthread --bind")
 
 # emcc -O3 -s MAIN_MODULE=1 -s EXPORT_NAME=libopus -s MODULARIZE=1 ./.libs/libopus.a -o ./emc_out/libopus.js
 
@@ -36,7 +36,7 @@ add_library(${PLUGIN_NAME} STATIC
   #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/TimeIt.cpp"
   #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Manipulator.cpp"
   #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Bookmark.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/FlutterFilamentWebResourceLoader.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/FlutterFilamentWebApi.cpp"
 )
 
 set_target_properties(${PLUGIN_NAME} PROPERTIES
