@@ -66,61 +66,65 @@ extern "C"
     return allocated;
   }
 
+  FLUTTER_PLUGIN_EXPORT void* flutter_filament_web_get_address(void** out) {
+    return *out;
+  }
+
   static std::thread* _t;
   
   
-  double red = 0;
-  double green = 0;
-  double blue = 0;
+  // double red = 0;
+  // double green = 0;
+  // double blue = 0;
 
-  EM_BOOL _looper(double time, void* userData) {
+  // EM_BOOL _looper(double time, void* userData) {
       
-      if(green >= 1.0) {
-        if(red >= 1.0) {
-          blue += 0.01;
-        } else {
-          red += 0.01;
-        }
-      } else { 
-        green += 0.01;
-      }
-      glClearColor(red, green, blue, 1);
-      glClear(GL_COLOR_BUFFER_BIT);
-      if(green + red + blue >= 3.0) {
-        return EM_FALSE;
-      }
-      return EM_TRUE;
-  }
+  //     if(green >= 1.0) {
+  //       if(red >= 1.0) {
+  //         blue += 0.01;
+  //       } else {
+  //         red += 0.01;
+  //       }
+  //     } else { 
+  //       green += 0.01;
+  //     }
+  //     glClearColor(red, green, blue, 1);
+  //     glClear(GL_COLOR_BUFFER_BIT);
+  //     if(green + red + blue >= 3.0) {
+  //       return EM_FALSE;
+  //     }
+  //     return EM_TRUE;
+  // }
 
   FLUTTER_PLUGIN_EXPORT EMSCRIPTEN_WEBGL_CONTEXT_HANDLE  flutter_filament_web_create_gl_context() {
     std::cout << "flutter_filament_web_create_gl_context called, is main runtime thread " << emscripten_is_main_runtime_thread() << std::endl;
     EmscriptenWebGLContextAttributes attr;
     emscripten_webgl_init_context_attributes(&attr);
     attr.explicitSwapControl = EM_FALSE;
+    attr.majorVersion = 2;
     // attr.renderViaOffscreenBackBuffer = EM_TRUE;
     // attr.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_DISALLOW;
     context = emscripten_webgl_create_context("#canvas", &attr);
-        std::cout << "created context  " << context << std::endl;
+        std::cout << "created context  " << context << " with major/minor ver " << attr.majorVersion << " " << attr.minorVersion << std::endl;
 
-    auto success = emscripten_webgl_make_context_current(context);
-    if(success != EMSCRIPTEN_RESULT_SUCCESS) {
-      std::cout << "failed to make context current  " << std::endl;
-      return 0;
-    }
-    emscripten_request_animation_frame_loop(_looper, nullptr);
-   
-    // std::cout << "currContext is " << currContext << std::endl;
-
-   
+    // auto success = emscripten_webgl_make_context_current(context);
+    // if(success != EMSCRIPTEN_RESULT_SUCCESS) {
+    //   std::cout << "failed to make context current  " << std::endl;
+    //   return 0;
+    // }
+    // emscripten_request_animation_frame_loop(_looper, nullptr);
+    // emscripten_cancel_main_loop();
+  
     return context;
   }
 
-  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_load_resource_fn(void* fn)
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_load_resource(const char* path)
   {
+
+    std::cout << "Loading " << path << std::endl;
 
     auto pendingCall = new PendingCall();
 
-    
    loadResourceToBuffer((void*)pendingCall);  
     _t = new std::thread([=] {
       
@@ -129,6 +133,15 @@ extern "C"
       std::cout << "wait finished " << std::endl;
       
     });
+  }
 
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_free_resource(ResourceBuffer rb) {
+    std::cout << "FREE" << std::endl;
+  }
+
+  FLUTTER_PLUGIN_EXPORT void* const flutter_filament_web_get_resource_loader_wrapper() {
+    auto resourceLoader = new ResourceLoaderWrapper((LoadFilamentResource)flutter_filament_web_load_resource, (FreeFilamentResource) flutter_filament_web_free_resource);
+    resourceLoader->load("assets/web/foo.txt");
+    return resourceLoader;
   }
 }

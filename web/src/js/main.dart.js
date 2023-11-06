@@ -19,8 +19,6 @@
       }
       fetch('assets/assets/web/libflutter_filament_web.wasm', { credentials: 'same-origin' }).then(async (response)  => {
         var result = await WebAssembly.instantiateStreaming(response, imports);
-        result.module["foo"] = "bar";
-        console.log(result.module);
         successCallback(result.instance,result.module);
       });
       return {};

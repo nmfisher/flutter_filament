@@ -171,8 +171,10 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
     _resizeTimer?.cancel();
 
     _resizeTimer = Timer(
-        Duration(milliseconds: (kReleaseMode || Platform.isWindows) ? 10 : 100),
-        () async {
+        Duration(
+            milliseconds: (kReleaseMode || (!kIsWeb && Platform.isWindows))
+                ? 10
+                : 100), () async {
       if (!mounted) {
         return;
       }
@@ -286,7 +288,8 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
 
           return Stack(children: [
             Positioned.fill(
-                child: Platform.isLinux || Platform.isWindows
+                child: kIsWeb == false &&
+                        (Platform.isLinux || Platform.isWindows)
                     ? Transform(
                         alignment: Alignment.center,
                         transform: Matrix4.rotationX(

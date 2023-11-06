@@ -40,8 +40,8 @@
 
 #endif /* __STDBOOL_H */
 
-#ifdef __APPLE__
-#include <stddef.h>
+#ifndef _WIN32
+#include <stddef.h> // does this work on Windows?
 #endif
 
 #include "ResourceBuffer.hpp"

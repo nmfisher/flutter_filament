@@ -61,9 +61,7 @@ void loadResourceToBuffer(Pointer context) {
 class FlutterFilamentPluginWeb {
   final _dummy = FooChar();
 
-  FlutterFilamentPluginWeb() {
-    flutter_filament_web_create_gl_context();
-  }
+  FlutterFilamentPluginWeb() {}
   static void registerWith(Registrar registrar) {
     final MethodChannel channel = MethodChannel("app.polyvox.filament/event",
         const StandardMethodCodec(), registrar.messenger);
@@ -74,15 +72,12 @@ class FlutterFilamentPluginWeb {
   Future handleMethodCall(MethodCall call) async {
     switch (call.method) {
       case "createTexture":
-        return [0, 0, 0, 0];
-        // var flutterTextureId = platformMessage[0];
-
-        // // void* on iOS (pointer to pixel buffer), Android (pointer to native window), null on macOS/Windows
-        // var surfaceAddress = platformMessage[1] as int? ?? 0;
-
-        // // null on iOS/Android, void* on MacOS (pointer to metal texture), GLuid on Windows/Linux
-        // var nativeTexture = platformMessage[2] as int? ?? 0;
-        return true;
+        var context = flutter_filament_web_create_gl_context();
+        return [0, 0, 0, context];
+      case "getResourceLoaderWrapper":
+        return flutter_filament_web_get_resource_loader_wrapper().address;
+      case "getRenderCallback":
+        return [0, 0];
       case "destroyTexture":
         return true;
     }

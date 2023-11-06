@@ -26,13 +26,14 @@ add_library(filament_shaders STATIC
 )
 
 add_library(${PLUGIN_NAME} STATIC
-  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/AssetManager.cpp"
-  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FilamentViewer.cpp"
-  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FlutterFilamentApi.cpp"
-  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/StreamBufferAdapter.cpp"
-  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/TimeIt.cpp"
-  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Manipulator.cpp"
-  #"${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Bookmark.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/AssetManager.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FilamentViewer.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FlutterFilamentApi.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FlutterFilamentFFIApi.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/StreamBufferAdapter.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/TimeIt.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Manipulator.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Bookmark.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/FlutterFilamentWebApi.cpp"
 )
 

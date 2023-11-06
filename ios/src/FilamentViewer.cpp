@@ -118,7 +118,7 @@ namespace polyvox
   FilamentViewer::FilamentViewer(const void *sharedContext, const ResourceLoaderWrapper *const resourceLoaderWrapper, void *const platform, const char *uberArchivePath)
       : _resourceLoaderWrapper(resourceLoaderWrapper)
   {
-
+    std::cout << "_resourceLoaderWrapper " << _resourceLoaderWrapper << std::endl;
     ASSERT_POSTCONDITION(_resourceLoaderWrapper != nullptr, "Resource loader must be non-null");
 
 #if TARGET_OS_IPHONE

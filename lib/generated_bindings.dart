@@ -7,15 +7,20 @@ import 'dart:ffi' as ffi;
 typedef EMSCRIPTEN_WEBGL_CONTEXT_HANDLE = ffi.Int;
 typedef EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART = int;
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: "_flutter_filament_web_set_load_resource_fn",
+@ffi.Native<ffi.Pointer<ffi.Void> Function()>(
+    symbol: "_flutter_filament_web_get_resource_loader_wrapper",
     assetId: "libflutter_filament")
-external void flutter_filament_web_set_load_resource_fn(
-    ffi.Pointer<ffi.Void> fn);
+external ffi.Pointer<ffi.Void>
+    flutter_filament_web_get_resource_loader_wrapper();
 
 @ffi.Native<ffi.IntPtr Function(ffi.Int32)>(
     symbol: "_flutter_filament_web_allocate", assetId: "libflutter_filament")
 external int flutter_filament_web_allocate(int length);
+
+@ffi.Native<ffi.IntPtr Function(ffi.Pointer<ffi.Pointer<ffi.Void>>)>(
+    symbol: "_flutter_filament_web_get_address", assetId: "libflutter_filament")
+external int flutter_filament_web_get_address(
+    ffi.Pointer<ffi.Pointer<ffi.Void>> out);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer, ffi.Int32, ffi.Int32)>(
     symbol: "_flutter_filament_web_set", assetId: "libflutter_filament")
@@ -65,11 +70,11 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 //   ffi.Pointer<ffi.Void> owner,
 // );
 
-// @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'get_asset_manager', assetId: 'libflutter_filament')
-// external ffi.Pointer<ffi.Void> get_asset_manager(
-//   ffi.Pointer<ffi.Void> viewer,
-// );
+@ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_get_asset_manager', assetId: 'libflutter_filament')
+external ffi.Pointer<ffi.Void> get_asset_manager(
+  ffi.Pointer<ffi.Void> viewer,
+);
 
 // @ffi.Native<
 //         ffi.Void Function(
@@ -239,45 +244,45 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 //   bool enabled,
 // );
 
-// @ffi.Native<
-//         ffi.Void Function(
-//             ffi.Pointer<ffi.Void>,
-//             ffi.Uint64,
-//             ffi.Pointer<ffi.Void>,
-//             ffi.Pointer<
-//                 ffi.NativeFunction<
-//                     ffi.Void Function(ffi.Pointer<ffi.Void> buf, ffi.Size size,
-//                         ffi.Pointer<ffi.Void> data)>>,
-//             ffi.Pointer<ffi.Void>)>(
-//     symbol: 'render', assetId: 'libflutter_filament')
-// external void render(
-//   ffi.Pointer<ffi.Void> viewer,
-//   int frameTimeInNanos,
-//   ffi.Pointer<ffi.Void> pixelBuffer,
-//   ffi.Pointer<
-//           ffi.NativeFunction<
-//               ffi.Void Function(ffi.Pointer<ffi.Void> buf, ffi.Size size,
-//                   ffi.Pointer<ffi.Void> data)>>
-//       callback,
-//   ffi.Pointer<ffi.Void> data,
-// );
+@ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>,
+            ffi.Uint64,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<
+                ffi.NativeFunction<
+                    ffi.Void Function(ffi.Pointer<ffi.Void> buf, ffi.Size size,
+                        ffi.Pointer<ffi.Void> data)>>,
+            ffi.Pointer<ffi.Void>)>(
+    symbol: '_render', assetId: 'libflutter_filament')
+external void render(
+  ffi.Pointer<ffi.Void> viewer,
+  int frameTimeInNanos,
+  ffi.Pointer<ffi.Void> pixelBuffer,
+  ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<ffi.Void> buf, ffi.Size size,
+                  ffi.Pointer<ffi.Void> data)>>
+      callback,
+  ffi.Pointer<ffi.Void> data,
+);
 
-// @ffi.Native<
-//         ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>,
-//             ffi.Uint32, ffi.Uint32)>(
-//     symbol: 'create_swap_chain', assetId: 'libflutter_filament')
-// external void create_swap_chain(
-//   ffi.Pointer<ffi.Void> viewer,
-//   ffi.Pointer<ffi.Void> window,
-//   int width,
-//   int height,
-// );
+@ffi.Native<
+        ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>,
+            ffi.Uint32, ffi.Uint32)>(
+    symbol: '_create_swap_chain', assetId: 'libflutter_filament')
+external void create_swap_chain(
+  ffi.Pointer<ffi.Void> viewer,
+  ffi.Pointer<ffi.Void> window,
+  int width,
+  int height,
+);
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'destroy_swap_chain', assetId: 'libflutter_filament')
-// external void destroy_swap_chain(
-//   ffi.Pointer<ffi.Void> viewer,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_destroy_swap_chain', assetId: 'libflutter_filament')
+external void destroy_swap_chain(
+  ffi.Pointer<ffi.Void> viewer,
+);
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>(
 //     symbol: 'set_frame_interval', assetId: 'libflutter_filament')
@@ -689,70 +694,84 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 //     symbol: 'ios_dummy', assetId: 'libflutter_filament')
 // external void ios_dummy();
 
-// @ffi.Native<
-//         ffi.Pointer<ffi.Void> Function(
-//             ffi.Pointer<ffi.Void>,
-//             ffi.Pointer<ffi.Void>,
-//             ffi.Pointer<ffi.Char>,
-//             ffi.Pointer<ResourceLoaderWrapper>,
-//             ffi
-//                 .Pointer<
-//                     ffi.NativeFunction<
-//                         ffi.Void Function(
-//                             ffi.Pointer<ffi.Void> renderCallbackOwner)>>,
-//             ffi.Pointer<ffi.Void>)>(
-//     symbol: 'create_filament_viewer_ffi', assetId: 'libflutter_filament')
-// external ffi.Pointer<ffi.Void> create_filament_viewer_ffi(
-//   ffi.Pointer<ffi.Void> context,
-//   ffi.Pointer<ffi.Void> platform,
-//   ffi.Pointer<ffi.Char> uberArchivePath,
-//   ffi.Pointer<ResourceLoaderWrapper> loader,
-//   ffi.Pointer<
-//           ffi.NativeFunction<
-//               ffi.Void Function(ffi.Pointer<ffi.Void> renderCallbackOwner)>>
-//       renderCallback,
-//   ffi.Pointer<ffi.Void> renderCallbackOwner,
-// );
+@ffi.Native<
+        ffi.Pointer<ffi.Void> Function(
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Void>,
+            ffi
+                .Pointer<
+                    ffi.NativeFunction<
+                        ffi.Void Function(
+                            ffi.Pointer<ffi.Void> renderCallbackOwner)>>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Pointer<ffi.Void>> out)>(
+    symbol: '_create_filament_viewer_ffi', assetId: 'libflutter_filament')
+external ffi.Pointer<ffi.Void> create_filament_viewer_ffi(
+    ffi.Pointer<ffi.Void> context,
+    ffi.Pointer<ffi.Void> platform,
+    ffi.Pointer<ffi.Char> uberArchivePath,
+    ffi.Pointer<ffi.Void> loader,
+    ffi.Pointer<
+            ffi.NativeFunction<
+                ffi.Void Function(ffi.Pointer<ffi.Void> renderCallbackOwner)>>
+        renderCallback,
+    ffi.Pointer<ffi.Void> renderCallbackOwner,
+    ffi.Pointer<ffi.Pointer<ffi.Void>> out);
 
-// @ffi.Native<
-//         ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>,
-//             ffi.Uint32, ffi.Uint32)>(
-//     symbol: 'create_swap_chain_ffi', assetId: 'libflutter_filament')
-// external void create_swap_chain_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-//   ffi.Pointer<ffi.Void> surface,
-//   int width,
-//   int height,
-// );
+@ffi.Native<
+    ffi.Pointer<ffi.Void> Function(
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<ffi.Char>,
+    )>(symbol: '_create_filament_viewer', assetId: 'libflutter_filament')
+external ffi.Pointer<ffi.Void> create_filament_viewer(
+    ffi.Pointer<ffi.Void> context,
+    ffi.Pointer<ffi.Void> loader,
+    ffi.Pointer<ffi.Void> platform,
+    ffi.Pointer<ffi.Char> uberArchivePath);
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'destroy_swap_chain_ffi', assetId: 'libflutter_filament')
-// external void destroy_swap_chain_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-// );
+@ffi.Native<
+        ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>,
+            ffi.Uint32, ffi.Uint32)>(
+    symbol: '_create_swap_chain_ffi', assetId: 'libflutter_filament')
+external void create_swap_chain_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+  ffi.Pointer<ffi.Void> surface,
+  int width,
+  int height,
+);
 
-// @ffi.Native<
-//         ffi.Void Function(
-//             ffi.Pointer<ffi.Void>, ffi.IntPtr, ffi.Uint32, ffi.Uint32)>(
-//     symbol: 'create_render_target_ffi', assetId: 'libflutter_filament')
-// external void create_render_target_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-//   int nativeTextureId,
-//   int width,
-//   int height,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_destroy_swap_chain_ffi', assetId: 'libflutter_filament')
+external void destroy_swap_chain_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+);
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'destroy_filament_viewer_ffi', assetId: 'libflutter_filament')
-// external void destroy_filament_viewer_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-// );
+@ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>, ffi.IntPtr, ffi.Uint32, ffi.Uint32)>(
+    symbol: '_create_render_target_ffi', assetId: 'libflutter_filament')
+external void create_render_target_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+  int nativeTextureId,
+  int width,
+  int height,
+);
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'render_ffi', assetId: 'libflutter_filament')
-// external void render_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_destroy_filament_viewer_ffi', assetId: 'libflutter_filament')
+external void destroy_filament_viewer_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_render_ffi', assetId: 'libflutter_filament')
+external void render_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+);
 
 // @ffi.Native<FilamentRenderCallback Function(FilamentRenderCallback)>(
 //     symbol: 'make_render_callback_fn_pointer', assetId: 'libflutter_filament')
@@ -760,30 +779,30 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 //   FilamentRenderCallback arg0,
 // );
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
-//     symbol: 'set_rendering_ffi', assetId: 'libflutter_filament')
-// external void set_rendering_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-//   bool rendering,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
+    symbol: '_set_rendering_ffi', assetId: 'libflutter_filament')
+external void set_rendering_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+  bool rendering,
+);
 
-// @ffi.Native<ffi.Void Function(ffi.Float)>(
-//     symbol: 'set_frame_interval_ffi', assetId: 'libflutter_filament')
-// external void set_frame_interval_ffi(
-//   double frameInterval,
-// );
+@ffi.Native<ffi.Void Function(ffi.Float)>(
+    symbol: '_set_frame_interval_ffi', assetId: 'libflutter_filament')
+external void set_frame_interval_ffi(
+  double frameInterval,
+);
 
-// @ffi.Native<
-//         ffi.Void Function(
-//             ffi.Pointer<ffi.Void>, ffi.Uint32, ffi.Uint32, ffi.Float)>(
-//     symbol: 'update_viewport_and_camera_projection_ffi',
-//     assetId: 'libflutter_filament')
-// external void update_viewport_and_camera_projection_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-//   int width,
-//   int height,
-//   double scaleFactor,
-// );
+@ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>, ffi.Uint32, ffi.Uint32, ffi.Float)>(
+    symbol: '_update_viewport_and_camera_projection_ffi',
+    assetId: 'libflutter_filament')
+external void update_viewport_and_camera_projection_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+  int width,
+  int height,
+  double scaleFactor,
+);
 
 // @ffi.Native<
 //         ffi.Void Function(
@@ -838,12 +857,12 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 //   double strength,
 // );
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)>(
-//     symbol: 'load_skybox_ffi', assetId: 'libflutter_filament')
-// external void load_skybox_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-//   ffi.Pointer<ffi.Char> skyboxPath,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)>(
+    symbol: '_load_skybox_ffi', assetId: 'libflutter_filament')
+external void load_skybox_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+  ffi.Pointer<ffi.Char> skyboxPath,
+);
 
 // @ffi.Native<
 //     ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
@@ -854,11 +873,11 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 //   double intensity,
 // );
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'remove_skybox_ffi', assetId: 'libflutter_filament')
-// external void remove_skybox_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_remove_skybox_ffi', assetId: 'libflutter_filament')
+external void remove_skybox_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+);
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
 //     symbol: 'remove_ibl_ffi', assetId: 'libflutter_filament')

@@ -10,6 +10,16 @@
 #include <mutex>
 #include <thread>
 
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#include <emscripten/threading.h>
+#include <emscripten/val.h>
+#include <GL/gl.h>
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#include <emscripten/threading.h>
+#include <emscripten/val.h>
+
 using namespace polyvox;
 
 class RenderLoop {
@@ -42,20 +52,30 @@ public:
     _t->join();
   }
 
-  void *const createViewer(void *const context, void *const platform,
+
+  void createViewer(void *const context, void *const platform,
                            const char *uberArchivePath,
                            const ResourceLoaderWrapper *const loader,
-                           void (*renderCallback)(void *), void *const owner) {
+                           void (*renderCallback)(void *), void *const renderCallbackOwner, void** out) {
+    // emscripten_pause_main_loop();
+    auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
+    if(success != EMSCRIPTEN_RESULT_SUCCESS) {
+      std::cout << "failed to make context current  " << std::endl;
+      return;
+    }
+
     _renderCallback = renderCallback;
-    _renderCallbackOwner = owner;
+    _renderCallbackOwner = renderCallbackOwner;
     std::packaged_task<FilamentViewer *()> lambda([&]() mutable {
       std::thread::id this_id = std::this_thread::get_id();
-      return new FilamentViewer(context, loader, platform, uberArchivePath);
+      _viewer = new FilamentViewer(context, loader, platform, uberArchivePath);
+      *out = _viewer;
+      return _viewer;
     });
     auto fut = add_task(lambda);
-    fut.wait();
-    _viewer = fut.get();
-    return (void *const)_viewer;
+    if(!out) {
+      fut.wait();
+    }
   }
 
   void destroyViewer() {
@@ -113,16 +133,18 @@ extern "C" {
 
 static RenderLoop *_rl;
 
-FLUTTER_PLUGIN_EXPORT void *const create_filament_viewer_ffi(
+FLUTTER_PLUGIN_EXPORT void create_filament_viewer_ffi(
     void *const context, void *const platform, const char *uberArchivePath,
     const ResourceLoaderWrapper *const loader,
     void (*renderCallback)(void *const renderCallbackOwner),
-    void *const renderCallbackOwner) {
+    void *const renderCallbackOwner, void** out) {
+
+      loader->load("assets/web/foo.txt");
   if (!_rl) {
     _rl = new RenderLoop();
   }
-  return _rl->createViewer(context, platform, uberArchivePath, loader,
-                           renderCallback, renderCallbackOwner);
+  _rl->createViewer(context, platform, uberArchivePath, loader,
+                           renderCallback, renderCallbackOwner, out);
 }
 
 FLUTTER_PLUGIN_EXPORT void destroy_filament_viewer_ffi(void *const viewer) {
@@ -137,7 +159,7 @@ FLUTTER_PLUGIN_EXPORT void create_swap_chain_ffi(void *const viewer,
   std::packaged_task<void()> lambda(
       [&]() mutable { create_swap_chain(viewer, surface, width, height); });
   auto fut = _rl->add_task(lambda);
-  fut.wait();
+  // fut.wait();
 }
 
 FLUTTER_PLUGIN_EXPORT void destroy_swap_chain_ffi(void *const viewer) {
@@ -169,7 +191,7 @@ FLUTTER_PLUGIN_EXPORT void update_viewport_and_camera_projection_ffi(
     update_viewport_and_camera_projection(viewer, width, height, scaleFactor);
   });
   auto fut = _rl->add_task(lambda);
-  fut.wait();
+  // fut.wait();
 }
 
 FLUTTER_PLUGIN_EXPORT void set_rendering_ffi(void *const viewer,
@@ -264,7 +286,7 @@ FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void *const viewer,
                                            const char *skyboxPath) {
   std::packaged_task<void()> lambda([&] { load_skybox(viewer, skyboxPath); });
   auto fut = _rl->add_task(lambda);
-  fut.wait();
+  // fut.wait();
 }
 FLUTTER_PLUGIN_EXPORT void load_ibl_ffi(void *const viewer, const char *iblPath,
                                         float intensity) {

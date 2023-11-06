@@ -164,7 +164,6 @@ FLUTTER_PLUGIN_EXPORT void create_render_target_ffi(void *const viewer,
 FLUTTER_PLUGIN_EXPORT void update_viewport_and_camera_projection_ffi(
     void *const viewer, const uint32_t width, const uint32_t height,
     const float scaleFactor) {
-  Log("Update viewport  %dx%d", width, height);
   std::packaged_task<void()> lambda([&]() mutable {
     update_viewport_and_camera_projection(viewer, width, height, scaleFactor);
   });
