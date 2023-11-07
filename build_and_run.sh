@@ -7,9 +7,7 @@ export EMCC_CFLAGS="-Wno-missing-field-initializers -Wno-deprecated-literal-oper
 BASE_DIR=$(realpath $(dirname $0))
 cd $BASE_DIR/web/build 
 
-# BINARYEN_ROOT=/opt/homebrew//Cellar/binaryen/116 EM_LLVM_ROOT=/Users/nickfisher/Downloads/clang+llvm-17.0.4-arm64-apple-darwin22.0/bin  
 emmake make 
-# BINARYEN_ROOT=/opt/homebrew//Cellar/binaryen/116 EM_LLVM_ROOT=/Users/nickfisher/Downloads/clang+llvm-17.0.4-arm64-apple-darwin22.0/bin  
 emcc --bind -std=c++17 -g -s ALLOW_TABLE_GROWTH=1 \
 -s EXPORT_NAME=libflutter_filament -sMAIN_MODULE -sMODULARIZE -sTOTAL_MEMORY=1024MB \
 -s ERROR_ON_UNDEFINED_SYMBOLS=0  -sEXPORTED_RUNTIME_METHODS=wasmExports,wasmTable \
