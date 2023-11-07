@@ -38,10 +38,9 @@ final class FooChar extends AbiSpecificInteger {
   const FooChar();
 }
 
-void _loadResourceToBuffer(Pointer context) async {
+void loadResourceToBuffer(String path, Pointer context) async {
   // _queue.add(Tuple4(out, length, callback, userData));
-  var bd = await rootBundle.load("assets/web/foo.txt");
-
+  var bd = await rootBundle.load(path);
   var dataPtr = Pointer<Uint8>.fromAddress(
       flutter_filament_web_allocate(bd.lengthInBytes));
 
@@ -50,11 +49,6 @@ void _loadResourceToBuffer(Pointer context) async {
   }
   flutter_filament_web_load_resource_callback(
       dataPtr, bd.lengthInBytes, context);
-}
-
-@pragma("wasm:export")
-void loadResourceToBuffer(Pointer context) {
-  _loadResourceToBuffer(context);
 }
 
 /// A web implementation of the FlutterFilamentPlatform of the FlutterFilament plugin.

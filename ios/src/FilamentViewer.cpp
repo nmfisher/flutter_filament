@@ -25,6 +25,7 @@
 
 #include <backend/DriverEnums.h>
 #include <backend/platforms/OpenGLPlatform.h>
+#include <backend/platforms/PlatformWebGL.h>
 #include <filament/ColorGrading.h>
 #include <filament/Engine.h>
 #include <filament/IndexBuffer.h>
@@ -118,7 +119,6 @@ namespace polyvox
   FilamentViewer::FilamentViewer(const void *sharedContext, const ResourceLoaderWrapper *const resourceLoaderWrapper, void *const platform, const char *uberArchivePath)
       : _resourceLoaderWrapper(resourceLoaderWrapper)
   {
-    std::cout << "_resourceLoaderWrapper " << _resourceLoaderWrapper << std::endl;
     ASSERT_POSTCONDITION(_resourceLoaderWrapper != nullptr, "Resource loader must be non-null");
 
 #if TARGET_OS_IPHONE
@@ -128,7 +128,7 @@ namespace polyvox
     ASSERT_POSTCONDITION(platform == nullptr, "Custom Platform not supported on macOS");
     _engine = Engine::create(Engine::Backend::METAL);
 #else
-    _engine = Engine::create(Engine::Backend::OPENGL, (backend::Platform *)platform, (void *)sharedContext, nullptr);
+    _engine = Engine::create(Engine::Backend::OPENGL, (backend::Platform *)new filament::backend::PlatformWebGL(), (void *)sharedContext, nullptr);
 #endif
 
     _renderer = _engine->createRenderer();
@@ -156,7 +156,12 @@ namespace polyvox
 
     Log("Set tone mapping");
 
-    setBloom(0.6f);
+    decltype(_view->getBloomOptions()) opts;
+    opts.enabled = false;
+
+    _view->setBloomOptions(opts);
+
+    // setBloom(0.6f);
     Log("Set bloom");
 
     _view->setScene(_scene);
@@ -1012,10 +1017,11 @@ namespace polyvox
       {
         _renderer->render(_view);
         _renderer->endFrame();
+        _engine->execute();
       }
       else
       {
-        // std::cout << "Skipped" << std::endl;
+        std::cout << "Skipped" << std::endl;
         // skipped frame
       }
     // }

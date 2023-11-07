@@ -303,51 +303,51 @@ external void destroy_swap_chain(
 //   double scaleFactor,
 // );
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'scroll_begin', assetId: 'libflutter_filament')
-// external void scroll_begin(
-//   ffi.Pointer<ffi.Void> viewer,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_scroll_begin', assetId: 'libflutter_filament')
+external void scroll_begin(
+  ffi.Pointer<ffi.Void> viewer,
+);
 
-// @ffi.Native<
-//     ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float,
-//         ffi.Float)>(symbol: 'scroll_update', assetId: 'libflutter_filament')
-// external void scroll_update(
-//   ffi.Pointer<ffi.Void> viewer,
-//   double x,
-//   double y,
-//   double z,
-// );
+@ffi.Native<
+    ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float,
+        ffi.Float)>(symbol: '_scroll_update', assetId: 'libflutter_filament')
+external void scroll_update(
+  ffi.Pointer<ffi.Void> viewer,
+  double x,
+  double y,
+  double z,
+);
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'scroll_end', assetId: 'libflutter_filament')
-// external void scroll_end(
-//   ffi.Pointer<ffi.Void> viewer,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_scroll_end', assetId: 'libflutter_filament')
+external void scroll_end(
+  ffi.Pointer<ffi.Void> viewer,
+);
 
-// @ffi.Native<
-//     ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float,
-//         ffi.Bool)>(symbol: 'grab_begin', assetId: 'libflutter_filament')
-// external void grab_begin(
-//   ffi.Pointer<ffi.Void> viewer,
-//   double x,
-//   double y,
-//   bool pan,
-// );
+@ffi.Native<
+    ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float,
+        ffi.Bool)>(symbol: '_grab_begin', assetId: 'libflutter_filament')
+external void grab_begin(
+  ffi.Pointer<ffi.Void> viewer,
+  double x,
+  double y,
+  bool pan,
+);
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float)>(
-//     symbol: 'grab_update', assetId: 'libflutter_filament')
-// external void grab_update(
-//   ffi.Pointer<ffi.Void> viewer,
-//   double x,
-//   double y,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float)>(
+    symbol: '_grab_update', assetId: 'libflutter_filament')
+external void grab_update(
+  ffi.Pointer<ffi.Void> viewer,
+  double x,
+  double y,
+);
 
-// @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'grab_end', assetId: 'libflutter_filament')
-// external void grab_end(
-//   ffi.Pointer<ffi.Void> viewer,
-// );
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_grab_end', assetId: 'libflutter_filament')
+external void grab_end(
+  ffi.Pointer<ffi.Void> viewer,
+);
 
 // @ffi.Native<
 //     ffi.Void Function(
@@ -864,14 +864,14 @@ external void load_skybox_ffi(
   ffi.Pointer<ffi.Char> skyboxPath,
 );
 
-// @ffi.Native<
-//     ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-//         ffi.Float)>(symbol: 'load_ibl_ffi', assetId: 'libflutter_filament')
-// external void load_ibl_ffi(
-//   ffi.Pointer<ffi.Void> viewer,
-//   ffi.Pointer<ffi.Char> iblPath,
-//   double intensity,
-// );
+@ffi.Native<
+    ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
+        ffi.Float)>(symbol: '_load_ibl_ffi', assetId: 'libflutter_filament')
+external void load_ibl_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+  ffi.Pointer<ffi.Char> iblPath,
+  double intensity,
+);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
     symbol: '_remove_skybox_ffi', assetId: 'libflutter_filament')
@@ -925,24 +925,24 @@ external void remove_skybox_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
 
-// @ffi.Native<
-//     EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-//         ffi.Bool)>(symbol: 'load_glb_ffi', assetId: 'libflutter_filament')
-// external int load_glb_ffi(
-//   ffi.Pointer<ffi.Void> assetManager,
-//   ffi.Pointer<ffi.Char> assetPath,
-//   bool unlit,
-// );
+@ffi.Native<
+    EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
+        ffi.Bool)>(symbol: '_load_glb_ffi', assetId: 'libflutter_filament')
+external int load_glb_ffi(
+  ffi.Pointer<ffi.Void> assetManager,
+  ffi.Pointer<ffi.Char> assetPath,
+  bool unlit,
+);
 
-// @ffi.Native<
-//         EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-//             ffi.Pointer<ffi.Char>)>(
-//     symbol: 'load_gltf_ffi', assetId: 'libflutter_filament')
-// external int load_gltf_ffi(
-//   ffi.Pointer<ffi.Void> assetManager,
-//   ffi.Pointer<ffi.Char> assetPath,
-//   ffi.Pointer<ffi.Char> relativePath,
-// );
+@ffi.Native<
+        EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>)>(
+    symbol: '_load_gltf_ffi', assetId: 'libflutter_filament')
+external int load_gltf_ffi(
+  ffi.Pointer<ffi.Void> assetManager,
+  ffi.Pointer<ffi.Char> assetPath,
+  ffi.Pointer<ffi.Char> relativePath,
+);
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
 //     symbol: 'remove_asset_ffi', assetId: 'libflutter_filament')
@@ -1269,7 +1269,7 @@ external void remove_skybox_ffi(
 
 // /// This header replicates most of the methods in FlutterFilamentApi.h, and is only intended to be used to generate client FFI bindings.
 // /// The intention is that calling one of these methods will call its respective method in FlutterFilamentApi.h, but wrapped in some kind of thread runner to ensure thread safety.
-// typedef EntityId = ffi.Int32;
+typedef EntityId = ffi.Int32;
 // typedef DartEntityId = int;
 // typedef FilamentRenderCallback
 //     = ffi.Pointer<ffi.NativeFunction<FilamentRenderCallbackFunction>>;

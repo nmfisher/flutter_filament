@@ -188,44 +188,8 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
-  Future<FilamentEntity> loadGlb(String path, {bool unlit = false}) {
-    // TODO: implement loadGlb
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<FilamentEntity> loadGltf(String path, String relativeResourcePath) {
-    // TODO: implement loadGltf
-    throw UnimplementedError();
-  }
-
-  @override
-  Future loadIbl(String lightingPath, {double intensity = 30000}) {
-    // TODO: implement loadIbl
-    throw UnimplementedError();
-  }
-
-  @override
   Future moveCameraToAsset(FilamentEntity entity) {
     // TODO: implement moveCameraToAsset
-    throw UnimplementedError();
-  }
-
-  @override
-  Future panEnd() {
-    // TODO: implement panEnd
-    throw UnimplementedError();
-  }
-
-  @override
-  Future panStart(double x, double y) {
-    // TODO: implement panStart
-    throw UnimplementedError();
-  }
-
-  @override
-  Future panUpdate(double x, double y) {
-    // TODO: implement panUpdate
     throw UnimplementedError();
   }
 
@@ -271,24 +235,6 @@ class FilamentControllerFFI extends FilamentController {
   @override
   Future reveal(FilamentEntity entity, String meshName) {
     // TODO: implement reveal
-    throw UnimplementedError();
-  }
-
-  @override
-  Future rotateEnd() {
-    // TODO: implement rotateEnd
-    throw UnimplementedError();
-  }
-
-  @override
-  Future rotateStart(double x, double y) {
-    // TODO: implement rotateStart
-    throw UnimplementedError();
-  }
-
-  @override
-  Future rotateUpdate(double x, double y) {
-    // TODO: implement rotateUpdate
     throw UnimplementedError();
   }
 
@@ -445,24 +391,6 @@ class FilamentControllerFFI extends FilamentController {
   @override
   Future transformToUnitCube(FilamentEntity entity) {
     // TODO: implement transformToUnitCube
-    throw UnimplementedError();
-  }
-
-  @override
-  Future zoomBegin() {
-    // TODO: implement zoomBegin
-    throw UnimplementedError();
-  }
-
-  @override
-  Future zoomEnd() {
-    // TODO: implement zoomEnd
-    throw UnimplementedError();
-  }
-
-  @override
-  Future zoomUpdate(double x, double y, double z) {
-    // TODO: implement zoomUpdate
     throw UnimplementedError();
   }
 
@@ -817,13 +745,20 @@ class FilamentControllerFFI extends FilamentController {
     load_skybox_ffi(_viewer, ptr.cast<Char>());
   }
 
-  // @override
-  // Future loadIbl(String lightingPath, {double intensity = 30000}) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   load_ibl_ffi(_viewer, lightingPath.toNativeUtf8().cast<Char>(), intensity);
-  // }
+  @override
+  Future loadIbl(String lightingPath, {double intensity = 30000}) async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    var ptr = Pointer<Void>.fromAddress(
+        flutter_filament_web_allocate(lightingPath.length + 1));
+    var units = utf8.encode(lightingPath);
+    for (int i = 0; i < lightingPath.length; i++) {
+      flutter_filament_web_set(ptr, i, units[i]);
+    }
+
+    load_ibl_ffi(_viewer, ptr.cast<Char>(), intensity);
+  }
 
   @override
   Future removeSkybox() async {
@@ -877,87 +812,107 @@ class FilamentControllerFFI extends FilamentController {
   //   clear_lights_ffi(_viewer);
   // }
 
-  // @override
-  // Future<FilamentEntity> loadGlb(String path, {bool unlit = false}) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   if (unlit) {
-  //     throw Exception("Not yet implemented");
-  //   }
-  //   var asset =
-  //       load_glb_ffi(_assetManager, path.toNativeUtf8().cast<Char>(), unlit);
-  //   if (asset == _FILAMENT_ASSET_ERROR) {
-  //     throw Exception("An error occurred loading the asset at $path");
-  //   }
-  //   return asset;
-  // }
+  @override
+  Future<FilamentEntity> loadGlb(String path, {bool unlit = false}) async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    if (unlit) {
+      throw Exception("Not yet implemented");
+    }
+    var ptr = Pointer<Void>.fromAddress(
+        flutter_filament_web_allocate(path.length + 1));
+    var units = utf8.encode(path);
+    for (int i = 0; i < path.length; i++) {
+      flutter_filament_web_set(ptr, i, units[i]);
+    }
 
-  // @override
-  // Future<FilamentEntity> loadGltf(String path, String relativeResourcePath,
-  //     {bool force = false}) async {
-  //   if (Platform.isWindows && !force) {
-  //     throw Exception(
-  //         "loadGltf has a race condition on Windows which is likely to crash your program. If you really want to try, pass force=true to loadGltf");
-  //   }
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   var asset = load_gltf_ffi(_assetManager, path.toNativeUtf8().cast<Char>(),
-  //       relativeResourcePath.toNativeUtf8().cast<Char>());
-  //   if (asset == _FILAMENT_ASSET_ERROR) {
-  //     throw Exception("An error occurred loading the asset at $path");
-  //   }
-  //   return asset;
-  // }
+    var asset = load_glb_ffi(_assetManager, ptr.cast<Char>(), unlit);
+    if (asset == _FILAMENT_ASSET_ERROR) {
+      throw Exception("An error occurred loading the asset at $path");
+    }
+    return asset;
+  }
 
-  // @override
-  // Future panStart(double x, double y) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   grab_begin(_viewer, x * _pixelRatio, y * _pixelRatio, true);
-  // }
+  @override
+  Future<FilamentEntity> loadGltf(String path, String relativeResourcePath,
+      {bool force = false}) async {
+    if (!kIsWeb && Platform.isWindows && !force) {
+      throw Exception(
+          "loadGltf has a race condition on Windows which is likely to crash your program. If you really want to try, pass force=true to loadGltf");
+    }
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    var ptr = Pointer<Void>.fromAddress(
+        flutter_filament_web_allocate(path.length + 1));
+    var units = utf8.encode(path);
+    for (int i = 0; i < path.length; i++) {
+      flutter_filament_web_set(ptr, i, units[i]);
+    }
 
-  // @override
-  // Future panUpdate(double x, double y) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   grab_update(_viewer, x * _pixelRatio, y * _pixelRatio);
-  // }
+    var rrpPtr = Pointer<Void>.fromAddress(
+        flutter_filament_web_allocate(relativeResourcePath.length + 1));
+    var rrpUnits = utf8.encode(relativeResourcePath);
+    for (int i = 0; i < relativeResourcePath.length; i++) {
+      flutter_filament_web_set(rrpPtr, i, rrpUnits[i]);
+    }
 
-  // @override
-  // Future panEnd() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   grab_end(_viewer);
-  // }
+    var asset =
+        load_gltf_ffi(_assetManager, ptr.cast<Char>(), rrpPtr.cast<Char>());
+    if (asset == _FILAMENT_ASSET_ERROR) {
+      throw Exception("An error occurred loading the asset at $path");
+    }
+    return asset;
+  }
 
-  // @override
-  // Future rotateStart(double x, double y) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   grab_begin(_viewer, x * _pixelRatio, y * _pixelRatio, false);
-  // }
+  @override
+  Future panStart(double x, double y) async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    grab_begin(_viewer, x * _pixelRatio, y * _pixelRatio, true);
+  }
 
-  // @override
-  // Future rotateUpdate(double x, double y) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   grab_update(_viewer, x * _pixelRatio, y * _pixelRatio);
-  // }
+  @override
+  Future panUpdate(double x, double y) async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    grab_update(_viewer, x * _pixelRatio, y * _pixelRatio);
+  }
 
-  // @override
-  // Future rotateEnd() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   grab_end(_viewer);
-  // }
+  @override
+  Future panEnd() async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    grab_end(_viewer);
+  }
+
+  @override
+  Future rotateStart(double x, double y) async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    grab_begin(_viewer, x * _pixelRatio, y * _pixelRatio, false);
+  }
+
+  @override
+  Future rotateUpdate(double x, double y) async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    grab_update(_viewer, x * _pixelRatio, y * _pixelRatio);
+  }
+
+  @override
+  Future rotateEnd() async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    grab_end(_viewer);
+  }
 
   // @override
   // Future setMorphTargetWeights(
@@ -1118,29 +1073,29 @@ class FilamentControllerFFI extends FilamentController {
   //   // clear_assets_ffi(_viewer);
   // }
 
-  // @override
-  // Future zoomBegin() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // scroll_begin(_viewer);
-  // }
+  @override
+  Future zoomBegin() async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    scroll_begin(_viewer);
+  }
 
-  // @override
-  // Future zoomUpdate(double x, double y, double z) async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // scroll_update(_viewer, x, y, z);
-  // }
+  @override
+  Future zoomUpdate(double x, double y, double z) async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    scroll_update(_viewer, x, y, z);
+  }
 
-  // @override
-  // Future zoomEnd() async {
-  //   if (_viewer == nullptr) {
-  //     throw Exception("No viewer available, ignoring");
-  //   }
-  //   // scroll_end(_viewer);
-  // }
+  @override
+  Future zoomEnd() async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    scroll_end(_viewer);
+  }
 
   // @override
   // Future playAnimation(FilamentEntity asset, int index,

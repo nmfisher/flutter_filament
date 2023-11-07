@@ -31,8 +31,10 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        color: Colors.transparent,
         // showPerformanceOverlay: true,
-        home: Scaffold(body: ExampleWidget()));
+        home: Scaffold(
+            backgroundColor: Colors.transparent, body: ExampleWidget()));
   }
 }
 
@@ -194,8 +196,8 @@ class _ExampleWidgetState extends State<ExampleWidget> {
           _item(() async {
             _shapes =
                 await _filamentController!.loadGlb('assets/shapes/shapes.glb');
-            _animations =
-                await _filamentController!.getAnimationNames(_shapes!);
+            // _animations =
+            //     await _filamentController!.getAnimationNames(_shapes!);
             setState(() {});
           }, 'load shapes GLB'),
           _item(() async {
@@ -376,7 +378,17 @@ class _ExampleWidgetState extends State<ExampleWidget> {
               "assets/BusterDrone",
             );
             await _filamentController!.playAnimation(_buster!, 0, loop: true);
-          }, "load buster")
+          }, "load buster"),
+          _item(() async {
+            if (_buster != null) {
+              await _filamentController!.removeAsset(_buster!);
+            }
+            _buster =
+                await (_filamentController as FilamentControllerFFI).loadGltf(
+              "assets/FlightHelmet/FlightHelmet.gltf",
+              "assets/FlightHelmet",
+            );
+          }, "load flight helmet"),
         ]);
       }
 
@@ -424,7 +436,7 @@ class _ExampleWidgetState extends State<ExampleWidget> {
 }
 
  // _item(24 () async { 'rotate by pi around Y axis'),
-                      // _item(5 () async { 'load flight helmet'),
+                      
 
                       // _item(7 () async { 'set all weights to 1'),
                       // _item(8 () async { 'set all weights to 0'),

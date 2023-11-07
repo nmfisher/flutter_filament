@@ -112,13 +112,16 @@ EntityId AssetManager::loadGltf(const char *uri,
     }
     
     // load resources synchronously
-    if (!_gltfResourceLoader->loadResources(asset)) {
+    if (!_gltfResourceLoader->asyncBeginLoad(asset)) {
         Log("Unknown error loading glTF asset");
         _resourceLoaderWrapper->free(rbuf);
         for(auto& rb : resourceBuffers) {
             _resourceLoaderWrapper->free(rb);
         }
         return 0;
+    }
+    while(_gltfResourceLoader->asyncGetLoadProgress() < 1.0f) {
+        _gltfResourceLoader->asyncUpdateLoad();
     }
     const utils::Entity *entities = asset->getEntities();
         
@@ -166,11 +169,17 @@ EntityId AssetManager::loadGlb(const char *uri, bool unlit) {
     int entityCount = asset->getEntityCount();
     
     _scene->addEntities(asset->getEntities(), entityCount);
+
     
-    if (!_gltfResourceLoader->loadResources(asset)) {
+    
+    if (!_gltfResourceLoader->asyncBeginLoad(asset)) {
         Log("Unknown error loading glb asset");
         _resourceLoaderWrapper->free(rbuf);
         return 0;
+    }
+
+    while(_gltfResourceLoader->asyncGetLoadProgress() < 1.0f) {
+        _gltfResourceLoader->asyncUpdateLoad();
     }
         
     const Entity *entities = asset->getEntities();

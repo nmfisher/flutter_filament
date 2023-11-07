@@ -9,16 +9,22 @@
 #include <functional>
 #include <mutex>
 #include <thread>
+#include <stdlib.h>
 
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
+#define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
+#include <GL/glext.h>
+
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
+
+#include <pthread.h>
 
 using namespace polyvox;
 
@@ -53,36 +59,59 @@ public:
   }
 
 
-  void createViewer(void *const context, void *const platform,
+  void* createViewer(void *const context, void *const platform,
                            const char *uberArchivePath,
                            const ResourceLoaderWrapper *const loader,
                            void (*renderCallback)(void *), void *const renderCallbackOwner, void** out) {
     // emscripten_pause_main_loop();
-    auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
-    if(success != EMSCRIPTEN_RESULT_SUCCESS) {
-      std::cout << "failed to make context current  " << std::endl;
-      return;
-    }
 
     _renderCallback = renderCallback;
     _renderCallbackOwner = renderCallbackOwner;
+    std::cout << "Creating viewer" << std::endl;
+    pthread_t flutter_thread_id = pthread_self();
+    printf("Flutter thread  %p\n", flutter_thread_id);
     std::packaged_task<FilamentViewer *()> lambda([&]() mutable {
       std::thread::id this_id = std::this_thread::get_id();
-      _viewer = new FilamentViewer(context, loader, platform, uberArchivePath);
-      *out = _viewer;
-      return _viewer;
+
+      pthread_t filament_runner_thread_id = pthread_self();
+      printf("filament runner thread  %p\n", filament_runner_thread_id);
+   
+      //  EmscriptenWebGLContextAttributes attr;
+      //  emscripten_webgl_init_context_attributes(&attr);
+      //  attr.explicitSwapControl = EM_FALSE;
+      //  attr.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_ALWAYS;
+      //  attr.renderViaOffscreenBackBuffer = EM_TRUE;
+      //  attr.majorVersion = 2;  
+    
+      //  auto newContext = emscripten_webgl_create_context("#canvas", &attr);
+      //   std::cout << "created context  " << newContext << " with major/minor ver " << attr.majorVersion << " " << attr.minorVersion << std::endl;
+      auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
+      if(success != EMSCRIPTEN_RESULT_SUCCESS) {
+        std::cout << "failed to make context current  " << std::endl;
+        // return nullptr;
+      }
+      std::cout << "made current" << std::endl;
+      glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT);
+   
+    
+      // success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)NULL);
+       viewer = new FilamentViewer((void*)context, loader, platform, uberArchivePath);
+       *out = viewer;
+      return viewer;
     });
     auto fut = add_task(lambda);
-    if(!out) {
+    // if(!out) {
       fut.wait();
-    }
+    // }
+    return viewer;
   }
 
   void destroyViewer() {
     std::packaged_task<void()> lambda([&]() mutable {
       _rendering = false;
-      destroy_filament_viewer(_viewer);
-      _viewer = nullptr;
+      destroy_filament_viewer(viewer);
+      viewer = nullptr;
     });
     auto fut = add_task(lambda);
     fut.wait();
@@ -92,14 +121,15 @@ public:
     std::packaged_task<void()> lambda(
         [&]() mutable { this->_rendering = rendering; });
     auto fut = add_task(lambda);
-    fut.wait();
+    // fut.wait();
   }
 
   void doRender() {
-    render(_viewer, 0, nullptr, nullptr, nullptr);
-    if(_renderCallback) {
-      _renderCallback(_renderCallbackOwner);
-    }
+    render(viewer, 0, nullptr, nullptr, nullptr);
+    emscripten_webgl_commit_frame();
+    // if(_renderCallback) {
+    //   _renderCallback(_renderCallbackOwner);
+    // }
   }
 
   void setFrameIntervalInMilliseconds(float frameIntervalInMilliseconds) {
@@ -115,13 +145,14 @@ public:
     _cond.notify_one();
     return ret;
   }
+  FilamentViewer *viewer = nullptr;
 
 private:
   bool _stop = false;
   bool _rendering = false;
   float _frameIntervalInMilliseconds = 1000.0 / 60.0;
   std::mutex _access;
-  FilamentViewer *_viewer = nullptr;
+
   void (*_renderCallback)(void *const) = nullptr;
   void *_renderCallbackOwner = nullptr;
   std::thread *_t = nullptr;
@@ -132,18 +163,19 @@ private:
 extern "C" {
 
 static RenderLoop *_rl;
+static void* _context;
 
-FLUTTER_PLUGIN_EXPORT void create_filament_viewer_ffi(
+FLUTTER_PLUGIN_EXPORT void* create_filament_viewer_ffi(
     void *const context, void *const platform, const char *uberArchivePath,
     const ResourceLoaderWrapper *const loader,
     void (*renderCallback)(void *const renderCallbackOwner),
     void *const renderCallbackOwner, void** out) {
 
-      loader->load("assets/web/foo.txt");
+    _context = context;
   if (!_rl) {
     _rl = new RenderLoop();
   }
-  _rl->createViewer(context, platform, uberArchivePath, loader,
+  return _rl->createViewer(context, platform, uberArchivePath, loader,
                            renderCallback, renderCallbackOwner, out);
 }
 
@@ -155,11 +187,15 @@ FLUTTER_PLUGIN_EXPORT void create_swap_chain_ffi(void *const viewer,
                                                  void *const surface,
                                                  uint32_t width,
                                                  uint32_t height) {
-  Log("Creating swapchain %dx%d", width, height);
+  Log("Creating swapchain %dx%d with viewer %p and surface %p", width, height, viewer, surface);
   std::packaged_task<void()> lambda(
-      [&]() mutable { create_swap_chain(viewer, surface, width, height); });
+      [&]() mutable { 
+        create_swap_chain(viewer, surface, width, height); 
+          Log("swapchain cerate finisehd");
+
+        });
   auto fut = _rl->add_task(lambda);
-  // fut.wait();
+  fut.wait();
 }
 
 FLUTTER_PLUGIN_EXPORT void destroy_swap_chain_ffi(void *const viewer) {
@@ -189,6 +225,8 @@ FLUTTER_PLUGIN_EXPORT void update_viewport_and_camera_projection_ffi(
   Log("Update viewport  %dx%d", width, height);
   std::packaged_task<void()> lambda([&]() mutable {
     update_viewport_and_camera_projection(viewer, width, height, scaleFactor);
+      Log("Update viewport finished", width, height);
+
   });
   auto fut = _rl->add_task(lambda);
   // fut.wait();
@@ -213,8 +251,31 @@ set_frame_interval_ffi(float frameIntervalInMilliseconds) {
   _rl->setFrameIntervalInMilliseconds(frameIntervalInMilliseconds);
 }
 
+
+EM_BOOL foo(double time, void* userData) {
+  // auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)_context);
+  // if(success != EMSCRIPTEN_RESULT_SUCCESS) {
+  //   std::cout << "failed to make context current  " << std::endl;
+  //   return EM_FALSE;
+  // }
+  // // ((RenderLoop*)userData)->doRender();
+  // float r = float(rand()) / float(RAND_MAX);
+  // float g = float(rand()) / float(RAND_MAX);
+  // float b = float(rand()) / float(RAND_MAX);
+  // glClearColor(r, g, b, 1.0f);
+  // glClear(GL_COLOR_BUFFER_BIT); 
+  emscripten_webgl_commit_frame();
+  return EM_TRUE;
+}
+
 FLUTTER_PLUGIN_EXPORT void render_ffi(void *const viewer) {
-  std::packaged_task<void()> lambda([&]() mutable { _rl->doRender(); });
+    std::cout << "render ffi" << std::endl;
+
+  std::packaged_task<void()> lambda([&]() mutable { 
+    std::cout << "doing render" << std::endl;
+    _rl->doRender(); 
+    emscripten_request_animation_frame(foo, nullptr);
+  });
   auto fut = _rl->add_task(lambda);
   fut.wait();
 }
@@ -282,9 +343,31 @@ FLUTTER_PLUGIN_EXPORT void set_bloom_ffi(void *const viewer, float strength) {
   auto fut = _rl->add_task(lambda);
   fut.wait();
 }
+
 FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void *const viewer,
-                                           const char *skyboxPath) {
-  std::packaged_task<void()> lambda([&] { load_skybox(viewer, skyboxPath); });
+                                           const char *skyboxPath) {  
+  // emscripten_request_animation_frame_loop(foo, _rl);                                                
+  std::packaged_task<void()> lambda([&] {    
+
+  //   auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)_context);
+  // if(success != EMSCRIPTEN_RESULT_SUCCESS) {
+  //   std::cout << "failed to make context current  " << std::endl;
+  //   // return EM_FALSE;
+  // }
+  // // ((RenderLoop*)userData)->doRender();
+  // float r = float(rand()) / float(RAND_MAX);
+  // float g = float(rand()) / float(RAND_MAX);
+  // float b = float(rand()) / float(RAND_MAX);
+  // glClearColor(r, g, b, 1.0f);
+  // glClear(GL_COLOR_BUFFER_BIT); 
+    
+    load_skybox(_rl->viewer, skyboxPath); 
+    std::cout << "doing render" << std::endl;
+    _rl->doRender();
+    std::cout << "requesting animation frame" << std::endl;
+    
+    emscripten_webgl_commit_frame();
+    });
   auto fut = _rl->add_task(lambda);
   // fut.wait();
 }

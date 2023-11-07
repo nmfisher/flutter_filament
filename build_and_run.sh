@@ -6,11 +6,16 @@ export EMCC_CFLAGS="-Wno-missing-field-initializers -Wno-deprecated-literal-oper
 
 BASE_DIR=$(realpath $(dirname $0))
 cd $BASE_DIR/web/build 
+
+# BINARYEN_ROOT=/opt/homebrew//Cellar/binaryen/116 EM_LLVM_ROOT=/Users/nickfisher/Downloads/clang+llvm-17.0.4-arm64-apple-darwin22.0/bin  
 emmake make 
+# BINARYEN_ROOT=/opt/homebrew//Cellar/binaryen/116 EM_LLVM_ROOT=/Users/nickfisher/Downloads/clang+llvm-17.0.4-arm64-apple-darwin22.0/bin  
 emcc --bind -std=c++17 -g -s ALLOW_TABLE_GROWTH=1 \
--s EXPORT_NAME=libflutter_filament -sMAIN_MODULE -sMODULARIZE -sALLOW_MEMORY_GROWTH \
+-s EXPORT_NAME=libflutter_filament -sMAIN_MODULE -sMODULARIZE -sTOTAL_MEMORY=1024MB \
 -s ERROR_ON_UNDEFINED_SYMBOLS=0  -sEXPORTED_RUNTIME_METHODS=wasmExports,wasmTable \
--sFULL_ES3 -s ASSERTIONS -pthread -sPTHREAD_POOL_SIZE=1 -sALLOW_BLOCKING_ON_MAIN_THREAD=1 -sPROXY_TO_PTHREAD -sOFFSCREEN_FRAMEBUFFER  \
+-sFULL_ES3 -s ASSERTIONS -pthread -sPTHREAD_POOL_SIZE=1 \
+-sALLOW_BLOCKING_ON_MAIN_THREAD=1 -sOFFSCREEN_FRAMEBUFFER  -sNO_DISABLE_EXCEPTION_CATCHING -sFETCH=1  \
+-sUSE_WEBGL2=1 -sMIN_WEBGL_VERSION=2  \
 ./libflutter_filament_plugin.a ./libfilament_shaders.a ../lib/lib*.a -o ./libflutter_filament_web.js 
 cp libflutter_filament_web.* $BASE_DIR/example/assets/web 
 cd $BASE_DIR/example/ 
