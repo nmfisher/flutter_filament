@@ -63,39 +63,23 @@ public:
                            const char *uberArchivePath,
                            const ResourceLoaderWrapper *const loader,
                            void (*renderCallback)(void *), void *const renderCallbackOwner, void** out) {
-    // emscripten_pause_main_loop();
 
     _renderCallback = renderCallback;
     _renderCallbackOwner = renderCallbackOwner;
-    std::cout << "Creating viewer" << std::endl;
+    
     pthread_t flutter_thread_id = pthread_self();
-    printf("Flutter thread  %p\n", flutter_thread_id);
+    
     std::packaged_task<FilamentViewer *()> lambda([&]() mutable {
       std::thread::id this_id = std::this_thread::get_id();
 
       pthread_t filament_runner_thread_id = pthread_self();
-      printf("filament runner thread  %p\n", filament_runner_thread_id);
    
-      //  EmscriptenWebGLContextAttributes attr;
-      //  emscripten_webgl_init_context_attributes(&attr);
-      //  attr.explicitSwapControl = EM_FALSE;
-      //  attr.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_ALWAYS;
-      //  attr.renderViaOffscreenBackBuffer = EM_TRUE;
-      //  attr.majorVersion = 2;  
-    
-      //  auto newContext = emscripten_webgl_create_context("#canvas", &attr);
-      //   std::cout << "created context  " << newContext << " with major/minor ver " << attr.majorVersion << " " << attr.minorVersion << std::endl;
       auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
       if(success != EMSCRIPTEN_RESULT_SUCCESS) {
         std::cout << "failed to make context current  " << std::endl;
         // return nullptr;
       }
-      std::cout << "made current" << std::endl;
-      glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT);
-   
-    
-      // success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)NULL);
+
        viewer = new FilamentViewer((void*)context, loader, platform, uberArchivePath);
        *out = viewer;
       return viewer;

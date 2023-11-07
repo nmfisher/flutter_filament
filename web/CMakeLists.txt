@@ -1,16 +1,36 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.27)
 
 set(PROJECT_NAME "flutter_filament")
 project(${PROJECT_NAME})
 
-set(EMCC_CFLAGS "-Wno-missing-field-initializers -Wno-deprecated-literal-operator -fPIC -pthread --bind")
-
-# emcc -O3 -s MAIN_MODULE=1 -s EXPORT_NAME=libopus -s MODULARIZE=1 ./.libs/libopus.a -o ./emc_out/libopus.js
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -stdlib=libc++ -fPIC -Wno-unused-variable -Wno-unused-function -pthread ")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fPIC -Wno-unused-variable -Wno-unused-function -pthread ")
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif(NOT CMAKE_BUILD_TYPE)
 
 set(PLUGIN_NAME "flutter_filament_plugin")
+
+set(EMCC_CFLAGS --bind)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_TABLE_GROWTH=1)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sEXPORT_NAME=${PLUGIN_NAME})
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMAIN_MODULE)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMODULARIZE)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sTOTAL_MEMORY=1024MB)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sERROR_ON_UNDEFINED_SYMBOLS=0 )
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sEXPORTED_RUNTIME_METHODS=wasmExports,wasmTable)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sFULL_ES3)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sASSERTIONS)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sPTHREAD_POOL_SIZE=1)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_BLOCKING_ON_MAIN_THREAD=1)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sOFFSCREEN_FRAMEBUFFER)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sNO_DISABLE_EXCEPTION_CATCHING)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sFETCH=1)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sUSE_WEBGL2=1)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMIN_WEBGL_VERSION=2)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-literal-operator -stdlib=libc++ -std=c++17 -fPIC -pthread -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+
+add_link_options(${EMCC_CFLAGS})
 
 link_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib") 
 
@@ -18,14 +38,15 @@ include_directories(../ios/src)
 include_directories(../ios/include)
 include_directories(../ios/include/filament)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/internal)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(filament_shaders STATIC 
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/include/material/image.c"
 )
 
-add_library(${PLUGIN_NAME} STATIC
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/)
+
+add_executable(${PLUGIN_NAME} 
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/AssetManager.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FilamentViewer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/FlutterFilamentApi.cpp"
@@ -34,7 +55,7 @@ add_library(${PLUGIN_NAME} STATIC
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/TimeIt.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Manipulator.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Bookmark.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/FlutterFilamentWebApi.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/FlutterFilamentWebApi.cpp"
 )
 
 set_target_properties(${PLUGIN_NAME} PROPERTIES
@@ -50,93 +71,161 @@ include_directories(../ios/src)
 include_directories(../ios/include)
 include_directories(../example/linux)
 
-# add_library(geometry  STATIC IMPORTED)
-# set_property(TARGET geometry  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libgeometry.a")
-# add_library(filament  STATIC IMPORTED)
-# set_property(TARGET filament  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libfilament.a")
-# add_library(backend  STATIC IMPORTED)
-# set_property(TARGET backend  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libbackend.a")
-# add_library(filameshio  STATIC IMPORTED)
-# set_property(TARGET filameshio  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libfilameshio.a")
-# add_library(filament_viewer  STATIC IMPORTED)
-# set_property(TARGET filament_viewer  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libviewer.a")
-# add_library(utils  STATIC IMPORTED)
-# set_property(TARGET utils  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libutils.a")
-# add_library(filabridge  STATIC IMPORTED)
-# set_property(TARGET filabridge  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libfilabridge.a")
-# add_library(gltfio_core  STATIC IMPORTED)
-# set_property(TARGET gltfio_core  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libgltfio_core.a")
-# add_library(filament-iblprefilter  STATIC IMPORTED)
-# set_property(TARGET filament-iblprefilter  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libfilament-iblprefilter.a")
-# add_library(image  STATIC IMPORTED)
-# set_property(TARGET image  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimage.a")
-# add_library(camutils  STATIC IMPORTED)
-# set_property(TARGET camutils  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libcamutils.a")
-# add_library(filaflat  STATIC IMPORTED)
-# set_property(TARGET filaflat  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libfilaflat.a")
-# add_library(dracodec  STATIC IMPORTED)
-# set_property(TARGET dracodec  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libdracodec.a")
-# add_library(ibl  STATIC IMPORTED)
-# set_property(TARGET ibl  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libibl.a")
-# add_library(ktxreader  STATIC IMPORTED)
-# set_property(TARGET ktxreader  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libktxreader.a")
-# add_library(imageio STATIC IMPORTED)
-# set_property(TARGET imageio PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimageio.a")
-# add_library(tinyexr STATIC IMPORTED)
-# set_property(TARGET tinyexr PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libtinyexr.a")
-# add_library(stb   STATIC IMPORTED)
-# set_property(TARGET stb   PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libstb.a")
-# # add_library(bluegl  STATIC IMPORTED)
-# # set_property(TARGET bluegl  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libbluegl.a")
-# add_library(uberzlib  STATIC IMPORTED)
-# set_property(TARGET uberzlib  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libuberzlib.a")
-# add_library(smol-v  STATIC IMPORTED)
-# set_property(TARGET smol-v  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libsmol-v.a")
-# add_library(png STATIC IMPORTED)
-# set_property(TARGET png PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libpng.a")
-# add_library(uberarchive  STATIC IMPORTED)
-# set_property(TARGET uberarchive  PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libuberarchive.a")
-# add_library(meshoptimizer STATIC IMPORTED)
-# set_property(TARGET meshoptimizer PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libmeshoptimizer.a")
-# add_library(mathio STATIC IMPORTED)
-# set_property(TARGET mathio PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libmathio.a")
-# add_library(math STATIC IMPORTED)
-# set_property(TARGET math PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libmath.a")
-# add_library(basis_transcoder STATIC IMPORTED)
-# set_property(TARGET basis_transcoder PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libbasis_transcoder.a")
-# add_library(z STATIC IMPORTED)
-# set_property(TARGET z PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libz.a")
+add_library(backend STATIC IMPORTED)
+set_property(TARGET backend PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libbackend.a")
+set_property(TARGET backend PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libbackend.a")
+set_property(TARGET backend PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libbackend.a")
 
-# target_link_libraries(${PLUGIN_NAME} PRIVATE
-#   FILAMENT_SHADERS
-#   gltfio_core 
-#   filament 
-#   backend 
-#   geometry 
-#   filameshio 
-#   filament_viewer  
-#   filabridge 
-#   filament-iblprefilter 
-#   camutils 
-#   filaflat 
-#   dracodec 
-#   ibl 
-#   ktxreader 
-#   imageio
-#   image
-#   png
-#   utils 
-#   tinyexr
-#   stb  
-#   # bluegl 
-#   uberzlib 
-#   smol-v 
-#   uberarchive 
-#   meshoptimizer
-#   mathio
-#   math
-#   geometry
-#   basis_transcoder
-#   z
-# )
+add_library(geometry STATIC IMPORTED)
+set_property(TARGET geometry PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libgeometry.a")
+set_property(TARGET geometry PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libgeometry.a")
+set_property(TARGET geometry PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libgeometry.a")
+
+add_library(filament STATIC IMPORTED)
+set_property(TARGET filament PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libfilament.a")
+set_property(TARGET filament PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libfilament.a")
+set_property(TARGET filament PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/Release/libfilament.a")
+
+add_library(filameshio STATIC IMPORTED)
+set_property(TARGET filameshio PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libfilameshio.a")
+set_property(TARGET filameshio PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/Release/libfilameshio.a")
+set_property(TARGET filameshio PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/Release/libfilameshio.a")
+
+add_library(filamat STATIC IMPORTED)
+set_property(TARGET filamat PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libfilamat.a")
+set_property(TARGET filamat  PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libfilamat.a")
+set_property(TARGET filamat  PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libfilamat.a")
+
+add_library(utils STATIC IMPORTED)
+set_property(TARGET utils PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libutils.a")
+set_property(TARGET utils PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libutils.a")
+set_property(TARGET utils PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libutils.a")
+
+add_library(filabridge STATIC IMPORTED)
+set_property(TARGET filabridge PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libfilabridge.a")
+set_property(TARGET filabridge PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libfilabridge.a")
+set_property(TARGET filabridge PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libfilabridge.a")
+
+
+add_library(gltfio_core STATIC IMPORTED)
+set_property(TARGET gltfio_core PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libgltfio_core.a")
+set_property(TARGET gltfio_core PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libgltfio_core.a")
+
+add_library(image STATIC IMPORTED)
+set_property(TARGET image PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libimage.a")
+set_property(TARGET image PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libimage.a")
+set_property(TARGET image PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libimage.a")
+
+add_library(imageio STATIC IMPORTED)
+set_property(TARGET imageio PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libimageio.a")
+set_property(TARGET imageio  PROPERTY IMPORTED_LOCATION_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libimageio.a")
+set_property(TARGET imageio  PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libimageio.a")
+
+add_library(tinyexr STATIC IMPORTED)
+set_property(TARGET tinyexr PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libtinyexr.a")
+set_property(TARGET tinyexr PROPERTY IMPORTED_LOCATION_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libtinyexr.a")
+set_property(TARGET tinyexr PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libtinyexr.a")
+
+add_library(camutils STATIC IMPORTED)
+set_property(TARGET camutils PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libcamutils.a")
+set_property(TARGET camutils PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libcamutils.a")
+set_property(TARGET camutils PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libcamutils.a")
+
+add_library(filaflat STATIC IMPORTED)
+set_property(TARGET filaflat PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libfilaflat.a")
+set_property(TARGET filaflat PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libfilaflat.a")
+set_property(TARGET filaflat PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libfilaflat.a")
+
+add_library(dracodec STATIC IMPORTED)
+set_property(TARGET dracodec PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libdracodec.a")
+set_property(TARGET dracodec  PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libdracodec.a")
+set_property(TARGET dracodec  PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libdracodec.a")
+
+add_library(ibl-lite STATIC IMPORTED)
+set_property(TARGET ibl-lite PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libibl-lite.a")
+set_property(TARGET ibl-lite  PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libibl-lite.a")
+set_property(TARGET ibl-lite  PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libibl-lite.a")
+
+add_library(ktxreader STATIC IMPORTED)
+set_property(TARGET ktxreader PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libktxreader.a")
+set_property(TARGET ktxreader PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libktxreader.a")
+set_property(TARGET ktxreader PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libktxreader.a")
+
+add_library(stb STATIC IMPORTED)
+set_property(TARGET stb PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libstb.a")
+set_property(TARGET stb PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libstb.a")
+set_property(TARGET stb PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libstb.a")
+
+add_library(uberzlib STATIC IMPORTED)
+set_property(TARGET uberzlib PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libuberzlib.a")
+set_property(TARGET uberzlib  PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libuberzlib.a")
+set_property(TARGET uberzlib  PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libuberzlib.a")
+
+add_library(uberarchive STATIC IMPORTED)
+set_property(TARGET uberarchive PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libuberarchive.a")
+set_property(TARGET uberarchive PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libuberarchive.a")
+set_property(TARGET uberarchive PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libuberarchive.a")
+
+add_library(meshoptimizer STATIC IMPORTED)
+set_property(TARGET meshoptimizer PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libmeshoptimizer.a")
+set_property(TARGET meshoptimizer PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libmeshoptimizer.a")
+set_property(TARGET meshoptimizer  PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libmeshoptimizer.a")
+
+add_library(basis_transcoder STATIC IMPORTED)
+set_property(TARGET basis_transcoder PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libbasis_transcoder.a")
+set_property(TARGET basis_transcoder  PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libbasis_transcoder.a")
+set_property(TARGET basis_transcoder  PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libbasis_transcoder.a")
+
+add_library(basis_encoder STATIC IMPORTED)
+set_property(TARGET basis_encoder PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libbasis_encoder.a")
+set_property(TARGET basis_encoder  PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libbasis_encoder.a")
+set_property(TARGET basis_encoder  PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libbasis_encoder.a")
+
+add_library(z STATIC IMPORTED)
+set_property(TARGET z PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libz.a")
+set_property(TARGET z PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libz.a")
+set_property(TARGET z PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libz.a")
+
+add_library(zstd STATIC IMPORTED)
+set_property(TARGET zstd PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libzstd.a")
+set_property(TARGET zstd  PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libzstd.a")
+set_property(TARGET zstd  PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libzstd.a")
+
+add_library(png STATIC IMPORTED)
+set_property(TARGET png PROPERTY IMPORTED_LOCATION_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/lib/debug/libpng.a")
+set_property(TARGET png PROPERTY IMPORTED_IMPLIB_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libpng.a")
+set_property(TARGET png PROPERTY IMPORTED_LOCATION_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/lib/release/libpng.a")
+
+target_link_libraries(${PLUGIN_NAME}  
+ filament_shaders
+ gltfio_core 
+ filament 
+ backend 
+ geometry 
+ dracodec 
+ ibl-lite
+ ktxreader 
+ filaflat
+ filabridge
+ image
+ imageio
+ utils 
+ stb 
+ uberzlib 
+ uberarchive 
+ meshoptimizer
+ basis_transcoder
+ basis_encoder
+ z
+ zstd
+ png
+ tinyexr
+)
+
+add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
+    COMMAND flutter build web --wasm WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../example/ && cp ${CMAKE_CURRENT_SOURCE_DIR}/src/js/main.dart.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/build/web_wasm/
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/js/main.dart.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/build/web_wasm/
+)
+
+
 

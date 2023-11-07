@@ -7,23 +7,21 @@
   let moduleInstance;
   try {
     var Module = {};
-    console.log("document is " + document);
-    // Module['canvas'] = document.getElementById("canvas");
     
     Module['instantiateWasm'] = function(imports, successCallback) {
-      imports["env"]["loadResourceToBuffer"] = (out, length, callback, userData) => { 
-        return moduleInstance.exports.loadResourceToBuffer(out, length, callback, userData);
-      }
-      imports["env"]["__main_argc_argv"] = (argc, argv) => {
-        console.log("main");
-      }
-      fetch('assets/assets/web/libflutter_filament_web.wasm', { credentials: 'same-origin' }).then(async (response)  => {
+      // imports["env"]["loadResourceToBuffer"] = (out, length, callback, userData) => { 
+      //   return moduleInstance.exports.loadResourceToBuffer(out, length, callback, userData);
+      // }
+      // imports["env"]["__main_argc_argv"] = (argc, argv) => {
+      //   console.log("main");
+      // }
+      fetch('assets/assets/web/flutter_filament_plugin.wasm', { credentials: 'same-origin' }).then(async (response)  => {
         var result = await WebAssembly.instantiateStreaming(response, imports);
         successCallback(result.instance,result.module);
       });
       return {};
     }
-    const imports = {"libflutter_filament":await libflutter_filament(Module)};;
+    const imports = {"flutter_filament_plugin":await flutter_filament_plugin(Module)};;
     const dartModulePromise = WebAssembly.compileStreaming(fetch('main.dart.wasm'));
         
     dart2wasm_runtime = await import('./main.dart.mjs');

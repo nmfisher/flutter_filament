@@ -336,9 +336,10 @@ You must also have:
 1) a local web server that will send the headers `Cross-Origin-Embedder-Policy": "require-corp","Cross-Origin-Opener-Policy": "same-origin"` which are required for SharedArrayBuffer. The simplest option is to clone the `dhttpd` fork at `git@github.com:nmfisher/dhttpd.git`, which is already configured to serve these headers out of the box.
 2) Chrome 119 or higher, or Firefox Nightly
 
-The example project already contains a working web build, so all you need to run the web app is:
+The example project already contains a working web build, so to run the web app:
 
 ```
+git lfs pull
 cd example/build/web_wasm
 dart run /path/to/your/dhttpd/bin/dhttpd.dart
 ```
