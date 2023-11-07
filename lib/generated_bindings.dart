@@ -9,32 +9,34 @@ typedef EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART = int;
 
 @ffi.Native<ffi.Pointer<ffi.Void> Function()>(
     symbol: "_flutter_filament_web_get_resource_loader_wrapper",
-    assetId: "libflutter_filament")
+    assetId: "flutter_filament_plugin")
 external ffi.Pointer<ffi.Void>
     flutter_filament_web_get_resource_loader_wrapper();
 
 @ffi.Native<ffi.IntPtr Function(ffi.Int32)>(
-    symbol: "_flutter_filament_web_allocate", assetId: "libflutter_filament")
+    symbol: "_flutter_filament_web_allocate",
+    assetId: "flutter_filament_plugin")
 external int flutter_filament_web_allocate(int length);
 
 @ffi.Native<ffi.IntPtr Function(ffi.Pointer<ffi.Pointer<ffi.Void>>)>(
-    symbol: "_flutter_filament_web_get_address", assetId: "libflutter_filament")
+    symbol: "_flutter_filament_web_get_address",
+    assetId: "flutter_filament_plugin")
 external int flutter_filament_web_get_address(
     ffi.Pointer<ffi.Pointer<ffi.Void>> out);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer, ffi.Int32, ffi.Int32)>(
-    symbol: "_flutter_filament_web_set", assetId: "libflutter_filament")
+    symbol: "_flutter_filament_web_set", assetId: "flutter_filament_plugin")
 external void flutter_filament_web_set(ffi.Pointer ptr, int offset, int value);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer, ffi.Int32, ffi.Pointer)>(
     symbol: "_flutter_filament_web_load_resource_callback",
-    assetId: "libflutter_filament")
+    assetId: "flutter_filament_plugin")
 external void flutter_filament_web_load_resource_callback(
     ffi.Pointer data, int length, ffi.Pointer context);
 
 @ffi.Native<EMSCRIPTEN_WEBGL_CONTEXT_HANDLE Function()>(
     symbol: "_flutter_filament_web_create_gl_context",
-    assetId: "libflutter_filament")
+    assetId: "flutter_filament_plugin")
 external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
     flutter_filament_web_create_gl_context();
 
@@ -44,7 +46,7 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 //             ffi.Pointer<ResourceLoaderWrapper>,
 //             ffi.Pointer<ffi.Void>,
 //             ffi.Pointer<ffi.Char>)>(
-//     symbol: 'create_filament_viewer', assetId: 'libflutter_filament')
+//     symbol: 'create_filament_viewer', assetId: 'flutter_filament_plugin')
 // external ffi.Pointer<ffi.Void> create_filament_viewer(
 //   ffi.Pointer<ffi.Void> context,
 //   ffi.Pointer<ResourceLoaderWrapper> loader,
@@ -53,7 +55,7 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'destroy_filament_viewer', assetId: 'libflutter_filament')
+//     symbol: 'destroy_filament_viewer', assetId: 'flutter_filament_plugin')
 // external void destroy_filament_viewer(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
@@ -63,7 +65,7 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 //             LoadFilamentResourceFromOwner,
 //             FreeFilamentResourceFromOwner,
 //             ffi.Pointer<ffi.Void>)>(
-//     symbol: 'make_resource_loader', assetId: 'libflutter_filament')
+//     symbol: 'make_resource_loader', assetId: 'flutter_filament_plugin')
 // external ffi.Pointer<ResourceLoaderWrapper> make_resource_loader(
 //   LoadFilamentResourceFromOwner loadFn,
 //   FreeFilamentResourceFromOwner freeFn,
@@ -71,7 +73,7 @@ external EMSCRIPTEN_WEBGL_CONTEXT_HANDLE_DART
 // );
 
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_get_asset_manager', assetId: 'libflutter_filament')
+    symbol: '_get_asset_manager', assetId: 'flutter_filament_plugin')
 external ffi.Pointer<ffi.Void> get_asset_manager(
   ffi.Pointer<ffi.Void> viewer,
 );
@@ -79,7 +81,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.IntPtr, ffi.Uint32, ffi.Uint32)>(
-//     symbol: 'create_render_target', assetId: 'libflutter_filament')
+//     symbol: 'create_render_target', assetId: 'flutter_filament_plugin')
 // external void create_render_target(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int texture,
@@ -88,7 +90,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'clear_background_image', assetId: 'libflutter_filament')
+//     symbol: 'clear_background_image', assetId: 'flutter_filament_plugin')
 // external void clear_background_image(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
@@ -96,7 +98,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Bool)>(
-//     symbol: 'set_background_image', assetId: 'libflutter_filament')
+//     symbol: 'set_background_image', assetId: 'flutter_filament_plugin')
 // external void set_background_image(
 //   ffi.Pointer<ffi.Void> viewer,
 //   ffi.Pointer<ffi.Char> path,
@@ -106,7 +108,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float, ffi.Bool)>(
-//     symbol: 'set_background_image_position', assetId: 'libflutter_filament')
+//     symbol: 'set_background_image_position', assetId: 'flutter_filament_plugin')
 // external void set_background_image_position(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double x,
@@ -117,7 +119,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float, ffi.Float, ffi.Float)>(
-//     symbol: 'set_background_color', assetId: 'libflutter_filament')
+//     symbol: 'set_background_color', assetId: 'flutter_filament_plugin')
 // external void set_background_color(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double r,
@@ -127,21 +129,21 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>(
-//     symbol: 'set_tone_mapping', assetId: 'libflutter_filament')
+//     symbol: 'set_tone_mapping', assetId: 'flutter_filament_plugin')
 // external void set_tone_mapping(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int toneMapping,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>(
-//     symbol: 'set_bloom', assetId: 'libflutter_filament')
+//     symbol: 'set_bloom', assetId: 'flutter_filament_plugin')
 // external void set_bloom(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double strength,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)>(
-//     symbol: 'load_skybox', assetId: 'libflutter_filament')
+//     symbol: 'load_skybox', assetId: 'flutter_filament_plugin')
 // external void load_skybox(
 //   ffi.Pointer<ffi.Void> viewer,
 //   ffi.Pointer<ffi.Char> skyboxPath,
@@ -149,7 +151,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 
 // @ffi.Native<
 //     ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-//         ffi.Float)>(symbol: 'load_ibl', assetId: 'libflutter_filament')
+//         ffi.Float)>(symbol: 'load_ibl', assetId: 'flutter_filament_plugin')
 // external void load_ibl(
 //   ffi.Pointer<ffi.Void> viewer,
 //   ffi.Pointer<ffi.Char> iblPath,
@@ -157,13 +159,13 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'remove_skybox', assetId: 'libflutter_filament')
+//     symbol: 'remove_skybox', assetId: 'flutter_filament_plugin')
 // external void remove_skybox(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'remove_ibl', assetId: 'libflutter_filament')
+//     symbol: 'remove_ibl', assetId: 'flutter_filament_plugin')
 // external void remove_ibl(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
@@ -180,7 +182,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 //         ffi.Float,
 //         ffi.Float,
 //         ffi.Float,
-//         ffi.Bool)>(symbol: 'add_light', assetId: 'libflutter_filament')
+//         ffi.Bool)>(symbol: 'add_light', assetId: 'flutter_filament_plugin')
 // external int add_light(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int type,
@@ -196,21 +198,21 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
-//     symbol: 'remove_light', assetId: 'libflutter_filament')
+//     symbol: 'remove_light', assetId: 'flutter_filament_plugin')
 // external void remove_light(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int entityId,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'clear_lights', assetId: 'libflutter_filament')
+//     symbol: 'clear_lights', assetId: 'flutter_filament_plugin')
 // external void clear_lights(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
 
 // @ffi.Native<
 //     EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-//         ffi.Bool)>(symbol: 'load_glb', assetId: 'libflutter_filament')
+//         ffi.Bool)>(symbol: 'load_glb', assetId: 'flutter_filament_plugin')
 // external int load_glb(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   ffi.Pointer<ffi.Char> assetPath,
@@ -220,7 +222,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // @ffi.Native<
 //         EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
 //             ffi.Pointer<ffi.Char>)>(
-//     symbol: 'load_gltf', assetId: 'libflutter_filament')
+//     symbol: 'load_gltf', assetId: 'flutter_filament_plugin')
 // external int load_gltf(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   ffi.Pointer<ffi.Char> assetPath,
@@ -230,7 +232,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // @ffi.Native<
 //         ffi.Bool Function(
 //             ffi.Pointer<ffi.Void>, EntityId, ffi.Pointer<ffi.Char>)>(
-//     symbol: 'set_camera', assetId: 'libflutter_filament')
+//     symbol: 'set_camera', assetId: 'flutter_filament_plugin')
 // external bool set_camera(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int asset,
@@ -238,7 +240,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
-//     symbol: 'set_view_frustum_culling', assetId: 'libflutter_filament')
+//     symbol: 'set_view_frustum_culling', assetId: 'flutter_filament_plugin')
 // external void set_view_frustum_culling(
 //   ffi.Pointer<ffi.Void> viewer,
 //   bool enabled,
@@ -254,7 +256,7 @@ external ffi.Pointer<ffi.Void> get_asset_manager(
                     ffi.Void Function(ffi.Pointer<ffi.Void> buf, ffi.Size size,
                         ffi.Pointer<ffi.Void> data)>>,
             ffi.Pointer<ffi.Void>)>(
-    symbol: '_render', assetId: 'libflutter_filament')
+    symbol: '_render', assetId: 'flutter_filament_plugin')
 external void render(
   ffi.Pointer<ffi.Void> viewer,
   int frameTimeInNanos,
@@ -270,7 +272,7 @@ external void render(
 @ffi.Native<
         ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>,
             ffi.Uint32, ffi.Uint32)>(
-    symbol: '_create_swap_chain', assetId: 'libflutter_filament')
+    symbol: '_create_swap_chain', assetId: 'flutter_filament_plugin')
 external void create_swap_chain(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Void> window,
@@ -279,13 +281,13 @@ external void create_swap_chain(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_destroy_swap_chain', assetId: 'libflutter_filament')
+    symbol: '_destroy_swap_chain', assetId: 'flutter_filament_plugin')
 external void destroy_swap_chain(
   ffi.Pointer<ffi.Void> viewer,
 );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>(
-//     symbol: 'set_frame_interval', assetId: 'libflutter_filament')
+//     symbol: 'set_frame_interval', assetId: 'flutter_filament_plugin')
 // external void set_frame_interval(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double interval,
@@ -295,7 +297,7 @@ external void destroy_swap_chain(
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Uint32, ffi.Uint32, ffi.Float)>(
 //     symbol: 'update_viewport_and_camera_projection',
-//     assetId: 'libflutter_filament')
+//     assetId: 'flutter_filament_plugin')
 // external void update_viewport_and_camera_projection(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int width,
@@ -304,14 +306,15 @@ external void destroy_swap_chain(
 // );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_scroll_begin', assetId: 'libflutter_filament')
+    symbol: '_scroll_begin', assetId: 'flutter_filament_plugin')
 external void scroll_begin(
   ffi.Pointer<ffi.Void> viewer,
 );
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float,
-        ffi.Float)>(symbol: '_scroll_update', assetId: 'libflutter_filament')
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float, ffi.Float)>(
+    symbol: '_scroll_update', assetId: 'flutter_filament_plugin')
 external void scroll_update(
   ffi.Pointer<ffi.Void> viewer,
   double x,
@@ -320,14 +323,14 @@ external void scroll_update(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_scroll_end', assetId: 'libflutter_filament')
+    symbol: '_scroll_end', assetId: 'flutter_filament_plugin')
 external void scroll_end(
   ffi.Pointer<ffi.Void> viewer,
 );
 
 @ffi.Native<
     ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float,
-        ffi.Bool)>(symbol: '_grab_begin', assetId: 'libflutter_filament')
+        ffi.Bool)>(symbol: '_grab_begin', assetId: 'flutter_filament_plugin')
 external void grab_begin(
   ffi.Pointer<ffi.Void> viewer,
   double x,
@@ -336,7 +339,7 @@ external void grab_begin(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float)>(
-    symbol: '_grab_update', assetId: 'libflutter_filament')
+    symbol: '_grab_update', assetId: 'flutter_filament_plugin')
 external void grab_update(
   ffi.Pointer<ffi.Void> viewer,
   double x,
@@ -344,7 +347,7 @@ external void grab_update(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_grab_end', assetId: 'libflutter_filament')
+    symbol: '_grab_end', assetId: 'flutter_filament_plugin')
 external void grab_end(
   ffi.Pointer<ffi.Void> viewer,
 );
@@ -355,7 +358,7 @@ external void grab_end(
 //         EntityId,
 //         ffi.Pointer<ffi.Char>,
 //         ffi.Pointer<ffi.Float>,
-//         ffi.Int)>(symbol: 'apply_weights', assetId: 'libflutter_filament')
+//         ffi.Int)>(symbol: 'apply_weights', assetId: 'flutter_filament_plugin')
 // external void apply_weights(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -367,7 +370,7 @@ external void grab_end(
 // @ffi.Native<
 //         ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId,
 //             ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Float>, ffi.Int)>(
-//     symbol: 'set_morph_target_weights', assetId: 'libflutter_filament')
+//     symbol: 'set_morph_target_weights', assetId: 'flutter_filament_plugin')
 // external void set_morph_target_weights(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -386,7 +389,7 @@ external void grab_end(
 //             ffi.Int,
 //             ffi.Int,
 //             ffi.Float)>(
-//     symbol: 'set_morph_animation', assetId: 'libflutter_filament')
+//     symbol: 'set_morph_animation', assetId: 'flutter_filament_plugin')
 // external bool set_morph_animation(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -409,7 +412,7 @@ external void grab_end(
 //             ffi.Pointer<ffi.Pointer<ffi.Char>>,
 //             ffi.Int,
 //             ffi.Float)>(
-//     symbol: 'set_bone_animation', assetId: 'libflutter_filament')
+//     symbol: 'set_bone_animation', assetId: 'flutter_filament_plugin')
 // external void set_bone_animation(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -430,7 +433,7 @@ external void grab_end(
 //         ffi.Bool,
 //         ffi.Bool,
 //         ffi.Bool,
-//         ffi.Float)>(symbol: 'play_animation', assetId: 'libflutter_filament')
+//         ffi.Float)>(symbol: 'play_animation', assetId: 'flutter_filament_plugin')
 // external void play_animation(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -443,7 +446,7 @@ external void grab_end(
 
 // @ffi.Native<
 //         ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Int, ffi.Int)>(
-//     symbol: 'set_animation_frame', assetId: 'libflutter_filament')
+//     symbol: 'set_animation_frame', assetId: 'flutter_filament_plugin')
 // external void set_animation_frame(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -452,7 +455,7 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Int)>(
-//     symbol: 'stop_animation', assetId: 'libflutter_filament')
+//     symbol: 'stop_animation', assetId: 'flutter_filament_plugin')
 // external void stop_animation(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -460,7 +463,7 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Int Function(ffi.Pointer<ffi.Void>, EntityId)>(
-//     symbol: 'get_animation_count', assetId: 'libflutter_filament')
+//     symbol: 'get_animation_count', assetId: 'flutter_filament_plugin')
 // external int get_animation_count(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -468,7 +471,7 @@ external void grab_end(
 
 // @ffi.Native<
 //     ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Pointer<ffi.Char>,
-//         ffi.Int)>(symbol: 'get_animation_name', assetId: 'libflutter_filament')
+//         ffi.Int)>(symbol: 'get_animation_name', assetId: 'flutter_filament_plugin')
 // external void get_animation_name(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -477,7 +480,7 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Float Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Int)>(
-//     symbol: 'get_animation_duration', assetId: 'libflutter_filament')
+//     symbol: 'get_animation_duration', assetId: 'flutter_filament_plugin')
 // external double get_animation_duration(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -487,7 +490,7 @@ external void grab_end(
 // @ffi.Native<
 //         ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId,
 //             ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>, ffi.Int)>(
-//     symbol: 'get_morph_target_name', assetId: 'libflutter_filament')
+//     symbol: 'get_morph_target_name', assetId: 'flutter_filament_plugin')
 // external void get_morph_target_name(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -499,7 +502,7 @@ external void grab_end(
 // @ffi.Native<
 //         ffi.Int Function(
 //             ffi.Pointer<ffi.Void>, EntityId, ffi.Pointer<ffi.Char>)>(
-//     symbol: 'get_morph_target_name_count', assetId: 'libflutter_filament')
+//     symbol: 'get_morph_target_name_count', assetId: 'flutter_filament_plugin')
 // external int get_morph_target_name_count(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -507,14 +510,14 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
-//     symbol: 'remove_asset', assetId: 'libflutter_filament')
+//     symbol: 'remove_asset', assetId: 'flutter_filament_plugin')
 // external void remove_asset(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int asset,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'clear_assets', assetId: 'libflutter_filament')
+//     symbol: 'clear_assets', assetId: 'flutter_filament_plugin')
 // external void clear_assets(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
@@ -529,7 +532,7 @@ external void grab_end(
 //             ffi.Float,
 //             ffi.Float,
 //             ffi.Float)>(
-//     symbol: 'set_material_color', assetId: 'libflutter_filament')
+//     symbol: 'set_material_color', assetId: 'flutter_filament_plugin')
 // external bool set_material_color(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -542,7 +545,7 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
-//     symbol: 'transform_to_unit_cube', assetId: 'libflutter_filament')
+//     symbol: 'transform_to_unit_cube', assetId: 'flutter_filament_plugin')
 // external void transform_to_unit_cube(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -550,7 +553,7 @@ external void grab_end(
 
 // @ffi.Native<
 //     ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Float, ffi.Float,
-//         ffi.Float)>(symbol: 'set_position', assetId: 'libflutter_filament')
+//         ffi.Float)>(symbol: 'set_position', assetId: 'flutter_filament_plugin')
 // external void set_position(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -566,7 +569,7 @@ external void grab_end(
 //         ffi.Float,
 //         ffi.Float,
 //         ffi.Float,
-//         ffi.Float)>(symbol: 'set_rotation', assetId: 'libflutter_filament')
+//         ffi.Float)>(symbol: 'set_rotation', assetId: 'flutter_filament_plugin')
 // external void set_rotation(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -577,7 +580,7 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Float)>(
-//     symbol: 'set_scale', assetId: 'libflutter_filament')
+//     symbol: 'set_scale', assetId: 'flutter_filament_plugin')
 // external void set_scale(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -585,7 +588,7 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
-//     symbol: 'move_camera_to_asset', assetId: 'libflutter_filament')
+//     symbol: 'move_camera_to_asset', assetId: 'flutter_filament_plugin')
 // external void move_camera_to_asset(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int asset,
@@ -594,7 +597,7 @@ external void grab_end(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float, ffi.Float)>(
-//     symbol: 'set_camera_exposure', assetId: 'libflutter_filament')
+//     symbol: 'set_camera_exposure', assetId: 'flutter_filament_plugin')
 // external void set_camera_exposure(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double aperture,
@@ -605,7 +608,7 @@ external void grab_end(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float, ffi.Float)>(
-//     symbol: 'set_camera_position', assetId: 'libflutter_filament')
+//     symbol: 'set_camera_position', assetId: 'flutter_filament_plugin')
 // external void set_camera_position(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double x,
@@ -616,7 +619,7 @@ external void grab_end(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float, ffi.Float, ffi.Float)>(
-//     symbol: 'set_camera_rotation', assetId: 'libflutter_filament')
+//     symbol: 'set_camera_rotation', assetId: 'flutter_filament_plugin')
 // external void set_camera_rotation(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double rads,
@@ -626,21 +629,21 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Float>)>(
-//     symbol: 'set_camera_model_matrix', assetId: 'libflutter_filament')
+//     symbol: 'set_camera_model_matrix', assetId: 'flutter_filament_plugin')
 // external void set_camera_model_matrix(
 //   ffi.Pointer<ffi.Void> viewer,
 //   ffi.Pointer<ffi.Float> matrix,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>(
-//     symbol: 'set_camera_focal_length', assetId: 'libflutter_filament')
+//     symbol: 'set_camera_focal_length', assetId: 'flutter_filament_plugin')
 // external void set_camera_focal_length(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double focalLength,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>(
-//     symbol: 'set_camera_focus_distance', assetId: 'libflutter_filament')
+//     symbol: 'set_camera_focus_distance', assetId: 'flutter_filament_plugin')
 // external void set_camera_focus_distance(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double focusDistance,
@@ -649,7 +652,7 @@ external void grab_end(
 // @ffi.Native<
 //         ffi.Int Function(
 //             ffi.Pointer<ffi.Void>, EntityId, ffi.Pointer<ffi.Char>)>(
-//     symbol: 'hide_mesh', assetId: 'libflutter_filament')
+//     symbol: 'hide_mesh', assetId: 'flutter_filament_plugin')
 // external int hide_mesh(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -659,7 +662,7 @@ external void grab_end(
 // @ffi.Native<
 //         ffi.Int Function(
 //             ffi.Pointer<ffi.Void>, EntityId, ffi.Pointer<ffi.Char>)>(
-//     symbol: 'reveal_mesh', assetId: 'libflutter_filament')
+//     symbol: 'reveal_mesh', assetId: 'flutter_filament_plugin')
 // external int reveal_mesh(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -667,7 +670,7 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
-//     symbol: 'set_post_processing', assetId: 'libflutter_filament')
+//     symbol: 'set_post_processing', assetId: 'flutter_filament_plugin')
 // external void set_post_processing(
 //   ffi.Pointer<ffi.Void> viewer,
 //   bool enabled,
@@ -675,7 +678,7 @@ external void grab_end(
 
 // @ffi.Native<
 //     ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int, ffi.Int,
-//         ffi.Pointer<EntityId>)>(symbol: 'pick', assetId: 'libflutter_filament')
+//         ffi.Pointer<EntityId>)>(symbol: 'pick', assetId: 'flutter_filament_plugin')
 // external void pick(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int x,
@@ -684,14 +687,14 @@ external void grab_end(
 // );
 
 // @ffi.Native<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Void>, EntityId)>(
-//     symbol: 'get_name_for_entity', assetId: 'libflutter_filament')
+//     symbol: 'get_name_for_entity', assetId: 'flutter_filament_plugin')
 // external ffi.Pointer<ffi.Char> get_name_for_entity(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int entityId,
 // );
 
 // @ffi.Native<ffi.Void Function()>(
-//     symbol: 'ios_dummy', assetId: 'libflutter_filament')
+//     symbol: 'ios_dummy', assetId: 'flutter_filament_plugin')
 // external void ios_dummy();
 
 @ffi.Native<
@@ -707,7 +710,7 @@ external void grab_end(
                             ffi.Pointer<ffi.Void> renderCallbackOwner)>>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Pointer<ffi.Void>> out)>(
-    symbol: '_create_filament_viewer_ffi', assetId: 'libflutter_filament')
+    symbol: '_create_filament_viewer_ffi', assetId: 'flutter_filament_plugin')
 external ffi.Pointer<ffi.Void> create_filament_viewer_ffi(
     ffi.Pointer<ffi.Void> context,
     ffi.Pointer<ffi.Void> platform,
@@ -726,7 +729,7 @@ external ffi.Pointer<ffi.Void> create_filament_viewer_ffi(
       ffi.Pointer<ffi.Void>,
       ffi.Pointer<ffi.Void>,
       ffi.Pointer<ffi.Char>,
-    )>(symbol: '_create_filament_viewer', assetId: 'libflutter_filament')
+    )>(symbol: '_create_filament_viewer', assetId: 'flutter_filament_plugin')
 external ffi.Pointer<ffi.Void> create_filament_viewer(
     ffi.Pointer<ffi.Void> context,
     ffi.Pointer<ffi.Void> loader,
@@ -736,7 +739,7 @@ external ffi.Pointer<ffi.Void> create_filament_viewer(
 @ffi.Native<
         ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>,
             ffi.Uint32, ffi.Uint32)>(
-    symbol: '_create_swap_chain_ffi', assetId: 'libflutter_filament')
+    symbol: '_create_swap_chain_ffi', assetId: 'flutter_filament_plugin')
 external void create_swap_chain_ffi(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Void> surface,
@@ -745,7 +748,7 @@ external void create_swap_chain_ffi(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_destroy_swap_chain_ffi', assetId: 'libflutter_filament')
+    symbol: '_destroy_swap_chain_ffi', assetId: 'flutter_filament_plugin')
 external void destroy_swap_chain_ffi(
   ffi.Pointer<ffi.Void> viewer,
 );
@@ -753,7 +756,7 @@ external void destroy_swap_chain_ffi(
 @ffi.Native<
         ffi.Void Function(
             ffi.Pointer<ffi.Void>, ffi.IntPtr, ffi.Uint32, ffi.Uint32)>(
-    symbol: '_create_render_target_ffi', assetId: 'libflutter_filament')
+    symbol: '_create_render_target_ffi', assetId: 'flutter_filament_plugin')
 external void create_render_target_ffi(
   ffi.Pointer<ffi.Void> viewer,
   int nativeTextureId,
@@ -762,32 +765,32 @@ external void create_render_target_ffi(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_destroy_filament_viewer_ffi', assetId: 'libflutter_filament')
+    symbol: '_destroy_filament_viewer_ffi', assetId: 'flutter_filament_plugin')
 external void destroy_filament_viewer_ffi(
   ffi.Pointer<ffi.Void> viewer,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_render_ffi', assetId: 'libflutter_filament')
+    symbol: '_render_ffi', assetId: 'flutter_filament_plugin')
 external void render_ffi(
   ffi.Pointer<ffi.Void> viewer,
 );
 
 // @ffi.Native<FilamentRenderCallback Function(FilamentRenderCallback)>(
-//     symbol: 'make_render_callback_fn_pointer', assetId: 'libflutter_filament')
+//     symbol: 'make_render_callback_fn_pointer', assetId: 'flutter_filament_plugin')
 // external FilamentRenderCallback make_render_callback_fn_pointer(
 //   FilamentRenderCallback arg0,
 // );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
-    symbol: '_set_rendering_ffi', assetId: 'libflutter_filament')
+    symbol: '_set_rendering_ffi', assetId: 'flutter_filament_plugin')
 external void set_rendering_ffi(
   ffi.Pointer<ffi.Void> viewer,
   bool rendering,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Float)>(
-    symbol: '_set_frame_interval_ffi', assetId: 'libflutter_filament')
+    symbol: '_set_frame_interval_ffi', assetId: 'flutter_filament_plugin')
 external void set_frame_interval_ffi(
   double frameInterval,
 );
@@ -796,7 +799,7 @@ external void set_frame_interval_ffi(
         ffi.Void Function(
             ffi.Pointer<ffi.Void>, ffi.Uint32, ffi.Uint32, ffi.Float)>(
     symbol: '_update_viewport_and_camera_projection_ffi',
-    assetId: 'libflutter_filament')
+    assetId: 'flutter_filament_plugin')
 external void update_viewport_and_camera_projection_ffi(
   ffi.Pointer<ffi.Void> viewer,
   int width,
@@ -807,7 +810,7 @@ external void update_viewport_and_camera_projection_ffi(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float, ffi.Float, ffi.Float)>(
-//     symbol: 'set_background_color_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_background_color_ffi', assetId: 'flutter_filament_plugin')
 // external void set_background_color_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double r,
@@ -817,7 +820,7 @@ external void update_viewport_and_camera_projection_ffi(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'clear_background_image_ffi', assetId: 'libflutter_filament')
+//     symbol: 'clear_background_image_ffi', assetId: 'flutter_filament_plugin')
 // external void clear_background_image_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
@@ -825,7 +828,7 @@ external void update_viewport_and_camera_projection_ffi(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Bool)>(
-//     symbol: 'set_background_image_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_background_image_ffi', assetId: 'flutter_filament_plugin')
 // external void set_background_image_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   ffi.Pointer<ffi.Char> path,
@@ -835,7 +838,7 @@ external void update_viewport_and_camera_projection_ffi(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float, ffi.Bool)>(
-//     symbol: 'set_background_image_position_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_background_image_position_ffi', assetId: 'flutter_filament_plugin')
 // external void set_background_image_position_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double x,
@@ -844,21 +847,21 @@ external void update_viewport_and_camera_projection_ffi(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int)>(
-//     symbol: 'set_tone_mapping_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_tone_mapping_ffi', assetId: 'flutter_filament_plugin')
 // external void set_tone_mapping_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int toneMapping,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>(
-//     symbol: 'set_bloom_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_bloom_ffi', assetId: 'flutter_filament_plugin')
 // external void set_bloom_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   double strength,
 // );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)>(
-    symbol: '_load_skybox_ffi', assetId: 'libflutter_filament')
+    symbol: '_load_skybox_ffi', assetId: 'flutter_filament_plugin')
 external void load_skybox_ffi(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Char> skyboxPath,
@@ -866,7 +869,7 @@ external void load_skybox_ffi(
 
 @ffi.Native<
     ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-        ffi.Float)>(symbol: '_load_ibl_ffi', assetId: 'libflutter_filament')
+        ffi.Float)>(symbol: '_load_ibl_ffi', assetId: 'flutter_filament_plugin')
 external void load_ibl_ffi(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Char> iblPath,
@@ -874,13 +877,13 @@ external void load_ibl_ffi(
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_remove_skybox_ffi', assetId: 'libflutter_filament')
+    symbol: '_remove_skybox_ffi', assetId: 'flutter_filament_plugin')
 external void remove_skybox_ffi(
   ffi.Pointer<ffi.Void> viewer,
 );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'remove_ibl_ffi', assetId: 'libflutter_filament')
+//     symbol: 'remove_ibl_ffi', assetId: 'flutter_filament_plugin')
 // external void remove_ibl_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
@@ -897,7 +900,7 @@ external void remove_skybox_ffi(
 //         ffi.Float,
 //         ffi.Float,
 //         ffi.Float,
-//         ffi.Bool)>(symbol: 'add_light_ffi', assetId: 'libflutter_filament')
+//         ffi.Bool)>(symbol: 'add_light_ffi', assetId: 'flutter_filament_plugin')
 // external int add_light_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int type,
@@ -913,21 +916,21 @@ external void remove_skybox_ffi(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
-//     symbol: 'remove_light_ffi', assetId: 'libflutter_filament')
+//     symbol: 'remove_light_ffi', assetId: 'flutter_filament_plugin')
 // external void remove_light_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int entityId,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'clear_lights_ffi', assetId: 'libflutter_filament')
+//     symbol: 'clear_lights_ffi', assetId: 'flutter_filament_plugin')
 // external void clear_lights_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
 
 @ffi.Native<
     EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-        ffi.Bool)>(symbol: '_load_glb_ffi', assetId: 'libflutter_filament')
+        ffi.Bool)>(symbol: '_load_glb_ffi', assetId: 'flutter_filament_plugin')
 external int load_glb_ffi(
   ffi.Pointer<ffi.Void> assetManager,
   ffi.Pointer<ffi.Char> assetPath,
@@ -937,7 +940,7 @@ external int load_glb_ffi(
 @ffi.Native<
         EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>)>(
-    symbol: '_load_gltf_ffi', assetId: 'libflutter_filament')
+    symbol: '_load_gltf_ffi', assetId: 'flutter_filament_plugin')
 external int load_gltf_ffi(
   ffi.Pointer<ffi.Void> assetManager,
   ffi.Pointer<ffi.Char> assetPath,
@@ -945,14 +948,14 @@ external int load_gltf_ffi(
 );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
-//     symbol: 'remove_asset_ffi', assetId: 'libflutter_filament')
+//     symbol: 'remove_asset_ffi', assetId: 'flutter_filament_plugin')
 // external void remove_asset_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int asset,
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-//     symbol: 'clear_assets_ffi', assetId: 'libflutter_filament')
+//     symbol: 'clear_assets_ffi', assetId: 'flutter_filament_plugin')
 // external void clear_assets_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 // );
@@ -960,7 +963,7 @@ external int load_gltf_ffi(
 // @ffi.Native<
 //         ffi.Bool Function(
 //             ffi.Pointer<ffi.Void>, EntityId, ffi.Pointer<ffi.Char>)>(
-//     symbol: 'set_camera_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_camera_ffi', assetId: 'flutter_filament_plugin')
 // external bool set_camera_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int asset,
@@ -973,7 +976,7 @@ external int load_gltf_ffi(
 //         EntityId,
 //         ffi.Pointer<ffi.Char>,
 //         ffi.Pointer<ffi.Float>,
-//         ffi.Int)>(symbol: 'apply_weights_ffi', assetId: 'libflutter_filament')
+//         ffi.Int)>(symbol: 'apply_weights_ffi', assetId: 'flutter_filament_plugin')
 // external void apply_weights_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -985,7 +988,7 @@ external int load_gltf_ffi(
 // @ffi.Native<
 //         ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId,
 //             ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Float>, ffi.Int)>(
-//     symbol: 'set_morph_target_weights_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_morph_target_weights_ffi', assetId: 'flutter_filament_plugin')
 // external void set_morph_target_weights_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1004,7 +1007,7 @@ external int load_gltf_ffi(
 //             ffi.Int,
 //             ffi.Int,
 //             ffi.Float)>(
-//     symbol: 'set_morph_animation_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_morph_animation_ffi', assetId: 'flutter_filament_plugin')
 // external bool set_morph_animation_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1027,7 +1030,7 @@ external int load_gltf_ffi(
 //             ffi.Pointer<ffi.Pointer<ffi.Char>>,
 //             ffi.Int,
 //             ffi.Float)>(
-//     symbol: 'set_bone_animation_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_bone_animation_ffi', assetId: 'flutter_filament_plugin')
 // external void set_bone_animation_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1043,7 +1046,7 @@ external int load_gltf_ffi(
 // @ffi.Native<
 //         ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Int, ffi.Bool,
 //             ffi.Bool, ffi.Bool, ffi.Float)>(
-//     symbol: 'play_animation_ffi', assetId: 'libflutter_filament')
+//     symbol: 'play_animation_ffi', assetId: 'flutter_filament_plugin')
 // external void play_animation_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1056,7 +1059,7 @@ external int load_gltf_ffi(
 
 // @ffi.Native<
 //         ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Int, ffi.Int)>(
-//     symbol: 'set_animation_frame_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_animation_frame_ffi', assetId: 'flutter_filament_plugin')
 // external void set_animation_frame_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1065,7 +1068,7 @@ external int load_gltf_ffi(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Int)>(
-//     symbol: 'stop_animation_ffi', assetId: 'libflutter_filament')
+//     symbol: 'stop_animation_ffi', assetId: 'flutter_filament_plugin')
 // external void stop_animation_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1073,7 +1076,7 @@ external int load_gltf_ffi(
 // );
 
 // @ffi.Native<ffi.Int Function(ffi.Pointer<ffi.Void>, EntityId)>(
-//     symbol: 'get_animation_count_ffi', assetId: 'libflutter_filament')
+//     symbol: 'get_animation_count_ffi', assetId: 'flutter_filament_plugin')
 // external int get_animation_count_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1082,7 +1085,7 @@ external int load_gltf_ffi(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, EntityId, ffi.Pointer<ffi.Char>, ffi.Int)>(
-//     symbol: 'get_animation_name_ffi', assetId: 'libflutter_filament')
+//     symbol: 'get_animation_name_ffi', assetId: 'flutter_filament_plugin')
 // external void get_animation_name_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1093,7 +1096,7 @@ external int load_gltf_ffi(
 // @ffi.Native<
 //         ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId,
 //             ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>, ffi.Int)>(
-//     symbol: 'get_morph_target_name_ffi', assetId: 'libflutter_filament')
+//     symbol: 'get_morph_target_name_ffi', assetId: 'flutter_filament_plugin')
 // external void get_morph_target_name_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1105,7 +1108,7 @@ external int load_gltf_ffi(
 // @ffi.Native<
 //         ffi.Int Function(
 //             ffi.Pointer<ffi.Void>, EntityId, ffi.Pointer<ffi.Char>)>(
-//     symbol: 'get_morph_target_name_count_ffi', assetId: 'libflutter_filament')
+//     symbol: 'get_morph_target_name_count_ffi', assetId: 'flutter_filament_plugin')
 // external int get_morph_target_name_count_ffi(
 //   ffi.Pointer<ffi.Void> assetManager,
 //   int asset,
@@ -1113,7 +1116,7 @@ external int load_gltf_ffi(
 // );
 
 // @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
-//     symbol: 'set_post_processing_ffi', assetId: 'libflutter_filament')
+//     symbol: 'set_post_processing_ffi', assetId: 'flutter_filament_plugin')
 // external void set_post_processing_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   bool enabled,
@@ -1122,7 +1125,7 @@ external int load_gltf_ffi(
 // @ffi.Native<
 //         ffi.Void Function(
 //             ffi.Pointer<ffi.Void>, ffi.Int, ffi.Int, ffi.Pointer<EntityId>)>(
-//     symbol: 'pick_ffi', assetId: 'libflutter_filament')
+//     symbol: 'pick_ffi', assetId: 'flutter_filament_plugin')
 // external void pick_ffi(
 //   ffi.Pointer<ffi.Void> viewer,
 //   int x,
@@ -1131,7 +1134,7 @@ external int load_gltf_ffi(
 // );
 
 // @ffi.Native<ffi.Void Function()>(
-//     symbol: 'ios_dummy_ffi', assetId: 'libflutter_filament')
+//     symbol: 'ios_dummy_ffi', assetId: 'flutter_filament_plugin')
 // external void ios_dummy_ffi();
 
 // final class __mbstate_t extends ffi.Union {
