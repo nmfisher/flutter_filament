@@ -9,12 +9,6 @@
     var Module = {};
     
     Module['instantiateWasm'] = function(imports, successCallback) {
-      // imports["env"]["loadResourceToBuffer"] = (out, length, callback, userData) => { 
-      //   return moduleInstance.exports.loadResourceToBuffer(out, length, callback, userData);
-      // }
-      // imports["env"]["__main_argc_argv"] = (argc, argv) => {
-      //   console.log("main");
-      // }
       fetch('assets/assets/web/flutter_filament_plugin.wasm', { credentials: 'same-origin' }).then(async (response)  => {
         var result = await WebAssembly.instantiateStreaming(response, imports);
         successCallback(result.instance,result.module);
