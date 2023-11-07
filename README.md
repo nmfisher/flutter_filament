@@ -13,7 +13,7 @@ https://github.com/nmfisher/flutter_filament/assets/7238578/abaed1c8-c97b-4999-9
 
 |Feature|Supported|
 |---|---|
-|Platforms|✅ iOS (arm64)<br/>✅ MacOS (arm64)<br/>✅ Android (arm64) <br/>✅ Windows (x64) (>= 10)<br/>⚠️ Linux (x64 - broken)<br/>⚠️ Web (planned)|
+|Platforms|✅ iOS (arm64)<br/>✅ MacOS (arm64)<br/>✅ Android (arm64) <br/>✅ Windows (x64) (>= 10)<br/>⚠️ Linux (x64 - broken)<br/>⚠️ Web (partial)|
 |Formats|✅ glb <br/>⚠️ glTF (partial - see Known Issues)|
 |Texture support|✅ PNG <br/>✅ JPEG <br/>✅ KTX <br/>⚠️ KTX2 (planned)|
 |Camera movement|✅ Desktop (mouse)<br/>✅ Mobile (swipe/pinch)|
@@ -25,6 +25,8 @@ Special thanks to [odd-io](https://github.com/odd-io/) for sponsoring work on su
 PRs are welcome but please create a placeholder PR to discuss before writing any code. This will help with feature planning, avoid clashes with existing work and keep the project structure consistent.   
 
 ## Getting Started
+
+For web usage, see the [Web Usage](#web) below
 
 This package requires Flutter >= `3.16.0-0.2.pre`, so you will need to first switch to the `beta` channel: 
 
@@ -322,13 +324,44 @@ Don't call playAnimation when the app is in the background  (i.e inactive/hidden
 
 If you have some kind of looping animation in your app code, make sure it pauses while the app is backgrounded.
 
+## Web Usage
+
+Currently, our implementation requires the wasm target for Flutter Web. Supporting the Javascript target is possible, but would require some additional code to glue the Flutter build to the filament wasm library. See the `feature/webgl-dartjs` branch if you want to help add support for this. 
+
+To use the wasm build, you must be on the Flutter master channel:
+
+`flutter channel master`
+
+You must also have:
+1) a local web server that will send the headers `Cross-Origin-Embedder-Policy": "require-corp","Cross-Origin-Opener-Policy": "same-origin"` which are required for SharedArrayBuffer. The simplest option is to clone the `dhttpd` fork at `git@github.com:nmfisher/dhttpd.git`, which is already configured to serve these headers out of the box.
+2) Chrome 119 or higher, or Firefox Nightly
+
+The example project already contains a working web build, so all you need to run the web app is:
+
+```
+cd example/build/web_wasm
+dart run /path/to/your/dhttpd/bin/dhttpd.dart
+```
+
+then open your browser and navigate to http://localhost:8080 
+
+If you need to rebuild the web files:
+
+```
+emcmake cmake -G Ninja ..
+cmake --build .      
+```
+
+This will rebuild the web-only sources, update the .js/.wasm files in the example app and rebuild the Flutter app.
+
+To rebuild the Filament libraries, use the `flutter-filament-webgl2` branch at `https://github.com/nmfisher/filament` (the only real difference is we need a single threaded Filament build that also supports pthreads).
 
 
 ## Versioning
 
 ||Android|iOS|MacOS|Windows|Linux|WebGL|
 |---|---|---|---|---|---||
-|Filament|v1.43.1 (arm64/armeabi-v7a/x86/x86_64)|v1.43.1* (arm64)|v1.43.1 (arm64)|v1.32.4 (x86_64)|TODO**|TODO***|
+|Filament|v1.43.1 (arm64/armeabi-v7a/x86/x86_64)|v1.43.1* (arm64)|v1.43.1 (arm64)|v1.32.4 (x86_64)|TODO**|v1.43.1|
 |Flutter||3.15.0-15.2.pre|3.15.0-15.2.pre|3.15.0-15.2.pre
 
 * iOS release build has a skybox bug so the debug versions are currently shipped on iOS
