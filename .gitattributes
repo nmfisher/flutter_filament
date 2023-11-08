@@ -597,3 +597,8 @@ windows/lib/Release/angle/* filter=lfs diff=lfs merge=lfs -text
 windows/lib/**/* filter=lfs diff=lfs merge=lfs -text
 example/assets/lit_opaque_43_metal_macos.uberz filter=lfs diff=lfs merge=lfs -text
 example/assets/lit_opaque_43_gles.uberz filter=lfs diff=lfs merge=lfs -text
+example/assets/web/ filter=lfs diff=lfs merge=lfs -text
+example/assets/web/flutter_filament_plugin.js filter=lfs diff=lfs merge=lfs -text
+example/assets/web/flutter_filament_plugin.wasm filter=lfs diff=lfs merge=lfs -text
+example/assets/web/flutter_filament_plugin.worker.js filter=lfs diff=lfs merge=lfs -text
+example/assets/test.glb filter=lfs diff=lfs merge=lfs -text
