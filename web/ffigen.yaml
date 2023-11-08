@@ -1,0 +1,16 @@
+output: '../lib/generated_bindings_web.dart'
+headers:
+  entry-points:
+    - 'include/FlutterFilamentWebApi.h'
+    - '../ios/include/FlutterFilamentFFIApi.h'
+ffi-native:
+  assetId: 'flutter_filament_plugin'
+structs:
+  exclude: 
+    - '.*'
+unions:
+  exclude: 
+    - '.*'
+globals:
+  exclude: 
+    - '.*'

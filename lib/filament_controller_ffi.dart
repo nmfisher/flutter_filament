@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
-import 'dart:js_interop';
+
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -12,21 +12,6 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter_filament/animations/animation_data.dart';
 import 'package:flutter_filament/generated_bindings.dart';
 import 'package:flutter_filament/rendering_surface.dart';
-
-class _Allocator implements Allocator {
-  const _Allocator();
-  @override
-  Pointer<T> allocate<T extends NativeType>(int byteCount, {int? alignment}) {
-    return Pointer<T>.fromAddress(flutter_filament_web_allocate(byteCount));
-  }
-
-  @override
-  void free(Pointer<NativeType> pointer) {
-    // TODO: implement free
-  }
-}
-
-final allocator = _Allocator();
 
 // ignore: constant_identifier_names
 const FilamentEntity _FILAMENT_ASSET_ERROR = 0;

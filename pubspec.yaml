@@ -30,7 +30,7 @@ ffigen:
     entry-points:
       - 'ios/include/FlutterFilamentFFIApi.h'
   ffi-native:
-    assetId: 'libflutter_filament'
+    assetId: 'flutter_filament_plugin'
 
 flutter:
   plugin:

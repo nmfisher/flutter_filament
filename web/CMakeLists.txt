@@ -227,5 +227,14 @@ add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/js/main.dart.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/build/web_wasm/
 )
 
+add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
+    COMMAND dart run ffigen --config ${CMAKE_CURRENT_SOURCE_DIR}/ffigen.yaml WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../
+    COMMAND ${CMAKE_COMMAND} -DINPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/generated_bindings_web.dart -DOUTPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/generated_bindings_web.dart "-DTO_REPLACE=symbol: '" "-DREPLACEMENT=symbol: '_" -P ${CMAKE_CURRENT_SOURCE_DIR}/replace_in_file.cmake 
+    VERBATIM
+)
+
+
+
+
 
 
