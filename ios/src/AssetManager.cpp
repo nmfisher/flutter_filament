@@ -170,8 +170,6 @@ EntityId AssetManager::loadGlb(const char *uri, bool unlit) {
     
     _scene->addEntities(asset->getEntities(), entityCount);
 
-    
-    
     if (!_gltfResourceLoader->asyncBeginLoad(asset)) {
         Log("Unknown error loading glb asset");
         _resourceLoaderWrapper->free(rbuf);

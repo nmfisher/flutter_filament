@@ -25,14 +25,15 @@ public:
 
   void Wait()
   {
-    std::future<void*> accumulate_future = prom.get_future();
+    std::future<int32_t> accumulate_future = prom.get_future();
+    std::cout << "Loaded asset from Flutter of length " << accumulate_future.get() << std::endl;
   }
 
   void HandleResponse(void* data, int32_t length)
   {
     this->data = data;
     this->length = length;
-    prom.set_value(data);
+    prom.set_value(length);
   }
 void* data = nullptr;
 int32_t length = 0;
@@ -41,7 +42,7 @@ private:
   std::mutex mutex_;
   std::condition_variable cv_;
   bool notified_ = false;
-  std::promise<void*> prom;
+  std::promise<int32_t> prom;
 
 };
 
@@ -50,9 +51,8 @@ using emscripten::val;
 extern "C"
 {
 
- 
-  EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context;
-
+  extern void loadFlutterAsset(const char* path, void* context); 
+  
   // 
   // Since are using -sMAIN_MODULE with -sPTHREAD_POOL_SIZE=1, main will be called when the first worker is spawned
   //
@@ -68,6 +68,10 @@ extern "C"
     memset(ptr+offset, val, 1);
   }
 
+  FLUTTER_PLUGIN_EXPORT char flutter_filament_web_get(char* ptr, int32_t offset) {
+    return ptr[offset];
+  }
+
   FLUTTER_PLUGIN_EXPORT void* flutter_filament_web_allocate(int32_t size) {
     char* allocated = (char*)calloc(size, 1);
     return allocated;
@@ -77,7 +81,8 @@ extern "C"
     return *out;
   }
 
-  FLUTTER_PLUGIN_EXPORT EMSCRIPTEN_WEBGL_CONTEXT_HANDLE  flutter_filament_web_create_gl_context() {
+  FLUTTER_PLUGIN_EXPORT EMSCRIPTEN_WEBGL_CONTEXT_HANDLE flutter_filament_web_create_gl_context() {
+
     EmscriptenWebGLContextAttributes attr;
     
     emscripten_webgl_init_context_attributes(&attr);
@@ -90,7 +95,7 @@ extern "C"
     // attr.renderViaOffscreenBackBuffer = EM_FALSE;
     attr.majorVersion = 2;
     
-    context = emscripten_webgl_create_context("#canvas", &attr);
+    auto context = emscripten_webgl_create_context("#canvas", &attr);
     std::cout << "Created WebGL context with major/minor " << attr.majorVersion << "." << attr.minorVersion << std::endl;
 
     auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
@@ -103,8 +108,19 @@ extern "C"
 
   int _lastResourceId = 0;
 
-  FLUTTER_PLUGIN_EXPORT ResourceBuffer flutter_filament_web_load_resource(const char* path)
+  ResourceBuffer flutter_filament_web_load_resource(const char* path)
   {
+    // ideally we should bounce the call to Flutter then wait for callback
+    // this isn't working for large assets though - seems like it's deadlocked
+    // will leavce this here commented out so we can revisit later if needed
+    // auto pendingCall = new PendingCall();
+    // loadFlutterAsset(path, (void*)pendingCall);
+    // pendingCall->Wait();
+    // auto rb = ResourceBuffer { pendingCall->data, (int32_t) pendingCall->length, _lastResourceId  } ;
+    // _lastResourceId++;
+    // delete pendingCall;
+    // std::cout << "Deleted pending call" << std::endl;
+
     emscripten_fetch_attr_t attr;
     emscripten_fetch_attr_init(&attr);
     attr.onsuccess = [](emscripten_fetch_t* fetch) {
@@ -120,8 +136,9 @@ extern "C"
       
     };
     attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS;
-    auto pathString = std::string("assets/");
+    auto pathString = std::string("../../");
     pathString += std::string(path);
+    std::cout << "Fetching from path " << pathString.c_str() << std::endl;
     auto request = emscripten_fetch(&attr, pathString.c_str());
     
     if(!request) {
@@ -129,18 +146,20 @@ extern "C"
     }
     auto data = malloc(request->numBytes);
     memcpy(data, request->data, request->numBytes);
-    // send a get request
-    auto rb = ResourceBuffer { data, (int32_t) request->numBytes, _lastResourceId  } ;
-    _lastResourceId++;
     emscripten_fetch_close(request);
+    auto rb = ResourceBuffer { data, (int32_t) request->numBytes, _lastResourceId  } ;
     return rb;
   }
 
-  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_free_resource(ResourceBuffer rb) {
-    free(rb.data);
+  void flutter_filament_web_free_resource(ResourceBuffer rb) {
+    free((void*)rb.data);
+  }
+  
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_free(void* ptr) {
+    free(ptr);
   }
 
   FLUTTER_PLUGIN_EXPORT void* const flutter_filament_web_get_resource_loader_wrapper() {
-    return new ResourceLoaderWrapper(flutter_filament_web_load_resource, flutter_filament_web_free_resource)
+    return new ResourceLoaderWrapper(flutter_filament_web_load_resource, flutter_filament_web_free_resource);
   }
 }

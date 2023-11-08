@@ -4,11 +4,22 @@
 // ignore_for_file: type=lint
 import 'dart:ffi' as ffi;
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
-    symbol: '_flutter_filament_web_set_load_resource_fn',
+@ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>, ffi.Int32, ffi.Pointer<ffi.Void>)>(
+    symbol: '_flutter_filament_web_load_resource_callback',
     assetId: 'flutter_filament_plugin')
-external void flutter_filament_web_set_load_resource_fn(
-  ffi.Pointer<ffi.Void> fn,
+external void flutter_filament_web_load_resource_callback(
+  ffi.Pointer<ffi.Void> data,
+  int length,
+  ffi.Pointer<ffi.Void> context,
+);
+
+@ffi.Native<ffi.Char Function(ffi.Pointer<ffi.Char>, ffi.Int32)>(
+    symbol: '_flutter_filament_web_get', assetId: 'flutter_filament_plugin')
+external int flutter_filament_web_get(
+  ffi.Pointer<ffi.Char> ptr,
+  int offset,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Char>, ffi.Int32, ffi.Int32)>(
@@ -17,6 +28,13 @@ external void flutter_filament_web_set(
   ffi.Pointer<ffi.Char> ptr,
   int offset,
   int val,
+);
+
+@ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Pointer<ffi.Void>>)>(
+    symbol: '_flutter_filament_web_get_address',
+    assetId: 'flutter_filament_plugin')
+external ffi.Pointer<ffi.Void> flutter_filament_web_get_address(
+  ffi.Pointer<ffi.Pointer<ffi.Void>> out,
 );
 
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Int32)>(
@@ -29,13 +47,6 @@ external ffi.Pointer<ffi.Void> flutter_filament_web_allocate(
     symbol: '_flutter_filament_web_free', assetId: 'flutter_filament_plugin')
 external void flutter_filament_web_free(
   ffi.Pointer<ffi.Void> ptr,
-);
-
-@ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Pointer<ffi.Void>>)>(
-    symbol: '_flutter_filament_web_get_address',
-    assetId: 'flutter_filament_plugin')
-external ffi.Pointer<ffi.Void> flutter_filament_web_get_address(
-  ffi.Pointer<ffi.Pointer<ffi.Void>> out,
 );
 
 @ffi.Native<ffi.Int Function()>(

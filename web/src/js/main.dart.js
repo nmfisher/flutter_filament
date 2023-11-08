@@ -7,8 +7,14 @@
   let moduleInstance;
   try {
     var Module = {};
-    
+    // adding this as a property to Module means it will get exported "across" the web worker boundary as a handler
+    Module['loadFlutterAsset'] = (path, context) => {
+      return moduleInstance.exports.loadFlutterAsset(path, context);
+    }
     Module['instantiateWasm'] = function(imports, successCallback) {
+      imports["env"]["loadFlutterAsset"] = (out, length, callback, userData) => { 
+        console.log("This function is only provided on the main thread to satisfy the WASM runtime linker. You should never actually see this being called.")
+      }
       fetch('assets/assets/web/flutter_filament_plugin.wasm', { credentials: 'same-origin' }).then(async (response)  => {
         var result = await WebAssembly.instantiateStreaming(response, imports);
         successCallback(result.instance,result.module);

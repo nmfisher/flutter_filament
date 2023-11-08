@@ -3,11 +3,11 @@
 // package as the core of your plugin.
 // ignore: avoid_web_libraries_in_flutter
 
-import 'package:ffi/ffi.dart';
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'package:flutter_filament/generated_bindings.dart';
-
+import 'package:flutter_filament/generated_bindings_web.dart';
 import 'dart:ffi';
 
 @AbiSpecificIntegerMapping({
@@ -38,18 +38,48 @@ final class FooChar extends AbiSpecificInteger {
   const FooChar();
 }
 
-void loadResourceToBuffer(String path, Pointer context) async {
-  // _queue.add(Tuple4(out, length, callback, userData));
-  var bd = await rootBundle.load(path);
-  var dataPtr = Pointer<Uint8>.fromAddress(
-      flutter_filament_web_allocate(bd.lengthInBytes));
+class _Allocator implements Allocator {
+  const _Allocator();
+  @override
+  Pointer<T> allocate<T extends NativeType>(int byteCount, {int? alignment}) {
+    return flutter_filament_web_allocate(byteCount).cast<T>();
+  }
+
+  @override
+  void free(Pointer<NativeType> pointer) {
+    flutter_filament_web_free(pointer.cast<Void>());
+  }
+}
+
+@pragma("wasm:export")
+void loadFlutterAsset(Pointer<Char> path, Pointer<Void> context) async {
+  final codeUnits = path.cast<Uint8>();
+  var length = 0;
+  var bytes = <int>[];
+  int i = 0;
+  while (true) {
+    var val = flutter_filament_web_get(path, i);
+    i++;
+    if (val != 0) {
+      bytes.add(val);
+    } else {
+      break;
+    }
+  }
+  var pathString = utf8.decode(bytes);
+
+  var bd = await rootBundle.load(pathString);
+
+  var dataPtr = flutter_filament_web_allocate(bd.lengthInBytes).cast<Char>();
 
   for (int i = 0; i < bd.lengthInBytes; i++) {
     flutter_filament_web_set(dataPtr, i, bd.getUint8(i));
   }
   flutter_filament_web_load_resource_callback(
-      dataPtr, bd.lengthInBytes, context);
+      dataPtr.cast<Void>(), bd.lengthInBytes, context);
 }
+
+final allocator = _Allocator();
 
 /// A web implementation of the FlutterFilamentPlatform of the FlutterFilament plugin.
 class FlutterFilamentPluginWeb {
