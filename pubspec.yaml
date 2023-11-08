@@ -25,7 +25,7 @@ dev_dependencies:
     path: /Users/nickfisher/Documents/ffigen
 
 ffigen:
-  output: 'lib/generated_bindings.dart'
+  output: 'lib/generated_bindings_other.dart'
   headers:
     entry-points:
       - 'ios/include/FlutterFilamentFFIApi.h'
