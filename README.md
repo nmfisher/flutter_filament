@@ -421,6 +421,21 @@ git checkout flutter-filament-ios-android-macos
 ./build.sh -p <platform> release
 ```
 
+For iOS, we build universal libs (for x86_64 Simulator, and arm64 iPhone). 
+
+I don't believe there's any way to build a universal library targeting different SDKs for the same architecture (i.e. both simulator and iPhone targeting arm64), so you won't be able to run an arm64 simulator.
+
+You will also need to create universal binaries for libpng.a, libtinyexr.a, libimageio.a, libmath.a libmathio.a manually:
+
+```
+lipo -create -output out/ios-release/filament/lib/universal/libpng.ai out/cmake-ios-release-x86_64/third_party/libpng/tnt/libpng.a out/cmake-ios-release-arm64/third_party/libpng/tnt/libpng.a
+lipo -create -output out/ios-release/filament/lib/universal/libtinyexr.a out/cmake-ios-release-x86_64/third_party/tinyexr/tnt/libtinyexr.a out/cmake-ios-release-arm64/third_party/tinyexr/tnt/libtinyexr.a
+lipo -create -output ~/Documents/polyvox/flutter/flutter_filament/ios/lib/libimageio.a out/cmake-ios-release-x86_64/libs/imageio/libimageio.a out/cmake-ios-release-arm64/libs/imageio/libimageio.a
+lipo -create -output ~/Documents/polyvox/flutter/flutter_filament/ios/lib/libmath.a out/cmake-ios-release-x86_64/libs/math/libmath.a out/cmake-ios-release-arm64/libs/math/libmath.a
+lipo -create -output ~/Documents/polyvox/flutter/flutter_filament/ios/lib/libmathio.a out/cmake-ios-release-x86_64/libs/mathio/libmathio.a out/cmake-ios-release-arm64/libs/mathio/libmathio.a
+```
+
+
 ## Windows
 
 To support embedding GPU textures in Flutter (rather than copying to a CPU pixel buffer on every frame), we need to build a slightly customized version of Filament that uses GLES on Windows (rather than the default, which uses OpenGL).
