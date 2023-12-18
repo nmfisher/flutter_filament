@@ -11,10 +11,13 @@
 #include <thread>
 #include <stdlib.h>
 
+#ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
+
+
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GL/glext.h>
@@ -23,7 +26,7 @@
 #include <emscripten/html5.h>
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
-
+#endif 
 #include <pthread.h>
 
 using namespace polyvox;
@@ -73,12 +76,14 @@ public:
       std::thread::id this_id = std::this_thread::get_id();
 
       pthread_t filament_runner_thread_id = pthread_self();
-   
+
+      #ifdef __EMSCRIPTEN__
       auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
       if(success != EMSCRIPTEN_RESULT_SUCCESS) {
         std::cout << "failed to make context current  " << std::endl;
-        // return nullptr;
+        return nullptr;
       }
+      #endif
 
        viewer = new FilamentViewer((void*)context, loader, platform, uberArchivePath);
        *out = viewer;
@@ -110,7 +115,9 @@ public:
 
   void doRender() {
     render(viewer, 0, nullptr, nullptr, nullptr);
+    #ifdef __EMSCRIPTEN__
     emscripten_webgl_commit_frame();
+    #endif
     // if(_renderCallback) {
     //   _renderCallback(_renderCallbackOwner);
     // }
@@ -236,7 +243,8 @@ set_frame_interval_ffi(float frameIntervalInMilliseconds) {
 }
 
 
-EM_BOOL foo(double time, void* userData) {
+#ifdef __EMSCRIPTEN__
+EM_BOOL commit_frame(double time, void* userData) {
   // auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)_context);
   // if(success != EMSCRIPTEN_RESULT_SUCCESS) {
   //   std::cout << "failed to make context current  " << std::endl;
@@ -251,14 +259,14 @@ EM_BOOL foo(double time, void* userData) {
   emscripten_webgl_commit_frame();
   return EM_TRUE;
 }
+#endif
 
 FLUTTER_PLUGIN_EXPORT void render_ffi(void *const viewer) {
-    std::cout << "render ffi" << std::endl;
-
   std::packaged_task<void()> lambda([&]() mutable { 
-    std::cout << "doing render" << std::endl;
     _rl->doRender(); 
-    emscripten_request_animation_frame(foo, nullptr);
+    #ifdef __EMSCRIPTEN__
+    commit_frame(foo, nullptr);
+    #endif
   });
   auto fut = _rl->add_task(lambda);
   fut.wait();
@@ -330,27 +338,9 @@ FLUTTER_PLUGIN_EXPORT void set_bloom_ffi(void *const viewer, float strength) {
 
 FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void *const viewer,
                                            const char *skyboxPath) {  
-  // emscripten_request_animation_frame_loop(foo, _rl);                                                
-  std::packaged_task<void()> lambda([&] {    
-
-  //   auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)_context);
-  // if(success != EMSCRIPTEN_RESULT_SUCCESS) {
-  //   std::cout << "failed to make context current  " << std::endl;
-  //   // return EM_FALSE;
-  // }
-  // // ((RenderLoop*)userData)->doRender();
-  // float r = float(rand()) / float(RAND_MAX);
-  // float g = float(rand()) / float(RAND_MAX);
-  // float b = float(rand()) / float(RAND_MAX);
-  // glClearColor(r, g, b, 1.0f);
-  // glClear(GL_COLOR_BUFFER_BIT); 
-    
+  std::packaged_task<void()> lambda([&] {       
     load_skybox(_rl->viewer, skyboxPath); 
-    std::cout << "doing render" << std::endl;
     _rl->doRender();
-    std::cout << "requesting animation frame" << std::endl;
-    
-    emscripten_webgl_commit_frame();
     });
   auto fut = _rl->add_task(lambda);
   // fut.wait();
