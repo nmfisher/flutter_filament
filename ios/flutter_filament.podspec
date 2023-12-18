@@ -26,7 +26,7 @@ A new flutter plugin project.
     'OTHER_CFLAGS' => '"-fvisibility=default" "$(inherited)"',
     'USER_HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/include" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/include/filament" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/src" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/src/image" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/src/shaders"  "$(inherited)"',
     'ALWAYS_SEARCH_USER_PATHS' => 'YES',
-    "OTHER_LDFLAGS" =>  '-lfilament -lbackend -lfilameshio -lviewer -lfilamat -lgeometry -lutils -lfilabridge -lgltfio_core -lfilament-iblprefilter -limage -limageio -ltinyexr -lgltfio_core -lfilaflat -ldracodec -libl -lktxreader -lpng -lpng16  -lz -lstb -luberzlib -lsmol-v -luberarchive -lzstd -lstdc++',
+    "OTHER_LDFLAGS" =>  '-lfilament -lbackend -lfilameshio -lfilamat -lgeometry -lutils -lfilabridge -lgltfio_core -lfilament-iblprefilter -limage -limageio -ltinyexr -lgltfio_core -lfilaflat -ldracodec -libl -lktxreader -lpng -lpng16  -lz -lstb -luberzlib -lsmol-v -luberarchive -lzstd -lstdc++',
     'LIBRARY_SEARCH_PATHS' => '"${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/lib" "$(inherited)"',
   }
 
@@ -38,7 +38,7 @@ A new flutter plugin project.
     'OTHER_CFLAGS' => '"-fvisibility=default" "$(inherited)"',
     'USER_HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/include" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/include/filament" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/src" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/src/image" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/src/shaders"  "$(inherited)"',
     'ALWAYS_SEARCH_USER_PATHS' => 'YES',
-    "OTHER_LDFLAGS" =>  '-lfilament -lbackend -lfilameshio -lviewer -lfilamat -lgeometry -lutils -lfilabridge -lgltfio_core -lfilament-iblprefilter -limage -limageio -ltinyexr -lgltfio_core -lfilaflat -ldracodec -libl -lktxreader -lpng -lpng16   -lz -lstb -luberzlib -lsmol-v -luberarchive -lzstd -lstdc++',
+    "OTHER_LDFLAGS" =>  '-lfilament -lbackend -lfilameshio -lfilamat -lgeometry -lutils -lfilabridge -lgltfio_core -lfilament-iblprefilter -limage -limageio -ltinyexr -lgltfio_core -lfilaflat -ldracodec -libl -lktxreader -lpng -lpng16   -lz -lstb -luberzlib -lsmol-v -luberarchive -lzstd -lstdc++',
     'LIBRARY_SEARCH_PATHS' => '"${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/lib" "$(inherited)"',
   }
 
