@@ -349,6 +349,10 @@ then open your browser and navigate to http://localhost:8080
 If you need to rebuild the web files, ensure you have Emscripten installed and available in your PATH, then run:
 
 ```
+cd web
+mkdir -p build
+rm -f build/*
+cd build
 emcmake cmake -G Ninja ..
 cmake --build . --clean-first      
 ```
