@@ -25,6 +25,9 @@
 
 #include <backend/DriverEnums.h>
 #include <backend/platforms/OpenGLPlatform.h>
+#ifdef __EMSCRIPTEN__
+#include <backend/platforms/PlatformWebGL.h>
+#endif
 #include <filament/ColorGrading.h>
 #include <filament/Engine.h>
 #include <filament/IndexBuffer.h>
@@ -131,6 +134,8 @@ namespace polyvox
 #elif TARGET_OS_OSX
     ASSERT_POSTCONDITION(platform == nullptr, "Custom Platform not supported on macOS");
     _engine = Engine::create(Engine::Backend::METAL);
+#elif defined(__EMSCRIPTEN__)
+    _engine = Engine::create(Engine::Backend::OPENGL, (backend::Platform *)new filament::backend::PlatformWebGL(), (void *)sharedContext, nullptr);
 #else
     _engine = Engine::create(Engine::Backend::OPENGL, (backend::Platform *)platform, (void *)sharedContext, nullptr);
 #endif
