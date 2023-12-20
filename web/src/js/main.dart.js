@@ -21,7 +21,10 @@
       });
       return {};
     }
-    const imports = {"flutter_filament_plugin":await flutter_filament_plugin(Module)};;
+    const imports = {"flutter_filament_plugin":await flutter_filament_plugin(Module),"ffi":{"memory":new WebAssembly.Memory({
+      initial: 10,
+      maximum: 100,
+    })}};
     const dartModulePromise = WebAssembly.compileStreaming(fetch('main.dart.wasm'));
         
     dart2wasm_runtime = await import('./main.dart.mjs');

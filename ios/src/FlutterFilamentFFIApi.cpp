@@ -35,24 +35,39 @@ class RenderLoop {
 public:
   explicit RenderLoop() {
     _t = new std::thread([this]() {
+      auto last = std::chrono::high_resolution_clock::now();
       while (!_stop) {
-        {
-          if (_rendering) {
-            doRender();
-          }
-        }
-        std::function<void()> task;
-        {
+
+        auto now = std::chrono::high_resolution_clock::now();
+
+        float elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
+
+        while(elapsed < 3 * _frameIntervalInMilliseconds / 4) {
+          
+          std::function<void()> task;
           std::unique_lock<std::mutex> lock(_access);
           if (_tasks.empty()) {
-            _cond.wait_for(lock, std::chrono::duration<float, std::milli>(
-                                     _frameIntervalInMilliseconds));
+            _cond.wait_for(lock, std::chrono::duration<float, std::milli>(1));
+            now = std::chrono::high_resolution_clock::now();
+            elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
             continue;
           }
           task = std::move(_tasks.front());
           _tasks.pop_front();
+          task();
+          
+          now = std::chrono::high_resolution_clock::now();
+          elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
         }
-        task();
+
+        if (_rendering) {
+          auto frameStart = std::chrono::high_resolution_clock::now();
+          doRender();
+          auto frameEnd = std::chrono::high_resolution_clock::now();
+          // Log("Took %f milliseconds for render",           float(std::chrono::duration_cast<std::chrono::milliseconds>(frameEnd - frameStart).count()));
+        }
+
+        last = now;
       }
     });
   }
@@ -61,46 +76,33 @@ public:
     _t->join();
   }
 
-
-  void* createViewer(void *const context, void *const platform,
+  void *const createViewer(void *const context, void *const platform,
                            const char *uberArchivePath,
                            const ResourceLoaderWrapper *const loader,
-                           void (*renderCallback)(void *), void *const renderCallbackOwner, void** out) {
-
+                           void (*renderCallback)(void *), void *const owner) {
     _renderCallback = renderCallback;
-    _renderCallbackOwner = renderCallbackOwner;
-    
-    pthread_t flutter_thread_id = pthread_self();
-    
+    _renderCallbackOwner = owner;
     std::packaged_task<FilamentViewer *()> lambda([&]() mutable {
-      std::thread::id this_id = std::this_thread::get_id();
-
-      pthread_t filament_runner_thread_id = pthread_self();
-
       #ifdef __EMSCRIPTEN__
-      auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
-      if(success != EMSCRIPTEN_RESULT_SUCCESS) {
-        std::cout << "failed to make context current  " << std::endl;
-        return nullptr;
-      }
+        auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
+        if(success != EMSCRIPTEN_RESULT_SUCCESS) {
+          std::cout << "Failed to make context current." << std::endl;
+          return (FilamentViewer*)nullptr;
+        }
       #endif
-
-       viewer = new FilamentViewer((void*)context, loader, platform, uberArchivePath);
-       *out = viewer;
-      return viewer;
+      return new FilamentViewer(context, loader, platform, uberArchivePath);
     });
     auto fut = add_task(lambda);
-    // if(!out) {
-      fut.wait();
-    // }
-    return viewer;
+    fut.wait();
+    _viewer = fut.get();
+    return (void *const)_viewer;
   }
 
   void destroyViewer() {
     std::packaged_task<void()> lambda([&]() mutable {
       _rendering = false;
-      destroy_filament_viewer(viewer);
-      viewer = nullptr;
+      destroy_filament_viewer(_viewer);
+      _viewer = nullptr;
     });
     auto fut = add_task(lambda);
     fut.wait();
@@ -110,17 +112,17 @@ public:
     std::packaged_task<void()> lambda(
         [&]() mutable { this->_rendering = rendering; });
     auto fut = add_task(lambda);
-    // fut.wait();
+    fut.wait();
   }
 
   void doRender() {
-    render(viewer, 0, nullptr, nullptr, nullptr);
+    render(_viewer, 0, nullptr, nullptr, nullptr);
     #ifdef __EMSCRIPTEN__
-    emscripten_webgl_commit_frame();
+      emscripten_webgl_commit_frame();
     #endif
-    // if(_renderCallback) {
-    //   _renderCallback(_renderCallbackOwner);
-    // }
+    if(_renderCallback) {
+      _renderCallback(_renderCallbackOwner);
+    }
   }
 
   void setFrameIntervalInMilliseconds(float frameIntervalInMilliseconds) {
@@ -136,14 +138,13 @@ public:
     _cond.notify_one();
     return ret;
   }
-  FilamentViewer *viewer = nullptr;
 
 private:
   bool _stop = false;
   bool _rendering = false;
   float _frameIntervalInMilliseconds = 1000.0 / 60.0;
   std::mutex _access;
-
+  FilamentViewer *_viewer = nullptr;
   void (*_renderCallback)(void *const) = nullptr;
   void *_renderCallbackOwner = nullptr;
   std::thread *_t = nullptr;
@@ -154,20 +155,19 @@ private:
 extern "C" {
 
 static RenderLoop *_rl;
-static void* _context;
 
-FLUTTER_PLUGIN_EXPORT void* create_filament_viewer_ffi(
-    void *const context, void *const platform, const char *uberArchivePath,
-    const ResourceLoaderWrapper *const loader,
+FLUTTER_PLUGIN_EXPORT void *const create_filament_viewer_ffi(
+    void *const context, 
+    void *const platform, 
+    const char *uberArchivePath,
+    const void* const loader, // must be const ResourceLoaderWrapper *const loader,
     void (*renderCallback)(void *const renderCallbackOwner),
-    void *const renderCallbackOwner, void** out) {
-
-    _context = context;
+    void *const renderCallbackOwner) {
   if (!_rl) {
     _rl = new RenderLoop();
   }
-  return _rl->createViewer(context, platform, uberArchivePath, loader,
-                           renderCallback, renderCallbackOwner, out);
+  return _rl->createViewer(context, platform, uberArchivePath, (const ResourceLoaderWrapper* const)loader,
+                           renderCallback, renderCallbackOwner);
 }
 
 FLUTTER_PLUGIN_EXPORT void destroy_filament_viewer_ffi(void *const viewer) {
@@ -178,13 +178,9 @@ FLUTTER_PLUGIN_EXPORT void create_swap_chain_ffi(void *const viewer,
                                                  void *const surface,
                                                  uint32_t width,
                                                  uint32_t height) {
-  Log("Creating swapchain %dx%d with viewer %p and surface %p", width, height, viewer, surface);
+  Log("Creating swapchain %dx%d", width, height);
   std::packaged_task<void()> lambda(
-      [&]() mutable { 
-        create_swap_chain(viewer, surface, width, height); 
-          Log("swapchain cerate finisehd");
-
-        });
+      [&]() mutable { create_swap_chain(viewer, surface, width, height); });
   auto fut = _rl->add_task(lambda);
   fut.wait();
 }
@@ -216,11 +212,9 @@ FLUTTER_PLUGIN_EXPORT void update_viewport_and_camera_projection_ffi(
   Log("Update viewport  %dx%d", width, height);
   std::packaged_task<void()> lambda([&]() mutable {
     update_viewport_and_camera_projection(viewer, width, height, scaleFactor);
-      Log("Update viewport finished", width, height);
-
   });
   auto fut = _rl->add_task(lambda);
-  // fut.wait();
+  fut.wait();
 }
 
 FLUTTER_PLUGIN_EXPORT void set_rendering_ffi(void *const viewer,
@@ -242,32 +236,8 @@ set_frame_interval_ffi(float frameIntervalInMilliseconds) {
   _rl->setFrameIntervalInMilliseconds(frameIntervalInMilliseconds);
 }
 
-
-#ifdef __EMSCRIPTEN__
-EM_BOOL commit_frame(double time, void* userData) {
-  // auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)_context);
-  // if(success != EMSCRIPTEN_RESULT_SUCCESS) {
-  //   std::cout << "failed to make context current  " << std::endl;
-  //   return EM_FALSE;
-  // }
-  // // ((RenderLoop*)userData)->doRender();
-  // float r = float(rand()) / float(RAND_MAX);
-  // float g = float(rand()) / float(RAND_MAX);
-  // float b = float(rand()) / float(RAND_MAX);
-  // glClearColor(r, g, b, 1.0f);
-  // glClear(GL_COLOR_BUFFER_BIT); 
-  emscripten_webgl_commit_frame();
-  return EM_TRUE;
-}
-#endif
-
 FLUTTER_PLUGIN_EXPORT void render_ffi(void *const viewer) {
-  std::packaged_task<void()> lambda([&]() mutable { 
-    _rl->doRender(); 
-    #ifdef __EMSCRIPTEN__
-    commit_frame(foo, nullptr);
-    #endif
-  });
+  std::packaged_task<void()> lambda([&]() mutable { _rl->doRender(); });
   auto fut = _rl->add_task(lambda);
   fut.wait();
 }
@@ -335,15 +305,11 @@ FLUTTER_PLUGIN_EXPORT void set_bloom_ffi(void *const viewer, float strength) {
   auto fut = _rl->add_task(lambda);
   fut.wait();
 }
-
 FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void *const viewer,
-                                           const char *skyboxPath) {  
-  std::packaged_task<void()> lambda([&] {       
-    load_skybox(_rl->viewer, skyboxPath); 
-    _rl->doRender();
-    });
+                                           const char *skyboxPath) {
+  std::packaged_task<void()> lambda([&] { load_skybox(viewer, skyboxPath); });
   auto fut = _rl->add_task(lambda);
-  // fut.wait();
+  fut.wait();
 }
 FLUTTER_PLUGIN_EXPORT void load_ibl_ffi(void *const viewer, const char *iblPath,
                                         float intensity) {
@@ -410,18 +376,6 @@ FLUTTER_PLUGIN_EXPORT bool set_camera_ffi(void *const viewer, EntityId asset,
   return fut.get();
 }
 
-FLUTTER_PLUGIN_EXPORT void set_bone_animation_ffi(
-    void *assetManager, EntityId asset, const float *const frameData,
-    int numFrames, int numBones, const char **const boneNames,
-    const char **const meshName, int numMeshTargets, float frameLengthInMs) {
-  std::packaged_task<void()> lambda([&] {
-    set_bone_animation(assetManager, asset, frameData, numFrames, numBones,
-                       boneNames, meshName, numMeshTargets, frameLengthInMs);
-  });
-  auto fut = _rl->add_task(lambda);
-  fut.wait();
-}
-
 FLUTTER_PLUGIN_EXPORT void
 get_morph_target_name_ffi(void *assetManager, EntityId asset,
                           const char *meshName, char *const outPtr, int index) {
@@ -443,12 +397,7 @@ get_morph_target_name_count_ffi(void *assetManager, EntityId asset,
   return fut.get();
 }
 
-void set_morph_target_weights_ffi(void *const assetManager, EntityId asset,
-                                  const char *const entityName,
-                                  const float *const morphData,
-                                  int numWeights) {
-  // TODO
-}
+
 
 FLUTTER_PLUGIN_EXPORT void play_animation_ffi(void *const assetManager,
                                               EntityId asset, int index,
@@ -522,6 +471,30 @@ get_name_for_entity_ffi(void *const assetManager, const EntityId entityId) {
   auto fut = _rl->add_task(lambda);
   fut.wait();
   return fut.get();
+}
+
+void set_morph_target_weights_ffi(void *const assetManager, 
+                                  EntityId asset,
+                                  const char *const entityName,
+                                  const float *const morphData,
+                                  int numWeights) {
+    std::packaged_task<void()> lambda(
+      [&] { return set_morph_target_weights(assetManager, asset, entityName, morphData, numWeights); });
+      auto fut = _rl->add_task(lambda);
+      fut.wait();
+}
+
+FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(
+		void *assetManager,
+		EntityId asset,
+		const char *entityName,
+		const float *const transform,
+		const char *boneName) {
+      std::packaged_task<bool()> lambda(
+      [&] { return set_bone_transform(assetManager, asset, entityName, transform, boneName); });
+      auto fut = _rl->add_task(lambda);
+      fut.wait();
+      return fut.get();
 }
 
 FLUTTER_PLUGIN_EXPORT void ios_dummy_ffi() { Log("Dummy called"); }

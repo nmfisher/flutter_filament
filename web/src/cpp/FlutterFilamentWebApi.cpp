@@ -68,20 +68,38 @@ extern "C"
     memset(ptr+offset, val, 1);
   }
 
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_float(float* ptr, int32_t offset, float val) {
+    ptr[offset] = val;
+  }
+
+  FLUTTER_PLUGIN_EXPORT float flutter_filament_web_get_float(float* ptr, int32_t offset) {
+    return ptr[offset];
+  }
+
+  FLUTTER_PLUGIN_EXPORT double flutter_filament_web_get_double(double* ptr, int32_t offset) {
+    return ptr[offset];
+  }
+
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_double(double* ptr, int32_t offset, double value) {
+    ptr[offset] = value;
+  }
+
   FLUTTER_PLUGIN_EXPORT char flutter_filament_web_get(char* ptr, int32_t offset) {
     return ptr[offset];
   }
 
-  FLUTTER_PLUGIN_EXPORT void* flutter_filament_web_allocate(int32_t size) {
+  FLUTTER_PLUGIN_EXPORT long flutter_filament_web_allocate(int32_t size) {
     char* allocated = (char*)calloc(size, 1);
-    return allocated;
+    return (long)allocated;
   }
 
-  FLUTTER_PLUGIN_EXPORT void* flutter_filament_web_get_address(void** out) {
-    return *out;
+  FLUTTER_PLUGIN_EXPORT long flutter_filament_web_get_address(void** out) {
+    return (long)*out;
   }
 
   FLUTTER_PLUGIN_EXPORT EMSCRIPTEN_WEBGL_CONTEXT_HANDLE flutter_filament_web_create_gl_context() {
+
+    std::cout << "Creating WebGL context." << std::endl;
 
     EmscriptenWebGLContextAttributes attr;
     
@@ -96,7 +114,7 @@ extern "C"
     attr.majorVersion = 2;
     
     auto context = emscripten_webgl_create_context("#canvas", &attr);
-    std::cout << "Created WebGL context with major/minor " << attr.majorVersion << "." << attr.minorVersion << std::endl;
+    std::cout << "Created WebGL context " << attr.majorVersion << "." << attr.minorVersion << std::endl;
 
     auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
     if(success != EMSCRIPTEN_RESULT_SUCCESS) {
@@ -112,7 +130,7 @@ extern "C"
   {
     // ideally we should bounce the call to Flutter then wait for callback
     // this isn't working for large assets though - seems like it's deadlocked
-    // will leavce this here commented out so we can revisit later if needed
+    // will leave this here commented out so we can revisit later if needed
     // auto pendingCall = new PendingCall();
     // loadFlutterAsset(path, (void*)pendingCall);
     // pendingCall->Wait();
@@ -159,7 +177,7 @@ extern "C"
     free(ptr);
   }
 
-  FLUTTER_PLUGIN_EXPORT void* const flutter_filament_web_get_resource_loader_wrapper() {
-    return new ResourceLoaderWrapper(flutter_filament_web_load_resource, flutter_filament_web_free_resource);
+  FLUTTER_PLUGIN_EXPORT long flutter_filament_web_get_resource_loader_wrapper() {
+    return (long) new ResourceLoaderWrapper(flutter_filament_web_load_resource, flutter_filament_web_free_resource);
   }
 }
