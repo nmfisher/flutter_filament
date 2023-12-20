@@ -307,9 +307,7 @@ FLUTTER_PLUGIN_EXPORT void set_bloom_ffi(void *const viewer, float strength) {
 }
 FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void *const viewer,
                                            const char *skyboxPath) {
-  std::packaged_task<void()> lambda([&] { 
-    load_skybox(viewer, "assets/default_env/default_env_skybox.ktx"); 
-    });
+  std::packaged_task<void()> lambda([&] { load_skybox(viewer, skyboxPath); });
   auto fut = _rl->add_task(lambda);
   fut.wait();
 }

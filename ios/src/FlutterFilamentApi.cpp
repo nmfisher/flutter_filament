@@ -242,16 +242,16 @@ extern "C" {
     const char** const meshNames,
     int numMeshTargets,
     float frameLengthInMs) {
-      ((AssetManager*)assetManager)->setBoneAnimationBuffer(
-        asset, 
-        frameData,
-        numFrames,
-        numBones,
-        boneNames, 
-        meshNames,
-        numMeshTargets,
-        frameLengthInMs
-      );
+    //   ((AssetManager*)assetManager)->setBoneAnimationBuffer(
+    //     asset, 
+    //     frameData,
+    //     numFrames,
+    //     numBones,
+    //     boneNames, 
+    //     meshNames,
+    //     numMeshTargets,
+    //     frameLengthInMs
+    //   );
     }
 
     FLUTTER_PLUGIN_EXPORT void set_post_processing(void* const viewer, bool enabled) {
