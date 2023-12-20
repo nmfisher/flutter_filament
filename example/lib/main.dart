@@ -30,7 +30,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     return MaterialApp(
         theme: ThemeData(useMaterial3: true),
         // showPerformanceOverlay: true,
-        home: const Scaffold(body: ExampleWidget()));
+        home: const Scaffold(
+            backgroundColor: Colors.transparent, body: ExampleWidget()));
   }
 }
 
