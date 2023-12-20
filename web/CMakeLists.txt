@@ -26,6 +26,18 @@ set(EMCC_CFLAGS ${EMCC_CFLAGS} -sNO_DISABLE_EXCEPTION_CATCHING)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sFETCH=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sUSE_WEBGL2=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMIN_WEBGL_VERSION=2)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sWASM_BIGINT)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sEMULATE_FUNCTION_POINTER_CASTS)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sSTACK_OVERFLOW_CHECK)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sIMPORTED_MEMORY=1)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sSHARED_MEMORY=1)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sERROR_ON_WASM_CHANGES_AFTER_LINK)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_MEMORY_GROWTH=1)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sSAFE_HEAP=1)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sSTACK_SIZE=5MB)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sSIDE_MODULE)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_UNIMPLEMENTED_SYSCALLS)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sRELOCATABLE)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-literal-operator -stdlib=libc++ -std=c++17 -fPIC -pthread -O3")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
@@ -56,6 +68,7 @@ add_executable(${PLUGIN_NAME}
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Manipulator.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../ios/src/camutils/Bookmark.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/FlutterFilamentWebApi.cpp"
+
 )
 
 set_target_properties(${PLUGIN_NAME} PROPERTIES
@@ -224,7 +237,7 @@ target_link_libraries(${PLUGIN_NAME}
 
 add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
     COMMAND dart run ffigen --config ${CMAKE_CURRENT_SOURCE_DIR}/ffigen.yaml WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../
-    COMMAND ${CMAKE_COMMAND} -DINPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/generated_bindings_web.dart -DOUTPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/generated_bindings_web.dart "-DTO_REPLACE=symbol: '" "-DREPLACEMENT=symbol: '_" -P ${CMAKE_CURRENT_SOURCE_DIR}/replace_in_file.cmake 
+    COMMAND ${CMAKE_COMMAND} -DINPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/ffi/ffi_web/generated_bindings_web.dart -DOUTPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/ffi/ffi_web/generated_bindings_web.dart "-DTO_REPLACE=symbol: '" "-DREPLACEMENT=symbol: '_" -P ${CMAKE_CURRENT_SOURCE_DIR}/replace_in_file.cmake 
     VERBATIM
 )
 

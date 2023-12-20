@@ -30,8 +30,7 @@ void main() {
 
   int _counter = 0;
 
-  Future _snapshot(WidgetTester tester, String label,
-      [int seconds = 0]) async {
+  Future _snapshot(WidgetTester tester, String label, [int seconds = 0]) async {
     await tester.pumpAndSettle(Duration(milliseconds: 16));
     for (int i = 0; i < seconds; i++) {
       await Future.delayed(Duration(seconds: 1));
@@ -50,16 +49,16 @@ void main() {
   }
 
   Future tap(WidgetTester tester, String label, [int seconds = 0]) async {
-    var target = find.text(label).first;
-    await tester.dragUntilVisible(
-        target,
-        find.byType(SingleChildScrollView),
-        // widget you want to scroll
-        const Offset(0, 500), // delta to move
-        duration: Duration(milliseconds: 10));
-    await tester.tap(target);
-    await _snapshot(
-        tester, label.replaceAll(RegExp("[ -:]"), ""), seconds);
+    var target = find.text(label, skipOffstage: false);
+
+    if (!target.hasFound) {
+      print("Couldn't find target, waiting 100ms");
+      await tester.pump(const Duration(milliseconds: 100));
+      target = find.text(label);
+    }
+
+    await tester.tap(target.first);
+    await _snapshot(tester, label.replaceAll(RegExp("[ -:]"), ""), seconds);
   }
 
   Future<void> pumpUntilFound(
@@ -89,13 +88,30 @@ void main() {
 
     await _snapshot(tester, "fresh");
 
-    await tap(tester, "create viewer (default ubershader)", 4);
+    await tap(tester, "Controller / Viewer");
+    await tap(tester, "Create FilamentController (default ubershader)");
+    await tap(tester, "Controller / Viewer");
+    await tap(tester, "Create FilamentViewer",
+        4); // on older devices this may take a while, so let's insert a length delay
 
-    await tap(tester, "Rendering: false", 2);
+    await tap(tester, "Scene");
+    await tap(tester, "Rendering");
+    await tap(tester, "Set continuous rendering to true");
 
-    await tap(tester, "load skybox", 2);
-    await tap(tester, "load IBL", 2);
-    await tap(tester, "load shapes GLB", 2);
+    await tap(tester, "Scene");
+    await tap(tester, "Assets");
+    await tap(tester, "Shapes");
+    await tap(tester, "Load GLB");
+
+    await tester.pump();
+
+    await tap(tester, "Scene");
+    await tap(tester, "Assets");
+    await tap(tester, "Load skybox", 1);
+
+    await tap(tester, "Scene");
+    await tap(tester, "Assets");
+    await tap(tester, "Load IBL", 1);
 
     final Offset pointerLocation =
         tester.getCenter(find.byType(FilamentWidget));
@@ -123,7 +139,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.sendEventToBinding(testPointer.up());
 
-    await _snapshot(tester,  "rotate", 2);
+    await _snapshot(tester, "rotate", 2);
 
     // pan
     testPointer = TestPointer(1, PointerDeviceKind.mouse, null, kPrimaryButton);
@@ -140,19 +156,35 @@ void main() {
     await tester.sendEventToBinding(testPointer.up());
     await tester.pumpAndSettle();
 
-    await _snapshot(tester,  "pan");
+    await _snapshot(tester, "pan");
 
-    await tap(tester, "transform to unit cube");
-    await tap(tester, "set shapes position to 1, 1, -1");
+    await tap(tester, "Scene");
+    await tap(tester, "Assets");
+    await tap(tester, "Shapes");
+    await tap(tester, "Transform to unit cube");
+
+    await tap(tester, "Scene");
+    await tap(tester, "Assets");
+    await tap(tester, "Shapes");
+    await tap(tester, "Set position to 1, 1, -1");
+
+    await tap(tester, "Scene");
+    await tap(tester, "Camera");
     await tap(tester, "Disable frustum culling");
-    await tap(tester, "Set tone mapping to linear");
-    await tap(tester, "Move camera to asset");
-    await tap(tester, "move camera to 1, 1, -1");
-    await tap(tester, 'set camera to first camera in shapes GLB');
 
-    await tap(tester, 'resize', 1);
-    await tap(tester, 'resize', 1);
-    await tap(tester, 'resize', 1);
-    await tap(tester, 'resize', 1);
+    await tap(tester, "Scene");
+    await tap(tester, "Rendering");
+    await tap(tester, "Set tone mapping to linear");
+
+    await tap(tester, "Scene");
+    await tap(tester, "Camera");
+    await tap(tester, 'Set to first camera in last added asset');
+
+    await tap(tester, "Move to last added asset");
+    await tap(tester, "Move to 1, 1, -1");
+
+    await tap(tester, 'Toggle viewport size', 1);
+    await tap(tester, 'Toggle viewport size', 1);
+    await tap(tester, 'Toggle viewport size', 1);
   });
 }

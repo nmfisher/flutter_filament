@@ -7,7 +7,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'package:flutter_filament/generated_bindings_web.dart';
+import 'package:flutter_filament/ffi/ffi_web/generated_bindings_web.dart';
 import 'dart:ffi';
 
 @AbiSpecificIntegerMapping({
@@ -38,18 +38,18 @@ final class FooChar extends AbiSpecificInteger {
   const FooChar();
 }
 
-class _Allocator implements Allocator {
-  const _Allocator();
-  @override
-  Pointer<T> allocate<T extends NativeType>(int byteCount, {int? alignment}) {
-    return flutter_filament_web_allocate(byteCount).cast<T>();
-  }
+// class _Allocator implements Allocator {
+//   const _Allocator();
+//   @override
+//   Pointer<T> allocate<T extends NativeType>(int byteCount, {int? alignment}) {
+//     return Pointer<T>.fromAddress(flutter_filament_web_allocate(byteCount));
+//   }
 
-  @override
-  void free(Pointer<NativeType> pointer) {
-    flutter_filament_web_free(pointer.cast<Void>());
-  }
-}
+//   @override
+//   void free(Pointer<NativeType> pointer) {
+//     flutter_filament_web_free(pointer.cast<Void>());
+//   }
+// }
 
 @pragma("wasm:export")
 void loadFlutterAsset(Pointer<Char> path, Pointer<Void> context) async {
@@ -79,7 +79,7 @@ void loadFlutterAsset(Pointer<Char> path, Pointer<Void> context) async {
       dataPtr.cast<Void>(), bd.lengthInBytes, context);
 }
 
-final allocator = _Allocator();
+// final allocator = _Allocator();
 
 /// A web implementation of the FlutterFilamentPlatform of the FlutterFilament plugin.
 class FlutterFilamentPluginWeb {
@@ -94,12 +94,15 @@ class FlutterFilamentPluginWeb {
   }
 
   Future handleMethodCall(MethodCall call) async {
+    print(call.method);
     switch (call.method) {
       case "createTexture":
         var context = flutter_filament_web_create_gl_context();
         return [0, 0, 0, context];
       case "getResourceLoaderWrapper":
-        return flutter_filament_web_get_resource_loader_wrapper().address;
+        final ptr = flutter_filament_web_get_resource_loader_wrapper();
+        print("Got rlw @ address ${ptr.address}");
+        return ptr.address;
       case "getRenderCallback":
         return [0, 0];
       case "destroyTexture":

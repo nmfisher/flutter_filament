@@ -1,12 +1,19 @@
+// ignore_for_file: constant_identifier_names
+
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 
 import 'package:flutter_filament/animations/animation_data.dart';
+import 'package:vector_math/vector_math_64.dart';
 
+// a handle that can be safely passed back to the rendering layer to manipulate an Entity
 typedef FilamentEntity = int;
 
 enum ToneMapper { ACES, FILMIC, LINEAR }
+
+// see filament Manipulator.h for more details
+enum ManipulatorMode { ORBIT, MAP, FREE_FLIGHT }
 
 class TextureDetails {
   final int textureId;
@@ -21,10 +28,28 @@ class TextureDetails {
 
 abstract class FilamentController {
   ///
+  /// A Stream containing every FilamentEntity added to the scene (i.e. via [loadGlb], [loadGltf] or [addLight]).
+  /// This is provided for convenience so you can set listeners in front-end widgets that can respond to entity loads without manually passing around the FilamentEntity returned from those methods.
+  ///
+  Stream<FilamentEntity> get onLoad;
+
+  ///
+  /// A Stream containing every FilamentEntity removed from the scene (i.e. via [removeAsset], [clearAssets], [removeLight] or [clearLights]).
+
+  Stream<FilamentEntity> get onUnload;
+
+  ///
   /// A [ValueNotifier] that holds the current dimensions (in physical pixels, after multiplying by pixel ratio) of the FilamentWidget.
   /// If you need to perform work as early as possible, add a listener to this property before a [FilamentWidget] has been inserted into the widget hierarchy.
   ///
   ValueNotifier<Rect?> get rect;
+
+  ///
+  /// A [ValueNotifier] to indicate whether a FilamentViewer is currently available.
+  /// (FilamentViewer is a C++ type, hence why it is not referenced) here.
+  /// Call [createViewer]/[destroyViewer] to create/destroy a FilamentViewer.
+  ///
+  ValueNotifier<bool> get hasViewer;
 
   ///
   /// Whether a Flutter Texture widget should be inserted into the widget hierarchy.
@@ -177,9 +202,18 @@ abstract class FilamentController {
   ///
   Future clearLights();
 
+  ///
+  /// Load the .glb asset at the given path and insert into the scene.
+  ///
   Future<FilamentEntity> loadGlb(String path, {bool unlit = false});
 
-  Future<FilamentEntity> loadGltf(String path, String relativeResourcePath);
+  ///
+  /// Load the .gltf asset at the given path and insert into the scene.
+  /// [relativeResourcePath] is the folder path where the glTF resources are stored;
+  /// this is usually the parent directory of the .gltf file itself.
+  ///
+  Future<FilamentEntity> loadGltf(String path, String relativeResourcePath,
+      {bool force = false});
 
   ///
   /// Called by `FilamentGestureDetector`. You probably don't want to call this yourself.
@@ -212,7 +246,9 @@ abstract class FilamentController {
   Future rotateEnd();
 
   ///
-  /// Set the weights for all morph targets under node [meshName] in [asset] to [weights].
+  /// Set the weights for all morph targets under node [meshName] in [entity] to [weights].
+  /// Note that [weights] must contain values for ALL morph targets, but no exception will be thrown if you don't do so (you'll just get incorrect results).
+  /// If you only want to set one value, set all others to zero (check [getMorphTargetNames] if you need the get a list of all morph targets.)
   ///
   Future setMorphTargetWeights(
       FilamentEntity entity, String meshName, List<double> weights);
@@ -238,16 +274,19 @@ abstract class FilamentController {
       FilamentEntity entity, MorphAnimationData animation);
 
   ///
-  /// Animates morph target weights/bone transforms (where each frame requires a duration of [frameLengthInMs].
-  /// [morphWeights] is a list of doubles in frame-major format.
-  /// Each frame is [numWeights] in length, and each entry is the weight to be applied to the morph target located at that index in the mesh primitive at that frame.
-  /// for now we only allow animating a single bone (though multiple skinned targets are supported)
+  /// Starts animating a bone (joint) according to the specified [animation].
   ///
-  Future setBoneAnimation(FilamentEntity entity, BoneAnimationData animation);
+  Future addBoneAnimation(FilamentEntity entity, BoneAnimationData animation);
+
+  ///
+  /// Sets the local joint transform for the bone at the given index in [entity] for the mesh under [meshName].
+  ///
+  Future setBoneTransform(
+      FilamentEntity entity, String meshName, String boneName, Matrix4 data);
 
   ///
   /// Removes/destroys the specified entity from the scene.
-  /// [asset] will no longer be a valid handle after this method is called; ensure you immediately discard all references once this method is complete.
+  /// [entity] will no longer be a valid handle after this method is called; ensure you immediately discard all references once this method is complete.
   ///
   Future removeAsset(FilamentEntity entity);
 
@@ -273,19 +312,20 @@ abstract class FilamentController {
   Future zoomEnd();
 
   ///
-  /// Schedules the glTF animation at [index] in [asset] to start playing on the next frame.
+  /// Schedules the glTF animation at [index] in [entity] to start playing on the next frame.
   ///
   Future playAnimation(FilamentEntity entity, int index,
       {bool loop = false,
       bool reverse = false,
       bool replaceActive = true,
       double crossfade = 0.0});
+
   Future setAnimationFrame(
       FilamentEntity entity, int index, int animationFrame);
   Future stopAnimation(FilamentEntity entity, int animationIndex);
 
   ///
-  /// Sets the current scene camera to the glTF camera under [name] in [asset].
+  /// Sets the current scene camera to the glTF camera under [name] in [entity].
   ///
   Future setCamera(FilamentEntity entity, String? name);
 
@@ -298,12 +338,75 @@ abstract class FilamentController {
   /// Sets the strength of the bloom.
   ///
   Future setBloom(double bloom);
+
+  ///
+  /// Sets the focal length of the camera. Default value is 28.0.
+  ///
   Future setCameraFocalLength(double focalLength);
+
+  ///
+  /// Sets the distance (in world units) to the near/far planes for the active camera. Default values are 0.05/1000.0. See Camera.h for details.
+  ///
+  Future setCameraCulling(double near, double far);
+
+  ///
+  /// Get the distance (in world units) to the near culling plane for the active camera.
+  ///
+  Future<double> getCameraCullingNear();
+
+  ///
+  /// Get the distance (in world units) to the far culling plane for the active camera.
+  ///
+  Future<double> getCameraCullingFar();
+
+  ///
+  /// Sets the focus distance for the camera.
+  ///
   Future setCameraFocusDistance(double focusDistance);
+
+  ///
+  /// Get the camera position in world space.
+  ///
+  Future<Vector3> getCameraPosition();
+
+  ///
+  /// Get the camera's model matrix.
+  ///
+  Future<Matrix4> getCameraModelMatrix();
+
+  ///
+  /// Get the camera's view matrix. See Camera.h for more details.
+  ///
+  Future<Matrix4> getCameraViewMatrix();
+
+  ///
+  /// Get the camera's projection matrix. See Camera.h for more details.
+  ///
+  Future<Matrix4> getCameraProjectionMatrix();
+
+  ///
+  /// Get the camera's culling projection matrix. See Camera.h for more details.
+  ///
+  Future<Matrix4> getCameraCullingProjectionMatrix();
+
+  ///
+  /// Get the camera's culling frustum in world space. Returns a (vector_math) [Frustum] instance where plane0-plane6 define the left, right, bottom, top, far and near planes respectively.
+  /// See Camera.h and (filament) Frustum.h for more details.
+  ///
+  Future<Frustum> getCameraFrustum();
+
+  ///
+  /// Set the camera position in world space. Note this is not persistent - any viewport navigation will reset the camera transform.
+  ///
   Future setCameraPosition(double x, double y, double z);
 
   ///
-  /// Repositions the camera to the last vertex of the bounding box of [asset], looking at the penultimate vertex.
+  /// Get the camera rotation matrix.
+  ///
+  Future<Matrix3> getCameraRotation();
+
+  ///
+  /// Repositions the camera to the last vertex of the bounding box of [entity], looking at the penultimate vertex.
   ///
   Future moveCameraToAsset(FilamentEntity entity);
 
@@ -311,21 +414,36 @@ abstract class FilamentController {
   /// Enables/disables frustum culling. Currently we don't expose a method for manipulating the camera projection/culling matrices so this is your only option to deal with unwanted near/far clipping.
   ///
   Future setViewFrustumCulling(bool enabled);
+
+  ///
+  /// Sets the camera exposure.
+  ///
   Future setCameraExposure(
       double aperture, double shutterSpeed, double sensitivity);
+
+  ///
+  /// Rotate the camera by [rads] around the given axis. Note this is not persistent - any viewport navigation will reset the camera transform.
+  ///
   Future setCameraRotation(double rads, double x, double y, double z);
+
+  ///
+  /// Sets the camera model matrix.
+  ///
   Future setCameraModelMatrix(List<double> matrix);
 
+  ///
+  /// Sets the `baseColorFactor` property for the material at index [materialIndex] in [entity] under node [meshName] to [color].
+  ///
   Future setMaterialColor(
       FilamentEntity entity, String meshName, int materialIndex, Color color);
 
   ///
-  /// Scales [asset] up/down so it fits within a unit cube.
+  /// Scale [entity] to fit within the unit cube.
   ///
   Future transformToUnitCube(FilamentEntity entity);
 
   ///
-  /// Sets the world space position for [asset] to the given coordinates.
+  /// Sets the world space position for [entity] to the given coordinates.
   ///
   Future setPosition(FilamentEntity entity, double x, double y, double z);
 
@@ -338,6 +456,10 @@ abstract class FilamentController {
   /// Sets the scale for the given entity.
   ///
   Future setScale(FilamentEntity entity, double scale);
+
+  ///
+  /// Sets the rotation for [entity] to [rads] around the axis {x,y,z}.
+  ///
   Future setRotation(
       FilamentEntity entity, double rads, double x, double y, double z);
 
@@ -363,4 +485,32 @@ abstract class FilamentController {
   /// Retrieves the name assigned to the given FilamentEntity (usually corresponds to the glTF mesh name).
   ///
   String? getNameForEntity(FilamentEntity entity);
+
+  ///
+  /// Sets the options for manipulating the camera via the viewport.
+  /// ManipulatorMode.FREE_FLIGHT and ManipulatorMode.MAP are currently unsupported and will throw an exception.
+  ///
+  Future setCameraManipulatorOptions(
+      {ManipulatorMode mode = ManipulatorMode.ORBIT,
+      double orbitSpeedX = 0.01,
+      double orbitSpeedY = 0.01,
+      double zoomSpeed = 0.01});
+
+  ///
+  /// Finds the child entity named [childName] associated with the given parent.
+  /// Usually, [parent] will be the return value from [loadGlb]/[loadGltf] and [childName] will be the name of a node/mesh.
+  ///
+  Future<FilamentEntity> getChildEntity(
+      FilamentEntity parent, String childName);
+
+  ///
+  /// If [recording] is set to true, each frame the framebuffer/texture will be written to /tmp/output_*.png.
+  /// This will impact performance; handle with care.
+  ///
+  Future setRecording(bool recording);
+
+  ///
+  /// Sets the output directory where recorded PNGs will be placed.
+  ///
+  Future setRecordingOutputDirectory(String outputDirectory);
 }
