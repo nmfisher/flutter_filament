@@ -159,14 +159,17 @@ namespace polyvox
     Log("View created");
 
     setToneMapping(ToneMapping::ACES);
-
     Log("Set tone mapping");
-    decltype(_view->getBloomOptions()) opts;
-    opts.enabled = false;
 
-    _view->setBloomOptions(opts);
-    // setBloom(0.6f);
-    Log("Set bloom");
+    #ifdef __EMSCRIPTEN__
+      Log("Bloom is disabled on WebGL builds as it causes instability with certain drivers");
+      decltype(_view->getBloomOptions()) opts;
+      opts.enabled = false;
+      _view->setBloomOptions(opts);
+    #else
+      setBloom(0.6f);
+      Log("Set bloom");
+    #endif
 
     _view->setScene(_scene);
     _view->setCamera(_mainCamera);
@@ -273,10 +276,14 @@ namespace polyvox
 
   void FilamentViewer::setBloom(float strength)
   {
-    decltype(_view->getBloomOptions()) opts;
-    opts.enabled = true;
-    opts.strength = strength;
-    _view->setBloomOptions(opts);
+    #ifdef __EMSCRIPTEN__
+      Log("Bloom is disabled on WebGL builds as it causes instability with certain drivers. setBloom will be ignored");
+    #else
+      decltype(_view->getBloomOptions()) opts;
+      opts.enabled = true;
+      opts.strength = strength;
+      _view->setBloomOptions(opts);
+    #endif
   }
 
   void FilamentViewer::setToneMapping(ToneMapping toneMapping)
@@ -1041,15 +1048,37 @@ namespace polyvox
       if (_renderer->beginFrame(_swapChain, frameTimeInNanos))
       {
         _renderer->render(_view);
+
+        if(_recording) {
+          Viewport const &vp = _view->getViewport();
+          size_t pixelBufferSize = vp.width * vp.height * 4;
+          auto* pixelBuffer = new uint8_t[pixelBufferSize];
+          auto callback = [](void *buf, size_t size, void *data) {
+            auto frameCallbackData = (FrameCallbackData*)data;
+            auto viewer = (FilamentViewer*)frameCallbackData->viewer;
+            viewer->savePng(buf, size, frameCallbackData->frameNumber);
+            delete frameCallbackData;
+          };
+
+          auto now = std::chrono::high_resolution_clock::now();
+          auto elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - _startTime).count());
+
+          auto frameNumber = uint32_t(floor(elapsed / _frameInterval));
+
+          auto userData = new FrameCallbackData { this, frameNumber };
+
+          auto pbd = Texture::PixelBufferDescriptor(
+              pixelBuffer, pixelBufferSize,
+              Texture::Format::RGBA,
+              Texture::Type::UBYTE, nullptr, callback, userData);
+      
+          _renderer->readPixels(_rt, 0, 0, vp.width, vp.height, std::move(pbd));
+        }
         _renderer->endFrame();
         _engine->execute();
+      } else {
+        _skippedFrames++;
       }
-      else
-      {
-        std::cout << "Skipped" << std::endl;
-        // skipped frame
-      }
-    // }
   }
 
 
