@@ -1085,7 +1085,9 @@ namespace polyvox
           _renderer->readPixels(_rt, 0, 0, vp.width, vp.height, std::move(pbd));
         }
         _renderer->endFrame();
+        #ifdef __EMSCRIPTEN__
         _engine->execute();
+        #endif
       } else {
         _skippedFrames++;
       }
