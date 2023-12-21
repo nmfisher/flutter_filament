@@ -130,7 +130,6 @@ class _FilamentGestureDetectorDesktopState
         // 2) if _pointerMoving is false, this is interpreted as a pick
         // same applies to middle mouse button, but this is ignored as a pick
         onPointerUp: (PointerUpEvent d) async {
-          print("poointer up");
           if (d.buttons == kTertiaryButton) {
             widget.controller.rotateEnd();
           } else {

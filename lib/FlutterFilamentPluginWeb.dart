@@ -94,14 +94,12 @@ class FlutterFilamentPluginWeb {
   }
 
   Future handleMethodCall(MethodCall call) async {
-    print(call.method);
     switch (call.method) {
       case "createTexture":
         var context = flutter_filament_web_create_gl_context();
         return [0, 0, 0, context];
       case "getResourceLoaderWrapper":
         final ptr = flutter_filament_web_get_resource_loader_wrapper();
-        print("Got rlw @ address ${ptr.address}");
         return ptr.address;
       case "getRenderCallback":
         return [0, 0];
