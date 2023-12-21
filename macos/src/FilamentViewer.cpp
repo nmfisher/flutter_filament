@@ -166,6 +166,16 @@ namespace polyvox
       decltype(_view->getBloomOptions()) opts;
       opts.enabled = false;
       _view->setBloomOptions(opts);
+
+      _view->setAmbientOcclusionOptions({.enabled=false});
+
+      _view->setDynamicResolutionOptions({.enabled=false});
+
+      _view->setDithering(filament::Dithering::NONE);
+      _view->setAntiAliasing(filament::AntiAliasing::NONE);
+      _view->setShadowingEnabled(false);
+      _view->setScreenSpaceRefractionEnabled(false);
+
     #else
       setBloom(0.6f);
       Log("Set bloom");
@@ -1075,7 +1085,9 @@ namespace polyvox
           _renderer->readPixels(_rt, 0, 0, vp.width, vp.height, std::move(pbd));
         }
         _renderer->endFrame();
+        #ifdef __EMSCRIPTEN__
         _engine->execute();
+        #endif
       } else {
         _skippedFrames++;
       }
