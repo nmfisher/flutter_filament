@@ -71,9 +71,9 @@ external int flutter_filament_web_get_address(
   ffi.Pointer<ffi.Pointer<ffi.Void>> out,
 );
 
-@ffi.Native<ffi.Long Function(ffi.Int32)>(
+@ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Int32)>(
     symbol: '_flutter_filament_web_allocate', assetId: 'flutter_filament_plugin')
-external int flutter_filament_web_allocate(
+external ffi.Pointer<ffi.Void> flutter_filament_web_allocate(
   int size,
 );
 
@@ -88,10 +88,11 @@ external void flutter_filament_web_free(
     assetId: 'flutter_filament_plugin')
 external int flutter_filament_web_create_gl_context();
 
-@ffi.Native<ffi.Long Function()>(
+@ffi.Native<ffi.Pointer<ffi.Void> Function()>(
     symbol: '_flutter_filament_web_get_resource_loader_wrapper',
     assetId: 'flutter_filament_plugin')
-external int flutter_filament_web_get_resource_loader_wrapper();
+external ffi.Pointer<ffi.Void>
+    flutter_filament_web_get_resource_loader_wrapper();
 
 @ffi.Native<
         ffi.Pointer<ffi.Void> Function(
