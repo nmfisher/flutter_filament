@@ -21,13 +21,13 @@ class _CameraSubmenuState extends State<CameraSubmenu> {
   @override
   void initState() {
     super.initState();
-    // widget.controller.getCameraCullingNear().then((v) {
-    //   _near = v;
-    //   widget.controller.getCameraCullingFar().then((v) {
-    //     _far = v;
-    //     setState(() {});
-    //   });
-    // });
+    widget.controller.getCameraCullingNear().then((v) {
+      _near = v;
+      widget.controller.getCameraCullingFar().then((v) {
+        _far = v;
+        setState(() {});
+      });
+    });
   }
 
   final _menuController = MenuController();
@@ -68,7 +68,7 @@ class _CameraSubmenuState extends State<CameraSubmenu> {
                       _near = v;
                       print("Setting camera culling to $_near $_far!");
 
-                      // widget.controller.setCameraCulling(_near!, _far!);
+                      widget.controller.setCameraCulling(_near!, _far!);
                     },
                     child: Text(
                       v.toStringAsFixed(2),
@@ -82,7 +82,7 @@ class _CameraSubmenuState extends State<CameraSubmenu> {
                     onPressed: () {
                       _far = v;
                       print("Setting camera culling to $_near! $_far");
-                      // widget.controller.setCameraCulling(_near!, _far!);
+                      widget.controller.setCameraCulling(_near!, _far!);
                     },
                     child: Text(
                       v.toStringAsFixed(2),
@@ -136,76 +136,76 @@ class _CameraSubmenuState extends State<CameraSubmenu> {
       MenuItemButton(
           closeOnActivate: false,
           onPressed: () async {
-            // var projMatrix =
-            //     // await widget.controller.getCameraProjectionMatrix();
-            //     await showDialog(
-            //         context: context,
-            //         builder: (ctx) {
-            //           return Center(
-            //               child: Container(
-            //                   height: 100,
-            //                   width: 300,
-            //                   color: Colors.white,
-            //                   child: Text(projMatrix.storage
-            //                       .map((v) => v.toStringAsFixed(2))
-            //                       .join(","))));
-            //         });
+            var projMatrix =
+                await widget.controller.getCameraProjectionMatrix();
+            await showDialog(
+                context: context,
+                builder: (ctx) {
+                  return Center(
+                      child: Container(
+                          height: 100,
+                          width: 300,
+                          color: Colors.white,
+                          child: Text(projMatrix.storage
+                              .map((v) => v.toStringAsFixed(2))
+                              .join(","))));
+                });
           },
           child: const Text("Get projection matrix")),
-      // SubmenuButton(
-      //     menuChildren: ManipulatorMode.values.map((mm) {
-      //       return MenuItemButton(
-      //         onPressed: () {
-      //           ExampleWidgetState.cameraManipulatorMode = mm;
-      //           widget.controller.setCameraManipulatorOptions(
-      //               mode: ExampleWidgetState.cameraManipulatorMode,
-      //               orbitSpeedX: ExampleWidgetState.orbitSpeedX,
-      //               orbitSpeedY: ExampleWidgetState.orbitSpeedY,
-      //               zoomSpeed: ExampleWidgetState.zoomSpeed);
-      //         },
-      //         child: Text(
-      //           mm.name,
-      //           style: TextStyle(
-      //               fontWeight: ExampleWidgetState.cameraManipulatorMode == mm
-      //                   ? FontWeight.bold
-      //                   : FontWeight.normal),
-      //         ),
-      //       );
-      //     }).toList(),
-      //     child: const Text("Manipulator mode")),
-      // SubmenuButton(
-      //     menuChildren: [0.01, 0.1, 1.0, 10.0, 100.0].map((speed) {
-      //       return MenuItemButton(
-      //         onPressed: () {
-      //           ExampleWidgetState.zoomSpeed = speed;
-      //           widget.controller.setCameraManipulatorOptions(
-      //               mode: ExampleWidgetState.cameraManipulatorMode,
-      //               orbitSpeedX: ExampleWidgetState.orbitSpeedX,
-      //               orbitSpeedY: ExampleWidgetState.orbitSpeedY,
-      //               zoomSpeed: ExampleWidgetState.zoomSpeed);
-      //         },
-      //         child: Text(
-      //           speed.toString(),
-      //           style: TextStyle(
-      //               fontWeight:
-      //                   (speed - ExampleWidgetState.zoomSpeed).abs() < 0.0001
-      //                       ? FontWeight.bold
-      //                       : FontWeight.normal),
-      //         ),
-      //       );
-      //     }).toList(),
-      //     child: const Text("Zoom speed")),
+      SubmenuButton(
+          menuChildren: ManipulatorMode.values.map((mm) {
+            return MenuItemButton(
+              onPressed: () {
+                ExampleWidgetState.cameraManipulatorMode = mm;
+                widget.controller.setCameraManipulatorOptions(
+                    mode: ExampleWidgetState.cameraManipulatorMode,
+                    orbitSpeedX: ExampleWidgetState.orbitSpeedX,
+                    orbitSpeedY: ExampleWidgetState.orbitSpeedY,
+                    zoomSpeed: ExampleWidgetState.zoomSpeed);
+              },
+              child: Text(
+                mm.name,
+                style: TextStyle(
+                    fontWeight: ExampleWidgetState.cameraManipulatorMode == mm
+                        ? FontWeight.bold
+                        : FontWeight.normal),
+              ),
+            );
+          }).toList(),
+          child: const Text("Manipulator mode")),
+      SubmenuButton(
+          menuChildren: [0.01, 0.1, 1.0, 10.0, 100.0].map((speed) {
+            return MenuItemButton(
+              onPressed: () {
+                ExampleWidgetState.zoomSpeed = speed;
+                widget.controller.setCameraManipulatorOptions(
+                    mode: ExampleWidgetState.cameraManipulatorMode,
+                    orbitSpeedX: ExampleWidgetState.orbitSpeedX,
+                    orbitSpeedY: ExampleWidgetState.orbitSpeedY,
+                    zoomSpeed: ExampleWidgetState.zoomSpeed);
+              },
+              child: Text(
+                speed.toString(),
+                style: TextStyle(
+                    fontWeight:
+                        (speed - ExampleWidgetState.zoomSpeed).abs() < 0.0001
+                            ? FontWeight.bold
+                            : FontWeight.normal),
+              ),
+            );
+          }).toList(),
+          child: const Text("Zoom speed")),
       SubmenuButton(
           menuChildren: [0.001, 0.01, 0.1, 1.0].map((speed) {
             return MenuItemButton(
               onPressed: () {
                 ExampleWidgetState.orbitSpeedX = speed;
                 ExampleWidgetState.orbitSpeedY = speed;
-                // widget.controller.setCameraManipulatorOptions(
-                //     mode: ExampleWidgetState.cameraManipulatorMode,
-                //     orbitSpeedX: ExampleWidgetState.orbitSpeedX,
-                //     orbitSpeedY: ExampleWidgetState.orbitSpeedY,
-                //     zoomSpeed: ExampleWidgetState.zoomSpeed);
+                widget.controller.setCameraManipulatorOptions(
+                    mode: ExampleWidgetState.cameraManipulatorMode,
+                    orbitSpeedX: ExampleWidgetState.orbitSpeedX,
+                    orbitSpeedY: ExampleWidgetState.orbitSpeedY,
+                    zoomSpeed: ExampleWidgetState.zoomSpeed);
               },
               child: Text(
                 speed.toString(),

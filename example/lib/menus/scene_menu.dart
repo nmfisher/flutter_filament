@@ -20,48 +20,47 @@ class _SceneMenuState extends State<SceneMenu> {
   @override
   void didUpdateWidget(SceneMenu oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // if (widget.controller != null &&
-    //     (widget.controller != oldWidget.controller ||
-    //         widget.controller!.hasViewer != oldWidget.controller!.hasViewer)) {
-    //   setState(() {});
-    // }
+    if (widget.controller != null &&
+        (widget.controller != oldWidget.controller ||
+            widget.controller!.hasViewer != oldWidget.controller!.hasViewer)) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // return ValueListenableBuilder(
-    //     valueListenable:
-    //         widget.controller?.hasViewer ?? ValueNotifier<bool>(false),
-    //     builder: (BuildContext ctx, bool hasViewer, Widget? child) {
-    return MenuAnchor(
-      menuChildren: widget.controller == null
-          ? []
-          : <Widget>[
-              RenderingSubmenu(
-                controller: widget.controller!,
-              ),
-              AssetSubmenu(controller: widget.controller!),
-              CameraSubmenu(
-                controller: widget.controller!,
-              ),
-            ],
-      builder:
-          (BuildContext context, MenuController controller, Widget? child) {
-        return TextButton(
-          onPressed: // !hasViewer
-              //     ? null
-              // :
-              () {
-            if (controller.isOpen) {
-              controller.close();
-            } else {
-              controller.open();
-            }
-          },
-          child: const Text("Scene"),
-        );
-      },
-    );
-    // });
+    return ValueListenableBuilder(
+        valueListenable:
+            widget.controller?.hasViewer ?? ValueNotifier<bool>(false),
+        builder: (BuildContext ctx, bool hasViewer, Widget? child) {
+          return MenuAnchor(
+            menuChildren: widget.controller == null
+                ? []
+                : <Widget>[
+                    RenderingSubmenu(
+                      controller: widget.controller!,
+                    ),
+                    AssetSubmenu(controller: widget.controller!),
+                    CameraSubmenu(
+                      controller: widget.controller!,
+                    ),
+                  ],
+            builder: (BuildContext context, MenuController controller,
+                Widget? child) {
+              return TextButton(
+                onPressed: !hasViewer
+                    ? null
+                    : () {
+                        if (controller.isOpen) {
+                          controller.close();
+                        } else {
+                          controller.open();
+                        }
+                      },
+                child: const Text("Scene"),
+              );
+            },
+          );
+        });
   }
 }

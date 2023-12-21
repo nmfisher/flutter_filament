@@ -27,40 +27,40 @@ class _CameraMatrixOverlayState extends State<CameraMatrixOverlay> {
   String? _cameraCullingProjectionMatrix;
 
   void _tick(Timer timer) async {
-    // var cameraPosition = await widget.controller.getCameraPosition();
-    // var cameraRotation = await widget.controller.getCameraRotation();
+    var cameraPosition = await widget.controller.getCameraPosition();
+    var cameraRotation = await widget.controller.getCameraRotation();
 
-    // _cameraPosition =
-    //     "${cameraPosition.storage.map((v) => v.toStringAsFixed(2))}";
-    // _cameraRotation =
-    //     "${cameraRotation.storage.map((v) => v.toStringAsFixed(2))}";
+    _cameraPosition =
+        "${cameraPosition.storage.map((v) => v.toStringAsFixed(2))}";
+    _cameraRotation =
+        "${cameraRotation.storage.map((v) => v.toStringAsFixed(2))}";
 
-    // if (widget.showProjectionMatrices) {
-    //   var projMatrix = await widget.controller.getCameraProjectionMatrix();
-    //   var cullingMatrix =
-    //       await widget.controller.getCameraCullingProjectionMatrix();
+    if (widget.showProjectionMatrices) {
+      var projMatrix = await widget.controller.getCameraProjectionMatrix();
+      var cullingMatrix =
+          await widget.controller.getCameraCullingProjectionMatrix();
 
-    //   _cameraProjectionMatrix =
-    //       projMatrix.storage.map((v) => v.toStringAsFixed(2)).join(",");
-    //   _cameraCullingProjectionMatrix =
-    //       cullingMatrix.storage.map((v) => v.toStringAsFixed(2)).join(",");
-    //   _getFrustum();
-    // }
+      _cameraProjectionMatrix =
+          projMatrix.storage.map((v) => v.toStringAsFixed(2)).join(",");
+      _cameraCullingProjectionMatrix =
+          cullingMatrix.storage.map((v) => v.toStringAsFixed(2)).join(",");
+      _getFrustum();
+    }
 
     setState(() {});
   }
 
   void _updateTimer() {
     _cameraTimer?.cancel();
-    // if (widget.controller.hasViewer.value) {
-    //   _cameraTimer = Timer.periodic(const Duration(milliseconds: 50), _tick);
-    // }
+    if (widget.controller.hasViewer.value) {
+      _cameraTimer = Timer.periodic(const Duration(milliseconds: 50), _tick);
+    }
   }
 
   v.Frustum? _frustum;
 
   void _getFrustum() async {
-    // _frustum = await widget.controller.getCameraFrustum();
+    _frustum = await widget.controller.getCameraFrustum();
   }
 
   @override
@@ -69,7 +69,7 @@ class _CameraMatrixOverlayState extends State<CameraMatrixOverlay> {
 
     _updateTimer();
 
-    // widget.controller.hasViewer.addListener(_updateTimer);
+    widget.controller.hasViewer.addListener(_updateTimer);
   }
 
   @override
@@ -81,7 +81,7 @@ class _CameraMatrixOverlayState extends State<CameraMatrixOverlay> {
   @override
   void dispose() {
     super.dispose();
-    // widget.controller.hasViewer.removeListener(_updateTimer);
+    widget.controller.hasViewer.removeListener(_updateTimer);
     _cameraTimer?.cancel();
   }
 

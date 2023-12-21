@@ -58,7 +58,7 @@ class ExampleWidgetState extends State<ExampleWidget> {
   static int framerate = 60;
   static bool postProcessing = true;
   static bool frustumCulling = true;
-  // static ManipulatorMode cameraManipulatorMode = ManipulatorMode.ORBIT;
+  static ManipulatorMode cameraManipulatorMode = ManipulatorMode.ORBIT;
 
   static double zoomSpeed = 0.01;
   static double orbitSpeedX = 0.01;
@@ -175,17 +175,17 @@ class ExampleWidgetState extends State<ExampleWidget> {
                     onControllerCreated: (controller) {
                       setState(() {
                         _filamentController = controller;
-                        // _listener = _filamentController!.onLoad
-                        //     .listen((FilamentEntity entity) async {
-                        //   assets.add(entity);
-                        //   animations = await _filamentController!
-                        //       .getAnimationNames(entity);
-                        //   if (mounted) {
-                        //     setState(() {});
-                        //   }
-                        //   print(_filamentController!.getNameForEntity(entity) ??
-                        //       "NAME NOT FOUND");
-                        // });
+                        _listener = _filamentController!.onLoad
+                            .listen((FilamentEntity entity) async {
+                          assets.add(entity);
+                          animations = await _filamentController!
+                              .getAnimationNames(entity);
+                          if (mounted) {
+                            setState(() {});
+                          }
+                          print(_filamentController!.getNameForEntity(entity) ??
+                              "NAME NOT FOUND");
+                        });
                       });
                     }),
                 SceneMenu(

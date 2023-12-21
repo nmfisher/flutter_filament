@@ -89,7 +89,8 @@ extern "C"
   }
 
   FLUTTER_PLUGIN_EXPORT void* flutter_filament_web_allocate(int32_t size) {
-    return calloc(size, 1);
+    void* allocated = (void*)calloc(size, 1);
+    return allocated;
   }
 
   FLUTTER_PLUGIN_EXPORT long flutter_filament_web_get_address(void** out) {

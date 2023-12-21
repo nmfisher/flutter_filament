@@ -27,29 +27,29 @@ class _AssetSubmenuState extends State<AssetSubmenu> {
     var children = [
       MenuItemButton(
           onPressed: () async {
-            // Timer.periodic(Duration(milliseconds: 50), (_) async {
-            //   await widget.controller.setBoneTransform(
-            //       ExampleWidgetState.assets.last,
-            //       "Cylinder",
-            //       "Bone",
-            //       Matrix4.rotationX(pi / 2));
-            // });
+            Timer.periodic(Duration(milliseconds: 50), (_) async {
+              await widget.controller.setBoneTransform(
+                  ExampleWidgetState.assets.last,
+                  "Cylinder",
+                  "Bone",
+                  Matrix4.rotationX(pi / 2));
+            });
           },
           child:
               const Text('Set bone transform for Cylinder (pi/2 rotation X)')),
       MenuItemButton(
           onPressed: () async {
-            // await widget.controller.addBoneAnimation(
-            //     ExampleWidgetState.assets.last,
-            //     BoneAnimationData(
-            //         "Bone",
-            //         ["Cylinder"],
-            //         List.generate(
-            //             60,
-            //             (idx) => v.Quaternion.axisAngle(
-            //                     v.Vector3(0, 0, 1), pi * 8 * (idx / 60))
-            //                 .normalized()),
-            //         1000.0 / 60.0));
+            await widget.controller.addBoneAnimation(
+                ExampleWidgetState.assets.last,
+                BoneAnimationData(
+                    "Bone",
+                    ["Cylinder"],
+                    List.generate(
+                        60,
+                        (idx) => v.Quaternion.axisAngle(
+                                v.Vector3(0, 0, 1), pi * 8 * (idx / 60))
+                            .normalized()),
+                    1000.0 / 60.0));
           },
           child: const Text('Set bone transform animation for Cylinder')),
       MenuItemButton(
@@ -161,9 +161,8 @@ class _AssetSubmenuState extends State<AssetSubmenu> {
             onPressed: () async {
               if (ExampleWidgetState.buster == null) {
                 ExampleWidgetState.buster = await widget.controller.loadGltf(
-                  "assets/BusterDrone/scene.gltf", "assets/BusterDrone",
-                  // force: true
-                );
+                    "assets/BusterDrone/scene.gltf", "assets/BusterDrone",
+                    force: true);
                 await widget.controller
                     .playAnimation(ExampleWidgetState.buster!, 0, loop: true);
                 ExampleWidgetState.animations = await widget.controller
@@ -179,12 +178,10 @@ class _AssetSubmenuState extends State<AssetSubmenu> {
         MenuItemButton(
             onPressed: () async {
               if (ExampleWidgetState.flightHelmet == null) {
-                ExampleWidgetState.flightHelmet ??=
-                    await widget.controller.loadGltf(
-                  'assets/FlightHelmet/FlightHelmet.gltf',
-                  'assets/FlightHelmet',
-                  // force: true
-                );
+                ExampleWidgetState.flightHelmet ??= await widget.controller
+                    .loadGltf('assets/FlightHelmet/FlightHelmet.gltf',
+                        'assets/FlightHelmet',
+                        force: true);
               } else {
                 await widget.controller
                     .removeAsset(ExampleWidgetState.flightHelmet!);

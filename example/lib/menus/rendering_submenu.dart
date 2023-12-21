@@ -59,7 +59,7 @@ class _RenderingSubmenuState extends State<RenderingSubmenu> {
         MenuItemButton(
           onPressed: () {
             ExampleWidgetState.recording = !ExampleWidgetState.recording;
-            // widget.controller.setRecording(ExampleWidgetState.recording);
+            widget.controller.setRecording(ExampleWidgetState.recording);
           },
           child: Text(
               "Turn recording ${ExampleWidgetState.recording ? "OFF" : "ON"}) "),

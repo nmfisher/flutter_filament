@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:vector_math/vector_math_64.dart';
+
 ///
 /// Specifies frame data (i.e. weights) to animate the morph targets contained in [morphTargets] under a mesh named [mesh].
 /// [data] is laid out as numFrames x numMorphTargets.
@@ -7,13 +9,13 @@ import 'dart:typed_data';
 /// [morphTargets] must be some subset of the actual morph targets under [mesh] (though the order of these does not need to match).
 ///
 class MorphAnimationData {
-  final String meshName;
+  final List<String> meshNames;
   final List<String> morphTargets;
 
   final List<double> data;
 
   MorphAnimationData(
-      this.meshName, this.data, this.morphTargets, this.frameLengthInMs) {
+      this.meshNames, this.data, this.morphTargets, this.frameLengthInMs) {
     assert(data.length == morphTargets.length * numFrames);
   }
 
@@ -25,6 +27,9 @@ class MorphAnimationData {
 
   Iterable<double> getData(String morphName) sync* {
     int index = morphTargets.indexOf(morphName);
+    if (index == -1) {
+      throw Exception("No data for morph $morphName");
+    }
     for (int i = 0; i < numFrames; i++) {
       yield data[(i * numMorphTargets) + index];
     }
@@ -40,7 +45,7 @@ class MorphAnimationData {
 class BoneAnimationData {
   final String boneName;
   final List<String> meshNames;
-  final Float32List frameData;
+  final List<Quaternion> frameData;
   double frameLengthInMs;
   BoneAnimationData(
       this.boneName, this.meshNames, this.frameData, this.frameLengthInMs);

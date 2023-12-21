@@ -51,50 +51,50 @@ class _ControllerMenuState extends State<ControllerMenu> {
   @override
   Widget build(BuildContext context) {
     var items = <Widget>[];
-    // if (_filamentController?.hasViewer.value != true) {
-    items.addAll([
-      MenuItemButton(
-        child: const Text("Create FilamentViewer"),
-        onPressed: _filamentController == null
-            ? null
-            : () {
-                _filamentController!.createViewer();
-              },
-      ),
-      MenuItemButton(
-        child: const Text("Create FilamentController (default ubershader)"),
-        onPressed: () {
-          _createController();
-        },
-      ),
-      MenuItemButton(
-        child: const Text(
-            "Create FilamentController (custom ubershader - lit opaque only)"),
-        onPressed: () {
-          _createController(
-              uberArchivePath: Platform.isWindows
-                  ? "assets/lit_opaque_32.uberz"
-                  : Platform.isMacOS
-                      ? "assets/lit_opaque_43.uberz"
-                      : Platform.isIOS
-                          ? "assets/lit_opaque_43.uberz"
-                          : "assets/lit_opaque_43_gles.uberz");
-        },
-      )
-    ]);
-    // } else {
-    //   items.addAll([
-    //     MenuItemButton(
-    //       child: const Text("Destroy viewer"),
-    //       onPressed: () {
-    //         _filamentController!.destroy();
-    //         _filamentController = null;
-    //         widget.onControllerDestroyed();
-    //         setState(() {});
-    //       },
-    //     )
-    //   ]);
-    // }
+    if (_filamentController?.hasViewer.value != true) {
+      items.addAll([
+        MenuItemButton(
+          child: const Text("Create FilamentViewer"),
+          onPressed: _filamentController == null
+              ? null
+              : () {
+                  _filamentController!.createViewer();
+                },
+        ),
+        MenuItemButton(
+          child: const Text("Create FilamentController (default ubershader)"),
+          onPressed: () {
+            _createController();
+          },
+        ),
+        MenuItemButton(
+          child: const Text(
+              "Create FilamentController (custom ubershader - lit opaque only)"),
+          onPressed: () {
+            _createController(
+                uberArchivePath: Platform.isWindows
+                    ? "assets/lit_opaque_32.uberz"
+                    : Platform.isMacOS
+                        ? "assets/lit_opaque_43.uberz"
+                        : Platform.isIOS
+                            ? "assets/lit_opaque_43.uberz"
+                            : "assets/lit_opaque_43_gles.uberz");
+          },
+        )
+      ]);
+    } else {
+      items.addAll([
+        MenuItemButton(
+          child: const Text("Destroy viewer"),
+          onPressed: () {
+            _filamentController!.destroy();
+            _filamentController = null;
+            widget.onControllerDestroyed();
+            setState(() {});
+          },
+        )
+      ]);
+    }
     return MenuAnchor(
         childFocusNode: _buttonFocusNode,
         menuChildren: items,

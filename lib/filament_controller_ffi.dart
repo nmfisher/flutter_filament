@@ -668,89 +668,88 @@ class FilamentControllerFFI extends FilamentController {
   @override
   Future setMorphAnimationData(
       FilamentEntity entity, MorphAnimationData animation) async {
-    throw Exception();
-    // if (_viewer == nullptr) {
-    //   throw Exception("No viewer available, ignoring");
-    // }
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
 
-    // var dataPtr = allocator<Float>(animation.data.length);
-    // for (int i = 0; i < animation.data.length; i++) {
-    //   dataPtr.elementAt(i).value = animation.data[i];
-    // }
+    var dataPtr = allocator<Float>(animation.data.length);
+    for (int i = 0; i < animation.data.length; i++) {
+      dataPtr.elementAt(i).value = animation.data[i];
+    }
 
-    // Pointer<Int> idxPtr = allocator<Int>(animation.morphTargets.length);
+    Pointer<Int> idxPtr = allocator<Int>(animation.morphTargets.length);
 
-    // for (var meshName in animation.meshNames) {
-    //   // the morph targets in [animation] might be a subset of those that actually exist in the mesh (and might not have the same order)
-    //   // we don't want to reorder the data (?? or do we? this is probably more efficient for the backend?)
-    //   // so let's get the actual list of morph targets from the mesh and pass the relevant indices to the native side.
-    //   var meshMorphTargets = await getMorphTargetNames(entity, meshName);
+    for (var meshName in animation.meshNames) {
+      // the morph targets in [animation] might be a subset of those that actually exist in the mesh (and might not have the same order)
+      // we don't want to reorder the data (?? or do we? this is probably more efficient for the backend?)
+      // so let's get the actual list of morph targets from the mesh and pass the relevant indices to the native side.
+      var meshMorphTargets = await getMorphTargetNames(entity, meshName);
 
-    //   for (int i = 0; i < animation.numMorphTargets; i++) {
-    //     var index = meshMorphTargets.indexOf(animation.morphTargets[i]);
-    //     if (index == -1) {
-    //       allocator.free(dataPtr);
-    //       allocator.free(idxPtr);
-    //       throw Exception(
-    //           "Morph target ${animation.morphTargets[i]} is specified in the animation but could not be found in the mesh $meshName under entity $entity");
-    //     }
-    //     idxPtr.elementAt(i).value = index;
-    //   }
+      for (int i = 0; i < animation.numMorphTargets; i++) {
+        var index = meshMorphTargets.indexOf(animation.morphTargets[i]);
+        if (index == -1) {
+          allocator.free(dataPtr);
+          allocator.free(idxPtr);
+          throw Exception(
+              "Morph target ${animation.morphTargets[i]} is specified in the animation but could not be found in the mesh $meshName under entity $entity");
+        }
+        idxPtr.elementAt(i).value = index;
+      }
 
-    //   var meshNamePtr =
-    //       meshName.toNativeUtf8(allocator: allocator).cast<Char>();
+      var meshNamePtr =
+          meshName.toNativeUtf8(allocator: allocator).cast<Char>();
 
-    //   set_morph_animation(
-    //       _assetManager,
-    //       entity,
-    //       meshNamePtr,
-    //       dataPtr,
-    //       idxPtr,
-    //       animation.numMorphTargets,
-    //       animation.numFrames,
-    //       (animation.frameLengthInMs));
-    //   allocator.free(meshNamePtr);
-    // }
-    // allocator.free(dataPtr);
-    // allocator.free(idxPtr);
+      set_morph_animation(
+          _assetManager,
+          entity,
+          meshNamePtr,
+          dataPtr,
+          idxPtr,
+          animation.numMorphTargets,
+          animation.numFrames,
+          (animation.frameLengthInMs));
+      allocator.free(meshNamePtr);
+    }
+    allocator.free(dataPtr);
+    allocator.free(idxPtr);
   }
 
   @override
   Future addBoneAnimation(
       FilamentEntity entity, BoneAnimationData animation) async {
-    // if (_viewer == nullptr) {
-    throw Exception("No viewer available, ignoring");
-    // }
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
 
-    // var numFrames = animation.frameData.length;
+    var numFrames = animation.frameData.length;
 
-    // var meshNames = allocator<Pointer<Char>>(animation.meshNames.length);
-    // for (int i = 0; i < animation.meshNames.length; i++) {
-    //   meshNames.elementAt(i).value = animation.meshNames[i]
-    //       .toNativeUtf8(allocator: allocator)
-    //       .cast<Char>();
-    // }
+    var meshNames = allocator<Pointer<Char>>(animation.meshNames.length);
+    for (int i = 0; i < animation.meshNames.length; i++) {
+      meshNames.elementAt(i).value = animation.meshNames[i]
+          .toNativeUtf8(allocator: allocator)
+          .cast<Char>();
+    }
 
-    // var data = allocator<Float>(numFrames * 4);
+    var data = allocator<Float>(numFrames * 4);
 
-    // for (int i = 0; i < numFrames; i++) {
-    //   data.elementAt(i * 4).value = animation.frameData[i].w;
-    //   data.elementAt((i * 4) + 1).value = animation.frameData[i].x;
-    //   data.elementAt((i * 4) + 2).value = animation.frameData[i].y;
-    //   data.elementAt((i * 4) + 3).value = animation.frameData[i].z;
-    // }
+    for (int i = 0; i < numFrames; i++) {
+      data.elementAt(i * 4).value = animation.frameData[i].w;
+      data.elementAt((i * 4) + 1).value = animation.frameData[i].x;
+      data.elementAt((i * 4) + 2).value = animation.frameData[i].y;
+      data.elementAt((i * 4) + 3).value = animation.frameData[i].z;
+    }
 
-    // add_bone_animation(
-    //     _assetManager,
-    //     entity,
-    //     data,
-    //     numFrames,
-    //     animation.boneName.toNativeUtf8(allocator: allocator).cast<Char>(),
-    //     meshNames,
-    //     animation.meshNames.length,
-    //     animation.frameLengthInMs);
-    // allocator.free(data);
-    // allocator.free(meshNames);
+    add_bone_animation(
+        _assetManager,
+        entity,
+        data,
+        numFrames,
+        animation.boneName.toNativeUtf8(allocator: allocator).cast<Char>(),
+        meshNames,
+        animation.meshNames.length,
+        animation.frameLengthInMs);
+    allocator.free(data);
+    allocator.free(meshNames);
   }
 
   @override
@@ -886,19 +885,17 @@ class FilamentControllerFFI extends FilamentController {
     if (_viewer == nullptr) {
       throw Exception("No viewer available, ignoring");
     }
-    // set_camera_culling(_viewer, near, far);
+    set_camera_culling(_viewer, near, far);
   }
 
   @override
   Future<double> getCameraCullingNear() async {
-    throw Exception();
-    // return get_camera_culling_near(_viewer);
+    return get_camera_culling_near(_viewer);
   }
 
   @override
   Future<double> getCameraCullingFar() async {
-    throw Exception();
-    // return get_camera_culling_far(_viewer);
+    return get_camera_culling_far(_viewer);
   }
 
   @override
@@ -1074,59 +1071,59 @@ class FilamentControllerFFI extends FilamentController {
 
   @override
   Future<Matrix4> getCameraViewMatrix() async {
-    // if (_viewer == nullptr) {
-    throw Exception("No viewer available");
-    // }
-    // var arrayPtr = get_camera_view_matrix(_viewer);
-    // var viewMatrix = Matrix4.fromList(arrayPtr.asTypedList(16));
-    // flutter_filament_free(arrayPtr.cast<Void>());
-    // return viewMatrix;
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available");
+    }
+    var arrayPtr = get_camera_view_matrix(_viewer);
+    var viewMatrix = Matrix4.fromList(arrayPtr.asTypedList(16));
+    flutter_filament_free(arrayPtr.cast<Void>());
+    return viewMatrix;
   }
 
   @override
   Future<Matrix4> getCameraModelMatrix() async {
-    // if (_viewer == nullptr) {
-    throw Exception("No viewer available");
-    // }
-    // if (kIsWeb) {
-    //   throw Exception("TODO");
-    // }
-    // var arrayPtr = get_camera_model_matrix(_viewer);
-    // var modelMatrix = Matrix4.fromList(arrayPtr.asTypedList(16));
-    // flutter_filament_free(arrayPtr.cast<Void>());
-    // return modelMatrix;
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available");
+    }
+    if (kIsWeb) {
+      throw Exception("TODO");
+    }
+    var arrayPtr = get_camera_model_matrix(_viewer);
+    var modelMatrix = Matrix4.fromList(arrayPtr.asTypedList(16));
+    flutter_filament_free(arrayPtr.cast<Void>());
+    return modelMatrix;
   }
 
   @override
   Future<Vector3> getCameraPosition() async {
-    // if (_viewer == nullptr) {
-    throw Exception("No viewer available");
-    // }
-    // var arrayPtr = get_camera_model_matrix(_viewer);
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available");
+    }
+    var arrayPtr = get_camera_model_matrix(_viewer);
 
-    // Float64List doubleList = arrayPtr.asTypedList(16);
+    Float64List doubleList = arrayPtr.asTypedList(16);
 
-    // var modelMatrix = Matrix4.fromFloat64List(doubleList);
+    var modelMatrix = Matrix4.fromFloat64List(doubleList);
 
-    // var position = modelMatrix.getColumn(3).xyz;
+    var position = modelMatrix.getColumn(3).xyz;
 
-    // flutter_filament_free(arrayPtr.cast<Void>());
-    // return position;
+    flutter_filament_free(arrayPtr.cast<Void>());
+    return position;
   }
 
   @override
   Future<Matrix3> getCameraRotation() async {
-    // if (_viewer == nullptr) {
-    throw Exception("No viewer available");
-    // }
-    // var arrayPtr = get_camera_model_matrix(_viewer);
-    // final doubleList = arrayPtr.asTypedList(16);
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available");
+    }
+    var arrayPtr = get_camera_model_matrix(_viewer);
+    final doubleList = arrayPtr.asTypedList(16);
 
-    // var modelMatrix = Matrix4.fromFloat64List(doubleList);
-    // var rotationMatrix = Matrix3.identity();
-    // modelMatrix.copyRotation(rotationMatrix);
-    // flutter_filament_free(arrayPtr.cast<Void>());
-    // return rotationMatrix;
+    var modelMatrix = Matrix4.fromFloat64List(doubleList);
+    var rotationMatrix = Matrix3.identity();
+    modelMatrix.copyRotation(rotationMatrix);
+    flutter_filament_free(arrayPtr.cast<Void>());
+    return rotationMatrix;
   }
 
   @override
@@ -1135,14 +1132,14 @@ class FilamentControllerFFI extends FilamentController {
       double orbitSpeedX = 0.01,
       double orbitSpeedY = 0.01,
       double zoomSpeed = 0.01}) async {
-    // if (_viewer == nullptr) {
-    throw Exception("No viewer available");
-    // }
-    // if (mode != ManipulatorMode.ORBIT) {
-    //   throw Exception("Manipulator mode $mode not yet implemented");
-    // }
-    // set_camera_manipulator_options(
-    //     _viewer, mode.index, orbitSpeedX, orbitSpeedX, zoomSpeed);
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available");
+    }
+    if (mode != ManipulatorMode.ORBIT) {
+      throw Exception("Manipulator mode $mode not yet implemented");
+    }
+    set_camera_manipulator_options(
+        _viewer, mode.index, orbitSpeedX, orbitSpeedX, zoomSpeed);
   }
 
   ///
@@ -1152,111 +1149,109 @@ class FilamentControllerFFI extends FilamentController {
   ///
   @override
   Future<Matrix4> getCameraProjectionMatrix() async {
-    // if (_viewer == nullptr) {
-    throw Exception("No viewer available");
-    // }
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available");
+    }
 
-    // print(
-    //     "WARNING: getCameraProjectionMatrix and getCameraCullingProjectionMatrix are not reliable. Consider these broken");
+    print(
+        "WARNING: getCameraProjectionMatrix and getCameraCullingProjectionMatrix are not reliable. Consider these broken");
 
-    // var arrayPtr = get_camera_projection_matrix(_viewer);
-    // var doubleList = arrayPtr.asTypedList(16);
-    // var projectionMatrix = Matrix4.fromList(doubleList);
-    // flutter_filament_free(arrayPtr.cast<Void>());
-    // return projectionMatrix;
+    var arrayPtr = get_camera_projection_matrix(_viewer);
+    var doubleList = arrayPtr.asTypedList(16);
+    var projectionMatrix = Matrix4.fromList(doubleList);
+    flutter_filament_free(arrayPtr.cast<Void>());
+    return projectionMatrix;
   }
 
   @override
   Future<Matrix4> getCameraCullingProjectionMatrix() async {
-    // if (_viewer == nullptr) {
-    throw Exception("No viewer available");
-    // }
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available");
+    }
 
-    // print(
-    //     "WARNING: getCameraProjectionMatrix and getCameraCullingProjectionMatrix are not reliable. Consider these broken");
-    // var arrayPtr = get_camera_culling_projection_matrix(_viewer);
-    // var doubleList = arrayPtr.asTypedList(16);
-    // var projectionMatrix = Matrix4.fromList(doubleList);
-    // flutter_filament_free(arrayPtr.cast<Void>());
-    // return projectionMatrix;
+    print(
+        "WARNING: getCameraProjectionMatrix and getCameraCullingProjectionMatrix are not reliable. Consider these broken");
+    var arrayPtr = get_camera_culling_projection_matrix(_viewer);
+    var doubleList = arrayPtr.asTypedList(16);
+    var projectionMatrix = Matrix4.fromList(doubleList);
+    flutter_filament_free(arrayPtr.cast<Void>());
+    return projectionMatrix;
   }
 
   @override
   Future<Frustum> getCameraFrustum() async {
-    // if (_viewer == nullptr) {
-    throw Exception("No viewer available");
-    // }
-    // var arrayPtr = get_camera_frustum(_viewer);
-    // final doubleList = arrayPtr.asTypedList(24);
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available");
+    }
+    var arrayPtr = get_camera_frustum(_viewer);
+    final doubleList = arrayPtr.asTypedList(24);
 
-    // var frustum = Frustum();
-    // frustum.plane0.setFromComponents(
-    //     doubleList[0], doubleList[1], doubleList[2], doubleList[3]);
-    // frustum.plane1.setFromComponents(
-    //     doubleList[4], doubleList[5], doubleList[6], doubleList[7]);
-    // frustum.plane2.setFromComponents(
-    //     doubleList[8], doubleList[9], doubleList[10], doubleList[11]);
-    // frustum.plane3.setFromComponents(
-    //     doubleList[12], doubleList[13], doubleList[14], doubleList[15]);
-    // frustum.plane4.setFromComponents(
-    //     doubleList[16], doubleList[17], doubleList[18], doubleList[19]);
-    // frustum.plane5.setFromComponents(
-    //     doubleList[20], doubleList[21], doubleList[22], doubleList[23]);
-    // flutter_filament_free(arrayPtr.cast<Void>());
-    // return frustum;
+    var frustum = Frustum();
+    frustum.plane0.setFromComponents(
+        doubleList[0], doubleList[1], doubleList[2], doubleList[3]);
+    frustum.plane1.setFromComponents(
+        doubleList[4], doubleList[5], doubleList[6], doubleList[7]);
+    frustum.plane2.setFromComponents(
+        doubleList[8], doubleList[9], doubleList[10], doubleList[11]);
+    frustum.plane3.setFromComponents(
+        doubleList[12], doubleList[13], doubleList[14], doubleList[15]);
+    frustum.plane4.setFromComponents(
+        doubleList[16], doubleList[17], doubleList[18], doubleList[19]);
+    frustum.plane5.setFromComponents(
+        doubleList[20], doubleList[21], doubleList[22], doubleList[23]);
+    flutter_filament_free(arrayPtr.cast<Void>());
+    return frustum;
   }
 
   @override
   Future setBoneTransform(FilamentEntity entity, String meshName,
       String boneName, Matrix4 data) async {
-    throw Exception();
-    // var ptr = allocator<Float>(16);
-    // for (int i = 0; i < 16; i++) {
-    //   ptr.elementAt(i).value = data.storage[i];
-    // }
+    var ptr = allocator<Float>(16);
+    for (int i = 0; i < 16; i++) {
+      ptr.elementAt(i).value = data.storage[i];
+    }
 
-    // var meshNamePtr = meshName.toNativeUtf8(allocator: allocator).cast<Char>();
-    // var boneNamePtr = boneName.toNativeUtf8(allocator: allocator).cast<Char>();
+    var meshNamePtr = meshName.toNativeUtf8(allocator: allocator).cast<Char>();
+    var boneNamePtr = boneName.toNativeUtf8(allocator: allocator).cast<Char>();
 
-    // var result = set_bone_transform_ffi(
-    //     _assetManager, entity, meshNamePtr, ptr, boneNamePtr);
+    var result = set_bone_transform_ffi(
+        _assetManager, entity, meshNamePtr, ptr, boneNamePtr);
 
-    // allocator.free(ptr);
-    // allocator.free(meshNamePtr);
-    // allocator.free(boneNamePtr);
-    // if (!result) {
-    //   throw Exception("Failed to set bone transform. See logs for details");
-    // }
+    allocator.free(ptr);
+    allocator.free(meshNamePtr);
+    allocator.free(boneNamePtr);
+    if (!result) {
+      throw Exception("Failed to set bone transform. See logs for details");
+    }
   }
 
   @override
   Future<FilamentEntity> getChildEntity(
       FilamentEntity parent, String childName) async {
-    throw Exception();
-    // var childNamePtr =
-    //     childName.toNativeUtf8(allocator: allocator).cast<Char>();
-    // try {
-    //   var childEntity =
-    //       find_child_entity_by_name(_assetManager, parent, childNamePtr);
-    //   if (childEntity == _FILAMENT_ASSET_ERROR) {
-    //     throw Exception(
-    //         "Could not find child ${childName} under the specified entity");
-    //   }
-    //   return childEntity;
-    // } finally {
-    //   allocator.free(childNamePtr);
-    // }
+    var childNamePtr =
+        childName.toNativeUtf8(allocator: allocator).cast<Char>();
+    try {
+      var childEntity =
+          find_child_entity_by_name(_assetManager, parent, childNamePtr);
+      if (childEntity == _FILAMENT_ASSET_ERROR) {
+        throw Exception(
+            "Could not find child ${childName} under the specified entity");
+      }
+      return childEntity;
+    } finally {
+      allocator.free(childNamePtr);
+    }
   }
 
   @override
   Future setRecording(bool recording) async {
-    // set_recording(_viewer, recording);
+    set_recording(_viewer, recording);
   }
 
   @override
   Future setRecordingOutputDirectory(String outputDir) async {
-    // var pathPtr = outputDir.toNativeUtf8(allocator: allocator);
-    // set_recording_output_directory(_viewer, pathPtr.cast<Char>());
-    // allocator.free(pathPtr);
+    var pathPtr = outputDir.toNativeUtf8(allocator: allocator);
+    set_recording_output_directory(_viewer, pathPtr.cast<Char>());
+    allocator.free(pathPtr);
   }
 }

@@ -460,22 +460,36 @@ external bool set_morph_animation(
             EntityId,
             ffi.Pointer<ffi.Float>,
             ffi.Int,
-            ffi.Int,
-            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Pointer<ffi.Char>>,
             ffi.Int,
             ffi.Float)>(
-    symbol: '_set_bone_animation', assetId: 'flutter_filament_plugin')
-external void set_bone_animation(
+    symbol: '_add_bone_animation', assetId: 'flutter_filament_plugin')
+external void add_bone_animation(
   ffi.Pointer<ffi.Void> assetManager,
   int asset,
   ffi.Pointer<ffi.Float> frameData,
   int numFrames,
-  int numBones,
-  ffi.Pointer<ffi.Pointer<ffi.Char>> boneNames,
-  ffi.Pointer<ffi.Pointer<ffi.Char>> meshName,
+  ffi.Pointer<ffi.Char> boneName,
+  ffi.Pointer<ffi.Pointer<ffi.Char>> meshNames,
   int numMeshTargets,
   double frameLengthInMs,
+);
+
+@ffi.Native<
+        ffi.Bool Function(
+            ffi.Pointer<ffi.Void>,
+            EntityId,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Float>,
+            ffi.Pointer<ffi.Char>)>(
+    symbol: '_set_bone_transform', assetId: 'flutter_filament_plugin')
+external bool set_bone_transform(
+  ffi.Pointer<ffi.Void> assetManager,
+  int asset,
+  ffi.Pointer<ffi.Char> entityName,
+  ffi.Pointer<ffi.Float> transform,
+  ffi.Pointer<ffi.Char> boneName,
 );
 
 @ffi.Native<
@@ -665,6 +679,12 @@ external void set_camera_position(
   double z,
 );
 
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_get_camera_position', assetId: 'flutter_filament_plugin')
+external void get_camera_position(
+  ffi.Pointer<ffi.Void> viewer,
+);
+
 @ffi.Native<
         ffi.Void Function(
             ffi.Pointer<ffi.Void>, ffi.Float, ffi.Float, ffi.Float, ffi.Float)>(
@@ -684,6 +704,68 @@ external void set_camera_model_matrix(
   ffi.Pointer<ffi.Float> matrix,
 );
 
+@ffi.Native<ffi.Pointer<ffi.Double> Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_get_camera_model_matrix', assetId: 'flutter_filament_plugin')
+external ffi.Pointer<ffi.Double> get_camera_model_matrix(
+  ffi.Pointer<ffi.Void> viewer,
+);
+
+@ffi.Native<ffi.Pointer<ffi.Double> Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_get_camera_view_matrix', assetId: 'flutter_filament_plugin')
+external ffi.Pointer<ffi.Double> get_camera_view_matrix(
+  ffi.Pointer<ffi.Void> viewer,
+);
+
+@ffi.Native<ffi.Pointer<ffi.Double> Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_get_camera_projection_matrix', assetId: 'flutter_filament_plugin')
+external ffi.Pointer<ffi.Double> get_camera_projection_matrix(
+  ffi.Pointer<ffi.Void> viewer,
+);
+
+@ffi.Native<
+        ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Double>,
+            ffi.Double, ffi.Double)>(
+    symbol: '_set_camera_projection_matrix', assetId: 'flutter_filament_plugin')
+external void set_camera_projection_matrix(
+  ffi.Pointer<ffi.Void> viewer,
+  ffi.Pointer<ffi.Double> matrix,
+  double near,
+  double far,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Double, ffi.Double)>(
+    symbol: '_set_camera_culling', assetId: 'flutter_filament_plugin')
+external void set_camera_culling(
+  ffi.Pointer<ffi.Void> viewer,
+  double near,
+  double far,
+);
+
+@ffi.Native<ffi.Double Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_get_camera_culling_near', assetId: 'flutter_filament_plugin')
+external double get_camera_culling_near(
+  ffi.Pointer<ffi.Void> viewer,
+);
+
+@ffi.Native<ffi.Double Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_get_camera_culling_far', assetId: 'flutter_filament_plugin')
+external double get_camera_culling_far(
+  ffi.Pointer<ffi.Void> viewer,
+);
+
+@ffi.Native<ffi.Pointer<ffi.Double> Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_get_camera_culling_projection_matrix',
+    assetId: 'flutter_filament_plugin')
+external ffi.Pointer<ffi.Double> get_camera_culling_projection_matrix(
+  ffi.Pointer<ffi.Void> viewer,
+);
+
+@ffi.Native<ffi.Pointer<ffi.Double> Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_get_camera_frustum', assetId: 'flutter_filament_plugin')
+external ffi.Pointer<ffi.Double> get_camera_frustum(
+  ffi.Pointer<ffi.Void> viewer,
+);
+
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Float)>(
     symbol: '_set_camera_focal_length', assetId: 'flutter_filament_plugin')
 external void set_camera_focal_length(
@@ -696,6 +778,19 @@ external void set_camera_focal_length(
 external void set_camera_focus_distance(
   ffi.Pointer<ffi.Void> viewer,
   double focusDistance,
+);
+
+@ffi.Native<
+        ffi.Void Function(ffi.Pointer<ffi.Void>, _ManipulatorMode, ffi.Double,
+            ffi.Double, ffi.Double)>(
+    symbol: '_set_camera_manipulator_options',
+    assetId: 'flutter_filament_plugin')
+external void set_camera_manipulator_options(
+  ffi.Pointer<ffi.Void> viewer,
+  int mode,
+  double orbitSpeedX,
+  double orbitSpeedY,
+  double zoomSpeed,
 );
 
 @ffi.Native<
@@ -743,9 +838,40 @@ external ffi.Pointer<ffi.Char> get_name_for_entity(
   int entityId,
 );
 
+@ffi.Native<
+        EntityId Function(
+            ffi.Pointer<ffi.Void>, EntityId, ffi.Pointer<ffi.Char>)>(
+    symbol: '_find_child_entity_by_name', assetId: 'flutter_filament_plugin')
+external int find_child_entity_by_name(
+  ffi.Pointer<ffi.Void> assetManager,
+  int parent,
+  ffi.Pointer<ffi.Char> name,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
+    symbol: '_set_recording', assetId: 'flutter_filament_plugin')
+external void set_recording(
+  ffi.Pointer<ffi.Void> viewer,
+  bool recording,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)>(
+    symbol: '_set_recording_output_directory',
+    assetId: 'flutter_filament_plugin')
+external void set_recording_output_directory(
+  ffi.Pointer<ffi.Void> viewer,
+  ffi.Pointer<ffi.Char> outputDirectory,
+);
+
 @ffi.Native<ffi.Void Function()>(
     symbol: '_ios_dummy', assetId: 'flutter_filament_plugin')
 external void ios_dummy();
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
+    symbol: '_flutter_filament_free', assetId: 'flutter_filament_plugin')
+external void flutter_filament_free(
+  ffi.Pointer<ffi.Void> ptr,
+);
 
 @ffi.Native<
         ffi.Pointer<ffi.Void> Function(
@@ -1189,6 +1315,8 @@ typedef DartFreeFilamentResourceFromOwnerFunction = void Function(
 /// The intention is that calling one of these methods will call its respective method in FlutterFilamentApi.h, but wrapped in some kind of thread runner to ensure thread safety.
 typedef EntityId = ffi.Int32;
 typedef DartEntityId = int;
+typedef _ManipulatorMode = ffi.Int32;
+typedef Dart_ManipulatorMode = int;
 typedef FilamentRenderCallback
     = ffi.Pointer<ffi.NativeFunction<FilamentRenderCallbackFunction>>;
 typedef FilamentRenderCallbackFunction = ffi.Void Function(
