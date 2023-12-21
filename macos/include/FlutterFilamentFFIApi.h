@@ -15,7 +15,12 @@ extern "C" {
 typedef int32_t EntityId;
 typedef void (*FilamentRenderCallback)(void* const owner);
 
-FLUTTER_PLUGIN_EXPORT void* const create_filament_viewer_ffi(void* const context, void* const platform, const char* uberArchivePath, const ResourceLoaderWrapper* const loader, void (*renderCallback)(void* const renderCallbackOwner), void* const renderCallbackOwner);
+FLUTTER_PLUGIN_EXPORT void* const create_filament_viewer_ffi(
+    void* const context, 
+    void* const platform, 
+    const char* uberArchivePath, 
+    const void* const loader, // should be const ResourceLoaderWrapper* const
+    void (*renderCallback)(void* const renderCallbackOwner), void* const renderCallbackOwner);
 FLUTTER_PLUGIN_EXPORT void create_swap_chain_ffi(void* const viewer, void* const surface, uint32_t width, uint32_t height);
 FLUTTER_PLUGIN_EXPORT void destroy_swap_chain_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT void create_render_target_ffi(void* const viewer, intptr_t nativeTextureId, uint32_t width, uint32_t height);
@@ -50,33 +55,7 @@ FLUTTER_PLUGIN_EXPORT void apply_weights_ffi(
                                              float *const weights,
                                              int count
                                              );
-FLUTTER_PLUGIN_EXPORT void set_morph_target_weights_ffi(
-                                                        void* const assetManager,
-                                                        EntityId asset,
-                                                        const char *const entityName,
-                                                        const float *const morphData,
-                                                        int numWeights
-                                                        );
-FLUTTER_PLUGIN_EXPORT bool set_morph_animation_ffi(
-                                                   void* const assetManager,
-                                                   EntityId asset,
-                                                   const char *const entityName,
-                                                   const float *const morphData,
-                                                   const int* const morphIndices,
-                                                   int numMorphTargets,
-                                                   int numFrames,
-                                                   float frameLengthInMs);
-FLUTTER_PLUGIN_EXPORT 
-FLUTTER_PLUGIN_EXPORT void set_bone_animation_ffi(
-                                                  void* const assetManager,
-                                                  EntityId asset,
-                                                  const float* const frameData,
-                                                  int numFrames,
-                                                  int numBones,
-                                                  const char** const boneNames,
-                                                  const char** const meshName,
-                                                  int numMeshTargets,
-                                                  float frameLengthInMs);
+
 FLUTTER_PLUGIN_EXPORT void play_animation_ffi(void* const assetManager, EntityId asset, int index, bool loop, bool reverse, bool replaceActive, float crossfade);
 FLUTTER_PLUGIN_EXPORT void set_animation_frame_ffi(void* const assetManager, EntityId asset, int animationIndex, int animationFrame);
 FLUTTER_PLUGIN_EXPORT void stop_animation_ffi(void* const assetManager, EntityId asset, int index);
@@ -84,6 +63,18 @@ FLUTTER_PLUGIN_EXPORT int get_animation_count_ffi(void* const assetManager, Enti
 FLUTTER_PLUGIN_EXPORT void get_animation_name_ffi(void* const assetManager, EntityId asset, char *const outPtr, int index);
 FLUTTER_PLUGIN_EXPORT void get_morph_target_name_ffi(void* const assetManager, EntityId asset, const char *meshName, char *const outPtr, int index);
 FLUTTER_PLUGIN_EXPORT int get_morph_target_name_count_ffi(void* const assetManager, EntityId asset, const char *meshName);
+FLUTTER_PLUGIN_EXPORT void set_morph_target_weights_ffi(void* const assetManager,
+                                                        EntityId asset,
+                                                        const char *const entityName,
+                                                        const float *const morphData,
+                                                        int numWeights
+                                                        );
+FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(
+		void *assetManager,
+		EntityId asset,
+		const char *entityName,
+		const float *const transform,
+		const char *boneName);
 FLUTTER_PLUGIN_EXPORT void set_post_processing_ffi(void* const viewer, bool enabled);
 FLUTTER_PLUGIN_EXPORT void pick_ffi(void* const viewer, int x, int y, EntityId* entityId);
 FLUTTER_PLUGIN_EXPORT void ios_dummy_ffi();
