@@ -16,12 +16,12 @@ A new flutter plugin project.
   s.source_files = 'Classes/*', 'src/*', "src/camutils/*", 'src/ios/*', 'include/filament/*', 'include/*', 'include/material/*.c'
   s.public_header_files = 'include/SwiftFlutterFilamentPlugin-Bridging-Header.h',  'include/FlutterFilamentApi.h', 'include/FlutterFilamentFFIApi.h', 'include/ResourceBuffer.hpp', 'include/Log.hpp'
   s.dependency 'Flutter' 
-  s.platform = :ios, '12.1'
+  s.platform = :ios, '13'
   s.static_framework = true
   s.vendored_libraries = "lib/*.a"
   s.user_target_xcconfig = { 
     'DEFINES_MODULE' => 'YES', 
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386', 
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => '"i386" "arm64', 
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
     'OTHER_CFLAGS' => '"-fvisibility=default" "$(inherited)"',
     'USER_HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/include" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/include/filament" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/src" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/src/image" "${PODS_ROOT}/../.symlinks/plugins/flutter_filament/ios/src/shaders"  "$(inherited)"',
@@ -32,7 +32,7 @@ A new flutter plugin project.
 
   s.pod_target_xcconfig = { 
     'DEFINES_MODULE' => 'YES', 
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386', 
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => '"i386" "arm64', 
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
     'OTHER_CXXFLAGS' => '"--std=c++17" "-fmodules" "-fcxx-modules" "-fvisibility=default" "$(inherited)"',
     'OTHER_CFLAGS' => '"-fvisibility=default" "$(inherited)"',
