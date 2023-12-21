@@ -38,19 +38,6 @@ final class FooChar extends AbiSpecificInteger {
   const FooChar();
 }
 
-// class _Allocator implements Allocator {
-//   const _Allocator();
-//   @override
-//   Pointer<T> allocate<T extends NativeType>(int byteCount, {int? alignment}) {
-//     return Pointer<T>.fromAddress(flutter_filament_web_allocate(byteCount));
-//   }
-
-//   @override
-//   void free(Pointer<NativeType> pointer) {
-//     flutter_filament_web_free(pointer.cast<Void>());
-//   }
-// }
-
 @pragma("wasm:export")
 void loadFlutterAsset(Pointer<Char> path, Pointer<Void> context) async {
   final codeUnits = path.cast<Uint8>();
@@ -78,8 +65,6 @@ void loadFlutterAsset(Pointer<Char> path, Pointer<Void> context) async {
   flutter_filament_web_load_resource_callback(
       dataPtr.cast<Void>(), bd.lengthInBytes, context);
 }
-
-// final allocator = _Allocator();
 
 /// A web implementation of the FlutterFilamentPlatform of the FlutterFilament plugin.
 class FlutterFilamentPluginWeb {
