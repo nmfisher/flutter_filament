@@ -77,7 +77,7 @@ namespace polyvox
         EntityManager &em = EntityManager::get();
 
         _assetLoader = AssetLoader::create({_engine, _ubershaderProvider, _ncm, &em});
-        _gltfResourceLoader->addTextureProvider("image/ktx2", _ktxDecoder);
+        _gltfResourceLoader->addTextureProvider ("image/ktx2", _ktxDecoder);
         _gltfResourceLoader->addTextureProvider("image/png", _stbDecoder);
         _gltfResourceLoader->addTextureProvider("image/jpeg", _stbDecoder);
     }
@@ -121,17 +121,31 @@ namespace polyvox
             _gltfResourceLoader->addResourceData(resourceUris[i], std::move(b));
         }
 
-        // load resources synchronously
-        if (!_gltfResourceLoader->loadResources(asset))
-        {
-            Log("Unknown error loading glTF asset");
-            _resourceLoaderWrapper->free(rbuf);
-            for (auto &rb : resourceBuffers)
-            {
-                _resourceLoaderWrapper->free(rb);
+        #ifdef __EMSCRIPTEN__
+            if (!_gltfResourceLoader->asyncBeginLoad(asset)) {
+                Log("Unknown error loading glTF asset");
+                _resourceLoaderWrapper->free(rbuf);
+                for(auto& rb : resourceBuffers) {
+                    _resourceLoaderWrapper->free(rb);
+                }
+                return 0;
             }
-            return 0;
-        }
+            while(_gltfResourceLoader->asyncGetLoadProgress() < 1.0f) {
+                _gltfResourceLoader->asyncUpdateLoad();
+            }
+        #else
+            // load resources synchronously
+            if (!_gltfResourceLoader->loadResources(asset))
+            {
+                Log("Unknown error loading glTF asset");
+                _resourceLoaderWrapper->free(rbuf);
+                for (auto &rb : resourceBuffers)
+                {
+                    _resourceLoaderWrapper->free(rb);
+                }
+                return 0;
+            }
+        #endif
 
         _scene->addEntities(asset->getEntities(), asset->getEntityCount());
 
@@ -166,7 +180,7 @@ namespace polyvox
 
         ResourceBuffer rbuf = _resourceLoaderWrapper->load(uri);
 
-        Log("Loaded GLB of size %d at URI %s", rbuf.size, uri);
+        Log("Loaded GLB data (%d bytes) from URI %s", rbuf.size, uri);
 
         FilamentAsset *asset = _assetLoader->createAsset(
             (const uint8_t *)rbuf.data, rbuf.size);
@@ -181,12 +195,23 @@ namespace polyvox
 
         _scene->addEntities(asset->getEntities(), entityCount);
 
-        if (!_gltfResourceLoader->loadResources(asset))
-        {
-            Log("Unknown error loading glb asset");
-            _resourceLoaderWrapper->free(rbuf);
-            return 0;
-        }
+        #ifdef __EMSCRIPTEN__ 
+            if (!_gltfResourceLoader->asyncBeginLoad(asset)) {
+                Log("Unknown error loading glb asset");
+                _resourceLoaderWrapper->free(rbuf);
+                return 0;
+            }
+            while(_gltfResourceLoader->asyncGetLoadProgress() < 1.0f) {
+                _gltfResourceLoader->asyncUpdateLoad();
+            }
+        #else 
+            if (!_gltfResourceLoader->loadResources(asset))
+            {
+                Log("Unknown error loading glb asset");
+                _resourceLoaderWrapper->free(rbuf);
+                return 0;
+            }
+        #endif
 
         auto lights = asset->getLightEntities();
         _scene->addEntities(lights, asset->getLightEntityCount());
