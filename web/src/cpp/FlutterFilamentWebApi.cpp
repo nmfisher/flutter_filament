@@ -107,8 +107,8 @@ extern "C"
     attr.alpha = EM_FALSE;
     attr.depth = EM_TRUE;
     attr.antialias = EM_FALSE;
-    attr.explicitSwapControl = EM_FALSE;
-    attr.preserveDrawingBuffer = EM_TRUE;
+    attr.explicitSwapControl = EM_TRUE;
+    attr.preserveDrawingBuffer = EM_FALSE;
     attr.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_ALWAYS;
     // attr.renderViaOffscreenBackBuffer = EM_TRUE;
     attr.majorVersion = 2;
