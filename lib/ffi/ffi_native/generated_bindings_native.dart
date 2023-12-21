@@ -122,6 +122,13 @@ external void load_ibl(
   double intensity,
 );
 
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Float>)>(
+    symbol: 'rotate_ibl', assetId: 'flutter_filament_plugin')
+external void rotate_ibl(
+  ffi.Pointer<ffi.Void> viewer,
+  ffi.Pointer<ffi.Float> rotationMatrix,
+);
+
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
     symbol: 'remove_skybox', assetId: 'flutter_filament_plugin')
 external void remove_skybox(

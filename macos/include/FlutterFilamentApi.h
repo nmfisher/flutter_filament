@@ -67,6 +67,7 @@ extern "C"
 	FLUTTER_PLUGIN_EXPORT void set_bloom(const void *const viewer, float strength);
 	FLUTTER_PLUGIN_EXPORT void load_skybox(const void *const viewer, const char *skyboxPath);
 	FLUTTER_PLUGIN_EXPORT void load_ibl(const void *const viewer, const char *iblPath, float intensity);
+	FLUTTER_PLUGIN_EXPORT void rotate_ibl(const void *const viewer, float* rotationMatrix);
 	FLUTTER_PLUGIN_EXPORT void remove_skybox(const void *const viewer);
 	FLUTTER_PLUGIN_EXPORT void remove_ibl(const void *const viewer);
 	FLUTTER_PLUGIN_EXPORT EntityId add_light(const void *const viewer, uint8_t type, float colour, float intensity, float posX, float posY, float posZ, float dirX, float dirY, float dirZ, bool shadows);

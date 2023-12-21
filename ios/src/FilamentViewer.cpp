@@ -951,6 +951,11 @@ namespace polyvox
     _scene->setIndirectLight(nullptr);
   }
 
+  void FilamentViewer::rotateIbl(const math::mat3f & matrix) {
+      _indirectLight->setRotation(matrix);
+  }
+
+
   void FilamentViewer::loadIbl(const char *const iblPath, float intensity)
   {
     removeIbl();

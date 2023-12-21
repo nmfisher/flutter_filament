@@ -76,6 +76,19 @@ extern "C"
         ((FilamentViewer *)viewer)->loadIbl(iblPath, intensity);
     }
 
+    FLUTTER_PLUGIN_EXPORT void rotate_ibl(const void *const viewer, float* rotationMatrix) {
+        math::mat3f matrix(rotationMatrix[0], rotationMatrix[1],
+         rotationMatrix[2],
+         rotationMatrix[3],
+         rotationMatrix[4],
+         rotationMatrix[5],
+         rotationMatrix[6],
+         rotationMatrix[7],
+         rotationMatrix[8]);
+        
+        ((FilamentViewer*)viewer)->rotateIbl(matrix);
+    }
+
     FLUTTER_PLUGIN_EXPORT void remove_skybox(const void *const viewer)
     {
         ((FilamentViewer *)viewer)->removeSkybox();

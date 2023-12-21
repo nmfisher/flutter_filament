@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter_filament/ffi/ffi_native/generated_bindings_native.dart';
 
 import 'package:flutter_filament/filament_controller.dart';
 
@@ -461,6 +462,19 @@ class FilamentControllerFFI extends FilamentController {
         _viewer,
         lightingPath.toNativeUtf8(allocator: allocator).cast<Char>(),
         intensity);
+  }
+
+  @override
+  Future rotateIbl(Matrix3 rotationMatrix) async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    var floatPtr = allocator<Float>(9);
+    for (int i = 0; i < 9; i++) {
+      floatPtr.elementAt(i).value = rotationMatrix.storage[i];
+    }
+    rotate_ibl(_viewer, floatPtr);
+    allocator.free(floatPtr);
   }
 
   @override

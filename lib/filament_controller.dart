@@ -164,6 +164,11 @@ abstract class FilamentController {
   Future loadIbl(String lightingPath, {double intensity = 30000});
 
   ///
+  /// Rotates the IBL & skybox.
+  ///
+  Future rotateIbl(Matrix3 rotation);
+
+  ///
   /// Removes the image-based light from the scene.
   ///
   Future removeIbl();
