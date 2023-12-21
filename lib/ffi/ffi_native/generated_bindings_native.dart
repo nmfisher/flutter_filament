@@ -788,7 +788,7 @@ external void flutter_filament_free(
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Char>,
-            ffi.Pointer<ResourceLoaderWrapper>,
+            ffi.Pointer<ffi.Void>,
             ffi
                 .Pointer<
                     ffi.NativeFunction<
@@ -800,7 +800,7 @@ external ffi.Pointer<ffi.Void> create_filament_viewer_ffi(
   ffi.Pointer<ffi.Void> context,
   ffi.Pointer<ffi.Void> platform,
   ffi.Pointer<ffi.Char> uberArchivePath,
-  ffi.Pointer<ResourceLoaderWrapper> loader,
+  ffi.Pointer<ffi.Void> loader,
   ffi.Pointer<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Void> renderCallbackOwner)>>
