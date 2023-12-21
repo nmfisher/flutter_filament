@@ -490,11 +490,11 @@ FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(
 		const char *entityName,
 		const float *const transform,
 		const char *boneName) {
-      std::packaged_task<bool()> lambda(
-      [&] { return set_bone_transform(assetManager, asset, entityName, transform, boneName); });
-      auto fut = _rl->add_task(lambda);
-      fut.wait();
-      return fut.get();
+      // std::packaged_task<bool()> lambda(
+      // [&] { return set_bone_transform(assetManager, asset, entityName, transform, boneName); });
+      // auto fut = _rl->add_task(lambda);
+      // fut.wait();
+      // return fut.get();
 }
 
 FLUTTER_PLUGIN_EXPORT void ios_dummy_ffi() { Log("Dummy called"); }

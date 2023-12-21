@@ -88,9 +88,9 @@ extern "C"
     return ptr[offset];
   }
 
-  FLUTTER_PLUGIN_EXPORT long flutter_filament_web_allocate(int32_t size) {
-    char* allocated = (char*)calloc(size, 1);
-    return (long)allocated;
+  FLUTTER_PLUGIN_EXPORT void* flutter_filament_web_allocate(int32_t size) {
+    void* allocated = (void*)calloc(size, 1);
+    return allocated;
   }
 
   FLUTTER_PLUGIN_EXPORT long flutter_filament_web_get_address(void** out) {
@@ -177,7 +177,7 @@ extern "C"
     free(ptr);
   }
 
-  FLUTTER_PLUGIN_EXPORT long flutter_filament_web_get_resource_loader_wrapper() {
-    return (long) new ResourceLoaderWrapper(flutter_filament_web_load_resource, flutter_filament_web_free_resource);
+  FLUTTER_PLUGIN_EXPORT void* flutter_filament_web_get_resource_loader_wrapper() {
+    return (void*) new ResourceLoaderWrapper(flutter_filament_web_load_resource, flutter_filament_web_free_resource);
   }
 }

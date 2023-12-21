@@ -16,7 +16,7 @@ class _Allocator implements ffi.Allocator {
   @override
   ffi.Pointer<T> allocate<T extends ffi.NativeType>(int byteCount,
       {int? alignment}) {
-    return ffi.Pointer<T>.fromAddress(flutter_filament_web_allocate(byteCount));
+    return flutter_filament_web_allocate(byteCount).cast<T>();
   }
 
   @override
