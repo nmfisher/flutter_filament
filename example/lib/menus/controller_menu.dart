@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_filament/filament_controller.dart';
@@ -72,13 +73,15 @@ class _ControllerMenuState extends State<ControllerMenu> {
               "Create FilamentController (custom ubershader - lit opaque only)"),
           onPressed: () {
             _createController(
-                uberArchivePath: Platform.isWindows
-                    ? "assets/lit_opaque_32.uberz"
-                    : Platform.isMacOS
-                        ? "assets/lit_opaque_43.uberz"
-                        : Platform.isIOS
+                uberArchivePath: kIsWeb
+                    ? "assets/lit_opaque_49_webgl.uberz"
+                    : Platform.isWindows
+                        ? "assets/lit_opaque_32.uberz"
+                        : Platform.isMacOS
                             ? "assets/lit_opaque_43.uberz"
-                            : "assets/lit_opaque_43_gles.uberz");
+                            : Platform.isIOS
+                                ? "assets/lit_opaque_43.uberz"
+                                : "assets/lit_opaque_43_gles.uberz");
           },
         )
       ]);
