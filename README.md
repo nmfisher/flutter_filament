@@ -467,6 +467,12 @@ e.g.
 - Note also need to specifically build imageio/png/tinyexr 
 - if release build, then need to comment out -fno-exceptions
 
+# MacOS
+
+If you want to load assets from local paths, you will need to disable the sandbox.
+
+In Xcode, select your target project, click "Signing & Capabilities" and delete the Debug & Profile sandbox entry.
+
 # Linux specific
 
 (Fedora 34)
