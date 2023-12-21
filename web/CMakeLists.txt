@@ -11,10 +11,11 @@ set(PLUGIN_NAME "flutter_filament_plugin")
 
 set(EMCC_CFLAGS --bind)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_TABLE_GROWTH=1)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_MEMORY_GROWTH=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sEXPORT_NAME=${PLUGIN_NAME})
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMAIN_MODULE)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMODULARIZE)
-set(EMCC_CFLAGS ${EMCC_CFLAGS} -sTOTAL_MEMORY=1024MB)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sTOTAL_MEMORY=1024MB)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sERROR_ON_UNDEFINED_SYMBOLS=0 )
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sEXPORTED_RUNTIME_METHODS=wasmExports,wasmTable)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sFULL_ES3)
@@ -48,12 +49,13 @@ link_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib")
 
 include_directories(../ios/src)
 include_directories(../ios/include)
-include_directories(../ios/include/filament)
+include_directories(../web/include)
+include_directories(../web/include/filament)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library(filament_shaders STATIC 
-  "${CMAKE_CURRENT_SOURCE_DIR}/../ios/include/material/image.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../web/include/material/image.c"
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/)
