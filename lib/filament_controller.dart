@@ -39,12 +39,6 @@ abstract class FilamentController {
   Stream<FilamentEntity> get onUnload;
 
   ///
-  /// A [ValueNotifier] that holds the current dimensions (in physical pixels, after multiplying by pixel ratio) of the FilamentWidget.
-  /// If you need to perform work as early as possible, add a listener to this property before a [FilamentWidget] has been inserted into the widget hierarchy.
-  ///
-  ValueNotifier<Rect?> get rect;
-
-  ///
   /// A [ValueNotifier] to indicate whether a FilamentViewer is currently available.
   /// (FilamentViewer is a C++ type, hence why it is not referenced) here.
   /// Call [createViewer]/[destroyViewer] to create/destroy a FilamentViewer.
@@ -107,12 +101,13 @@ abstract class FilamentController {
   Future destroyTexture();
 
   ///
-  /// Create a FilamentViewer. Must be called at least one frame after a [FilamentWidget] has been inserted into the rendering hierarchy.
-  ///
-  /// Before a FilamentViewer is created, the FilamentWidget will only contain an empty Container (by default, with a solid red background).
-  /// FilamentWidget will then call [setDimensions] with dimensions/pixel ratio of the viewport
-  /// Calling [createViewer] will then dispatch a request to the native platform to create a hardware texture (Metal on iOS, OpenGL on Linux, GLES on Android and Windows) and a FilamentViewer (the main interface for manipulating the 3D scene) .
-  /// [FilamentWidget] will be notified that a texture is available and will replace the empty Container with a Texture widget
+  /// A FilamentViewer is the native interface used for scene manipulation/rendering (see FilamentViewer.hpp).
+  /// This is not exposed directly - you only need to work with a [FilamentController] - but you do need to call [createViewer] to actually instantiate this.
+  /// Creating a viewer requires the dimensions for the viewport, so internally this method waits for [setDimensions] to be called.
+  /// [FilamentWidget] calls this method whenever it is inserted into the widget hierarchy; you generally do not need to call [setDimensions] yourself.
+  /// You do not need to ensure that [FilamentWidget] exists in the rendering
+  /// When the dimensions are available, [createViewer] will then dispatch a request to the native platform to create a hardware texture (Metal on iOS, OpenGL on Linux, GLES on Android and Windows) and a FilamentViewer (the main interface for manipulating the 3D scene) .
+  /// [FilamentWidget] will be notified that a rendering surface is available and will replace the empty Container with the appropriate widget (Texture on iOS/MacOS/Android, transparency on Windows and WebGL to show the underlying window/canvas).
   ///
   Future createViewer();
 
