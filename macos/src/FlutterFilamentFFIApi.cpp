@@ -9,6 +9,25 @@
 #include <functional>
 #include <mutex>
 #include <thread>
+#include <stdlib.h>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#include <emscripten/threading.h>
+#include <emscripten/val.h>
+
+
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#include <GL/glext.h>
+
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#include <emscripten/threading.h>
+#include <emscripten/val.h>
+#endif 
+#include <pthread.h>
 
 using namespace polyvox;
 
@@ -16,24 +35,39 @@ class RenderLoop {
 public:
   explicit RenderLoop() {
     _t = new std::thread([this]() {
+      auto last = std::chrono::high_resolution_clock::now();
       while (!_stop) {
-        {
-          if (_rendering) {
-            doRender();
-          }
-        }
-        std::function<void()> task;
-        {
+
+        auto now = std::chrono::high_resolution_clock::now();
+
+        float elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
+
+        while(elapsed < 3 * _frameIntervalInMilliseconds / 4) {
+          
+          std::function<void()> task;
           std::unique_lock<std::mutex> lock(_access);
           if (_tasks.empty()) {
-            _cond.wait_for(lock, std::chrono::duration<float, std::milli>(
-                                     _frameIntervalInMilliseconds));
+            _cond.wait_for(lock, std::chrono::duration<float, std::milli>(1));
+            now = std::chrono::high_resolution_clock::now();
+            elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
             continue;
           }
           task = std::move(_tasks.front());
           _tasks.pop_front();
+          task();
+          
+          now = std::chrono::high_resolution_clock::now();
+          elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
         }
-        task();
+
+        if (_rendering) {
+          auto frameStart = std::chrono::high_resolution_clock::now();
+          doRender();
+          auto frameEnd = std::chrono::high_resolution_clock::now();
+          // Log("Took %f milliseconds for render",           float(std::chrono::duration_cast<std::chrono::milliseconds>(frameEnd - frameStart).count()));
+        }
+
+        last = now;
       }
     });
   }
@@ -49,7 +83,13 @@ public:
     _renderCallback = renderCallback;
     _renderCallbackOwner = owner;
     std::packaged_task<FilamentViewer *()> lambda([&]() mutable {
-      std::thread::id this_id = std::this_thread::get_id();
+      #ifdef __EMSCRIPTEN__
+        auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
+        if(success != EMSCRIPTEN_RESULT_SUCCESS) {
+          std::cout << "Failed to make context current." << std::endl;
+          return (FilamentViewer*)nullptr;
+        }
+      #endif
       return new FilamentViewer(context, loader, platform, uberArchivePath);
     });
     auto fut = add_task(lambda);
@@ -77,6 +117,9 @@ public:
 
   void doRender() {
     render(_viewer, 0, nullptr, nullptr, nullptr);
+    #ifdef __EMSCRIPTEN__
+      emscripten_webgl_commit_frame();
+    #endif
     if(_renderCallback) {
       _renderCallback(_renderCallbackOwner);
     }
@@ -114,14 +157,16 @@ extern "C" {
 static RenderLoop *_rl;
 
 FLUTTER_PLUGIN_EXPORT void *const create_filament_viewer_ffi(
-    void *const context, void *const platform, const char *uberArchivePath,
-    const ResourceLoaderWrapper *const loader,
+    void *const context, 
+    void *const platform, 
+    const char *uberArchivePath,
+    const void* const loader, // must be const ResourceLoaderWrapper *const loader,
     void (*renderCallback)(void *const renderCallbackOwner),
     void *const renderCallbackOwner) {
   if (!_rl) {
     _rl = new RenderLoop();
   }
-  return _rl->createViewer(context, platform, uberArchivePath, loader,
+  return _rl->createViewer(context, platform, uberArchivePath, (const ResourceLoaderWrapper* const)loader,
                            renderCallback, renderCallbackOwner);
 }
 
@@ -164,6 +209,7 @@ FLUTTER_PLUGIN_EXPORT void create_render_target_ffi(void *const viewer,
 FLUTTER_PLUGIN_EXPORT void update_viewport_and_camera_projection_ffi(
     void *const viewer, const uint32_t width, const uint32_t height,
     const float scaleFactor) {
+  Log("Update viewport  %dx%d", width, height);
   std::packaged_task<void()> lambda([&]() mutable {
     update_viewport_and_camera_projection(viewer, width, height, scaleFactor);
   });
@@ -330,18 +376,6 @@ FLUTTER_PLUGIN_EXPORT bool set_camera_ffi(void *const viewer, EntityId asset,
   return fut.get();
 }
 
-FLUTTER_PLUGIN_EXPORT void set_bone_animation_ffi(
-    void *assetManager, EntityId asset, const float *const frameData,
-    int numFrames, int numBones, const char **const boneNames,
-    const char **const meshName, int numMeshTargets, float frameLengthInMs) {
-  std::packaged_task<void()> lambda([&] {
-    set_bone_animation(assetManager, asset, frameData, numFrames, numBones,
-                       boneNames, meshName, numMeshTargets, frameLengthInMs);
-  });
-  auto fut = _rl->add_task(lambda);
-  fut.wait();
-}
-
 FLUTTER_PLUGIN_EXPORT void
 get_morph_target_name_ffi(void *assetManager, EntityId asset,
                           const char *meshName, char *const outPtr, int index) {
@@ -363,12 +397,7 @@ get_morph_target_name_count_ffi(void *assetManager, EntityId asset,
   return fut.get();
 }
 
-void set_morph_target_weights_ffi(void *const assetManager, EntityId asset,
-                                  const char *const entityName,
-                                  const float *const morphData,
-                                  int numWeights) {
-  // TODO
-}
+
 
 FLUTTER_PLUGIN_EXPORT void play_animation_ffi(void *const assetManager,
                                               EntityId asset, int index,
@@ -442,6 +471,30 @@ get_name_for_entity_ffi(void *const assetManager, const EntityId entityId) {
   auto fut = _rl->add_task(lambda);
   fut.wait();
   return fut.get();
+}
+
+void set_morph_target_weights_ffi(void *const assetManager, 
+                                  EntityId asset,
+                                  const char *const entityName,
+                                  const float *const morphData,
+                                  int numWeights) {
+    std::packaged_task<void()> lambda(
+      [&] { return set_morph_target_weights(assetManager, asset, entityName, morphData, numWeights); });
+      auto fut = _rl->add_task(lambda);
+      fut.wait();
+}
+
+FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(
+		void *assetManager,
+		EntityId asset,
+		const char *entityName,
+		const float *const transform,
+		const char *boneName) {
+      std::packaged_task<bool()> lambda(
+      [&] { return set_bone_transform(assetManager, asset, entityName, transform, boneName); });
+      auto fut = _rl->add_task(lambda);
+      fut.wait();
+      return fut.get();
 }
 
 FLUTTER_PLUGIN_EXPORT void ios_dummy_ffi() { Log("Dummy called"); }

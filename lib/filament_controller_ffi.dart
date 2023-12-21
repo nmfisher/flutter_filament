@@ -46,7 +46,8 @@ class FilamentControllerFFI extends FilamentController {
   Pointer<Void> _driver = nullptr.cast<Void>();
 
   @override
-  final rect = ValueNotifier<Rect?>(null);
+  final _rect = ValueNotifier<Rect?>(null);
+  final _rectCompleter = Completer<Rect?>();
 
   @override
   final hasViewer = ValueNotifier<bool>(false);
@@ -87,7 +88,7 @@ class FilamentControllerFFI extends FilamentController {
       _resizingWidth = call.arguments[0];
       _resizingHeight = call.arguments[1];
       _resizeTimer = Timer(const Duration(milliseconds: 500), () async {
-        rect.value = Offset.zero &
+        _rect.value = Offset.zero &
             ui.Size(_resizingWidth!.toDouble(), _resizingHeight!.toDouble());
         await resize();
       });
@@ -137,11 +138,12 @@ class FilamentControllerFFI extends FilamentController {
 
   @override
   Future setDimensions(Rect rect, double pixelRatio) async {
-    this.rect.value = Rect.fromLTWH(
+    this._rect.value = Rect.fromLTWH(
         (rect.left * _pixelRatio).floor().toDouble(),
         rect.top * _pixelRatio.floor().toDouble(),
         (rect.width * _pixelRatio).ceil().toDouble(),
         (rect.height * _pixelRatio).ceil().toDouble());
+    _rectCompleter.complete(this._rect.value);
     _pixelRatio = pixelRatio;
   }
 
@@ -174,12 +176,20 @@ class FilamentControllerFFI extends FilamentController {
     dev.log("Texture destroyed");
   }
 
+  bool _creating = false;
+
   ///
   /// Called by `FilamentWidget`. You do not need to call this yourself.
   ///
   @override
   Future createViewer() async {
-    if (rect.value == null) {
+    if (_creating) {
+      throw Exception(
+          "An existing call to createViewer is pending completion.");
+    }
+    _creating = true;
+    await _rectCompleter.future;
+    if (_rect.value == null) {
       throw Exception(
           "Dimensions have not yet been set by FilamentWidget. You need to wait for at least one frame after FilamentWidget has been inserted into the hierarchy");
     }
@@ -231,31 +241,32 @@ class FilamentControllerFFI extends FilamentController {
     _assetManager = get_asset_manager(_viewer);
 
     create_swap_chain_ffi(_viewer, renderingSurface.surface,
-        rect.value!.width.toInt(), rect.value!.height.toInt());
+        _rect.value!.width.toInt(), _rect.value!.height.toInt());
     dev.log("Created swap chain");
     if (renderingSurface.textureHandle != 0) {
       dev.log(
           "Creating render target from native texture  ${renderingSurface.textureHandle}");
       create_render_target_ffi(_viewer, renderingSurface.textureHandle,
-          rect.value!.width.toInt(), rect.value!.height.toInt());
+          _rect.value!.width.toInt(), _rect.value!.height.toInt());
     }
 
     textureDetails.value = TextureDetails(
         textureId: renderingSurface.flutterTextureId,
-        width: rect.value!.width.toInt(),
-        height: rect.value!.height.toInt());
+        width: _rect.value!.width.toInt(),
+        height: _rect.value!.height.toInt());
     dev.log("texture details ${textureDetails.value}");
     update_viewport_and_camera_projection_ffi(
-        _viewer, rect.value!.width.toInt(), rect.value!.height.toInt(), 1.0);
+        _viewer, _rect.value!.width.toInt(), _rect.value!.height.toInt(), 1.0);
     hasViewer.value = true;
+    _creating = false;
   }
 
   Future<RenderingSurface> _createRenderingSurface() async {
     return RenderingSurface.from(await _channel.invokeMethod("createTexture", [
-      rect.value!.width,
-      rect.value!.height,
-      rect.value!.left,
-      rect.value!.top
+      _rect.value!.width,
+      _rect.value!.height,
+      _rect.value!.left,
+      _rect.value!.top
     ]));
   }
 
@@ -349,12 +360,12 @@ class FilamentControllerFFI extends FilamentController {
               "destroyTexture", textureDetails.value!.textureId);
         }
       } else if (!kIsWeb && Platform.isWindows) {
-        dev.log("Resizing window with rect $rect");
+        dev.log("Resizing window with rect $_rect");
         await _channel.invokeMethod("resizeWindow", [
-          rect.value!.width,
-          rect.value!.height,
-          rect.value!.left,
-          rect.value!.top
+          _rect.value!.width,
+          _rect.value!.height,
+          _rect.value!.left,
+          _rect.value!.top
         ]);
       }
 
@@ -368,23 +379,23 @@ class FilamentControllerFFI extends FilamentController {
 
       if (!_usesBackingWindow) {
         create_swap_chain_ffi(_viewer, renderingSurface.surface,
-            rect.value!.width.toInt(), rect.value!.height.toInt());
+            _rect.value!.width.toInt(), _rect.value!.height.toInt());
       }
 
       if (renderingSurface.textureHandle != 0) {
         dev.log(
             "Creating render target from native texture  ${renderingSurface.textureHandle}");
         create_render_target_ffi(_viewer, renderingSurface.textureHandle,
-            rect.value!.width.toInt(), rect.value!.height.toInt());
+            _rect.value!.width.toInt(), _rect.value!.height.toInt());
       }
 
       textureDetails.value = TextureDetails(
           textureId: renderingSurface.flutterTextureId,
-          width: rect.value!.width.toInt(),
-          height: rect.value!.height.toInt());
+          width: _rect.value!.width.toInt(),
+          height: _rect.value!.height.toInt());
 
-      update_viewport_and_camera_projection_ffi(
-          _viewer, rect.value!.width.toInt(), rect.value!.height.toInt(), 1.0);
+      update_viewport_and_camera_projection_ffi(_viewer,
+          _rect.value!.width.toInt(), _rect.value!.height.toInt(), 1.0);
 
       await setRendering(_rendering);
     } finally {

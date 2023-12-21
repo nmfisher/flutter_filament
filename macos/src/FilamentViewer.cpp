@@ -25,6 +25,9 @@
 
 #include <backend/DriverEnums.h>
 #include <backend/platforms/OpenGLPlatform.h>
+#ifdef __EMSCRIPTEN__
+#include <backend/platforms/PlatformWebGL.h>
+#endif
 #include <filament/ColorGrading.h>
 #include <filament/Engine.h>
 #include <filament/IndexBuffer.h>
@@ -55,6 +58,9 @@
 #include <utils/NameComponentManager.h>
 
 #include <imageio/ImageDecoder.h>
+#include <imageio/ImageEncoder.h>
+#include <image/ColorTransform.h>
+
 
 #include "math.h"
 
@@ -70,8 +76,11 @@
 #include <ktxreader/Ktx2Reader.h>
 
 #include <iostream>
+#include <streambuf>
+#include <sstream>
+#include <istream>
 #include <fstream>
-
+#include <filesystem>
 #include <mutex>
 
 #include "Log.hpp"
@@ -80,6 +89,7 @@
 #include "StreamBufferAdapter.hpp"
 #include "material/image.h"
 #include "TimeIt.hpp"
+#include "ThreadPool.hpp"
 
 using namespace filament;
 using namespace filament::math;
@@ -95,9 +105,6 @@ namespace filament
 
 namespace polyvox
 {
-
-  const double kNearPlane = 0.05;  // 5 cm
-  const double kFarPlane = 1000.0; // 1 km
 
   // const float kAperture = 1.0f;
   // const float kShutterSpeed = 1.0f;
@@ -127,18 +134,17 @@ namespace polyvox
 #elif TARGET_OS_OSX
     ASSERT_POSTCONDITION(platform == nullptr, "Custom Platform not supported on macOS");
     _engine = Engine::create(Engine::Backend::METAL);
+#elif defined(__EMSCRIPTEN__)
+    _engine = Engine::create(Engine::Backend::OPENGL, (backend::Platform *)new filament::backend::PlatformWebGL(), (void *)sharedContext, nullptr);
 #else
     _engine = Engine::create(Engine::Backend::OPENGL, (backend::Platform *)platform, (void *)sharedContext, nullptr);
 #endif
 
     _renderer = _engine->createRenderer();
 
-    float fr = 60.0f;
-    _renderer->setDisplayInfo({.refreshRate = fr});
+    _frameInterval = 1000.0f / 60.0f;
 
-    Renderer::FrameRateOptions fro;
-    fro.interval = 1 / fr;
-    _renderer->setFrameRateOptions(fro);
+    setFrameInterval(_frameInterval);
 
     _scene = _engine->createScene();
 
@@ -153,18 +159,24 @@ namespace polyvox
     Log("View created");
 
     setToneMapping(ToneMapping::ACES);
-
     Log("Set tone mapping");
 
-    setBloom(0.6f);
-    Log("Set bloom");
+    #ifdef __EMSCRIPTEN__
+      Log("Bloom is disabled on WebGL builds as it causes instability with certain drivers");
+      decltype(_view->getBloomOptions()) opts;
+      opts.enabled = false;
+      _view->setBloomOptions(opts);
+    #else
+      setBloom(0.6f);
+      Log("Set bloom");
+    #endif
 
     _view->setScene(_scene);
     _view->setCamera(_mainCamera);
 
     _cameraFocalLength = 28.0f;
-    _mainCamera->setLensProjection(_cameraFocalLength, 1.0f, kNearPlane,
-                                   kFarPlane);
+    _mainCamera->setLensProjection(_cameraFocalLength, 1.0f, _near,
+                                   _far);
     // _mainCamera->setExposure(kAperture, kShutterSpeed, kSensitivity);
     Log("View created");
     const float aperture = _mainCamera->getAperture();
@@ -264,10 +276,14 @@ namespace polyvox
 
   void FilamentViewer::setBloom(float strength)
   {
-    decltype(_view->getBloomOptions()) opts;
-    opts.enabled = true;
-    opts.strength = strength;
-    _view->setBloomOptions(opts);
+    #ifdef __EMSCRIPTEN__
+      Log("Bloom is disabled on WebGL builds as it causes instability with certain drivers. setBloom will be ignored");
+    #else
+      decltype(_view->getBloomOptions()) opts;
+      opts.enabled = true;
+      opts.strength = strength;
+      _view->setBloomOptions(opts);
+    #endif
   }
 
   void FilamentViewer::setToneMapping(ToneMapping toneMapping)
@@ -301,6 +317,7 @@ namespace polyvox
 
   void FilamentViewer::setFrameInterval(float frameInterval)
   {
+    _frameInterval = frameInterval;
     Renderer::FrameRateOptions fro;
     fro.interval = frameInterval;
     _renderer->setFrameRateOptions(fro);
@@ -677,10 +694,8 @@ namespace polyvox
               .texture(RenderTarget::AttachmentPoint::DEPTH, _rtDepth)
               .build(*_engine);
 
-    // Make a specific viewport just for our render target
     _view->setRenderTarget(_rt);
-
-    Log("Set render target for texture id %u to %u x %u", texture, width, height);
+    Log("Created render target for texture id %u (%u x %u)", texture, width, height);
   }
 
   void FilamentViewer::destroySwapChain()
@@ -745,8 +760,29 @@ namespace polyvox
   {
     Camera &cam = _view->getCamera();
     _cameraFocalLength = focalLength;
-    cam.setLensProjection(_cameraFocalLength, 1.0f, kNearPlane,
-                          kFarPlane);
+    cam.setLensProjection(_cameraFocalLength, 1.0f, _near,
+                          _far);
+  }
+
+  ///
+  /// Set the focal length of the active camera.
+  ///
+  void FilamentViewer::setCameraCulling(double near, double far)
+  {
+    Camera &cam = _view->getCamera();
+    _near = near;
+    _far = far;
+    cam.setLensProjection(_cameraFocalLength, 1.0f, _near, _far);
+    Log("Set lens projection to focal length %f, near %f and far %f", _cameraFocalLength, _near, _far);
+  }
+
+  double FilamentViewer::getCameraCullingNear() {
+    Camera &cam = _view->getCamera();
+    return cam.getNear();
+  }
+  double FilamentViewer::getCameraCullingFar() {
+    Camera &cam = _view->getCamera();
+    return cam.getCullingFar();
   }
 
   ///
@@ -955,6 +991,7 @@ namespace polyvox
 
   double _elapsed = 0;
   int _frameCount = 0;
+  int _skippedFrames = 0;
 
   void FilamentViewer::render(
       uint64_t frameTimeInNanos,
@@ -1011,14 +1048,101 @@ namespace polyvox
       if (_renderer->beginFrame(_swapChain, frameTimeInNanos))
       {
         _renderer->render(_view);
+
+        if(_recording) {
+          Viewport const &vp = _view->getViewport();
+          size_t pixelBufferSize = vp.width * vp.height * 4;
+          auto* pixelBuffer = new uint8_t[pixelBufferSize];
+          auto callback = [](void *buf, size_t size, void *data) {
+            auto frameCallbackData = (FrameCallbackData*)data;
+            auto viewer = (FilamentViewer*)frameCallbackData->viewer;
+            viewer->savePng(buf, size, frameCallbackData->frameNumber);
+            delete frameCallbackData;
+          };
+
+          auto now = std::chrono::high_resolution_clock::now();
+          auto elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - _startTime).count());
+
+          auto frameNumber = uint32_t(floor(elapsed / _frameInterval));
+
+          auto userData = new FrameCallbackData { this, frameNumber };
+
+          auto pbd = Texture::PixelBufferDescriptor(
+              pixelBuffer, pixelBufferSize,
+              Texture::Format::RGBA,
+              Texture::Type::UBYTE, nullptr, callback, userData);
+      
+          _renderer->readPixels(_rt, 0, 0, vp.width, vp.height, std::move(pbd));
+        }
         _renderer->endFrame();
+        _engine->execute();
+      } else {
+        _skippedFrames++;
       }
-      else
-      {
-        // std::cout << "Skipped" << std::endl;
-        // skipped frame
+  }
+
+
+  void FilamentViewer::savePng(void* buf, size_t size, int frameNumber) {
+    std::lock_guard lock(_recordingMutex);
+    if(!_recording) {
+      delete[] static_cast<uint8_t*>(buf);
+      return;
+    }
+
+    Viewport const &vp = _view->getViewport();
+
+    std::packaged_task<void()> lambda([=]() mutable {
+
+      int digits = 6;
+      std::ostringstream stringStream;
+      stringStream << _recordingOutputDirectory << "/output_";
+      stringStream << std::setfill('0') << std::setw(digits);
+      stringStream << std::to_string(frameNumber);
+      stringStream << ".png";
+
+      std::string filename = stringStream.str();
+
+      ofstream wf(filename, ios::out | ios::binary);
+
+      LinearImage image(toLinearWithAlpha<uint8_t>(vp.width, vp.height, vp.width * 4,
+                              static_cast<uint8_t*>(buf)));
+
+      auto result = image::ImageEncoder::encode(
+        wf, image::ImageEncoder::Format::PNG, image, std::string(""), std::string("")
+      );
+
+      delete[] static_cast<uint8_t*>(buf);
+
+      if(!result) {
+        Log("Failed to encode");
       }
-    // }
+      
+      wf.close();
+      if(!wf.good()) {
+        Log("Write failed!");
+      } 
+
+     });
+     _tp->add_task(lambda);
+  }
+
+  void FilamentViewer::setRecordingOutputDirectory(const char* path) {
+    _recordingOutputDirectory = std::string(path);
+    auto outputDirAsPath = std::filesystem::path(path);
+    if(!std::filesystem::is_directory(outputDirAsPath)) {
+      std::filesystem::create_directories(outputDirAsPath);
+    }
+  }
+
+  void FilamentViewer::setRecording(bool recording) {
+    std::lock_guard lock(_recordingMutex);
+    this->_recording = recording;
+    if(recording) {
+      _tp = new flutter_filament::ThreadPool(8);
+      _startTime = std::chrono::high_resolution_clock::now();
+    } else { 
+      delete _tp;
+    }
   }
 
   void FilamentViewer::updateViewportAndCameraProjection(
@@ -1037,8 +1161,8 @@ namespace polyvox
     const double aspect = (double)width / height;
 
     Camera &cam = _view->getCamera();
-    cam.setLensProjection(_cameraFocalLength, 1.0f, kNearPlane,
-                          kFarPlane);
+    cam.setLensProjection(_cameraFocalLength, 1.0f, _near,
+                          _far);
 
     cam.setScaling({1.0 / aspect, 1.0});
 
@@ -1108,25 +1232,90 @@ namespace polyvox
     cam.setModelMatrix(modelMatrix);
   }
 
+  void FilamentViewer::setCameraProjectionMatrix(const double *const matrix, double near, double far)
+  {
+    Camera &cam = _view->getCamera();
+
+    mat4 projectionMatrix(
+        matrix[0],
+        matrix[1],
+        matrix[2],
+        matrix[3],
+        matrix[4],
+        matrix[5],
+        matrix[6],
+        matrix[7],
+        matrix[8],
+        matrix[9],
+        matrix[10],
+        matrix[11],
+        matrix[12],
+        matrix[13],
+        matrix[14],
+        matrix[15]);
+    cam.setCustomProjection(projectionMatrix,projectionMatrix, near, far);
+  }
+
+  const math::mat4 FilamentViewer::getCameraModelMatrix()
+  {
+    const auto &cam = _view->getCamera();
+    return cam.getModelMatrix();
+  }
+
+  const math::mat4 FilamentViewer::getCameraViewMatrix()
+  {
+    const auto &cam = _view->getCamera();
+    return cam.getViewMatrix();
+  }
+
+  const math::mat4 FilamentViewer::getCameraProjectionMatrix()
+  {
+    const auto &cam = _view->getCamera();
+    return cam.getProjectionMatrix();
+  }
+
+  const math::mat4 FilamentViewer::getCameraCullingProjectionMatrix()
+  {
+    const auto &cam = _view->getCamera();
+    return cam.getCullingProjectionMatrix();
+  }
+
+  const filament::Frustum FilamentViewer::getCameraFrustum()
+  {
+    const auto &cam = _view->getCamera();
+    return cam.getFrustum();
+  }
+
   void FilamentViewer::_createManipulator()
   {
     Camera &cam = _view->getCamera();
+    
     math::double3 home = cam.getPosition();
     math::double3 up = cam.getUpVector();
-    math::double3 target = home + cam.getForwardVector();
+    auto fv = cam.getForwardVector();
+    math::double3 target = home + fv;
     Viewport const &vp = _view->getViewport();
-    Log("Creating manipulator for viewport size %dx%d with camera norm %f", vp.width, vp.height, norm(home));
-    float zoomSpeed = norm(home) / 10;
-    zoomSpeed = math::clamp(zoomSpeed, 0.1f, 100000.0f);
+    // Log("Creating manipulator for viewport size %dx%d at home %f %f %f, fv %f %f %f, up %f %f %f target %f %f %f (norm %f) with _zoomSpeed %f", vp.width, vp.height, home[0], home[1], home[2], fv[0], fv[1], fv[2], up[0], up[1], up[2], target[0], target[1], target[2], norm(home), _zoomSpeed);
 
     _manipulator = Manipulator<double>::Builder()
                        .viewport(vp.width, vp.height)
-                       .orbitHomePosition(home[0], home[1], home[2])
-                       .upVector(up.x, up.y, up.z)
-                       .zoomSpeed(zoomSpeed)
-                      //  .orbitSpeed(0.0001, 0.0001)
+                        .upVector(up.x, up.y, up.z)
+                       .zoomSpeed(_zoomSpeed)
                        .targetPosition(target[0], target[1], target[2])
-                       .build(Mode::ORBIT);
+                       // only applicable to Mode::ORBIT
+                       .orbitHomePosition(home[0], home[1], home[2])
+                       .orbitSpeed(_orbitSpeedX, _orbitSpeedY)
+                       // only applicable to Mode::FREE_FLIGHT
+                       .flightStartPosition(home[0], home[1], home[2])
+                       .build(_manipulatorMode);
+  }
+
+  void FilamentViewer::setCameraManipulatorOptions(filament::camutils::Mode mode, double orbitSpeedX, double orbitSpeedY, double zoomSpeed)
+  {
+    _manipulatorMode = mode;
+    _orbitSpeedX = orbitSpeedX;
+    _orbitSpeedY = orbitSpeedY;
+    _zoomSpeed = zoomSpeed;
   }
 
   void FilamentViewer::grabBegin(float x, float y, bool pan)
@@ -1140,12 +1329,15 @@ namespace polyvox
     {
       _createManipulator();
     }
-    if(pan) {
+    if (pan)
+    {
       Log("Beginning pan at %f %f", x, y);
-    } else { 
+    }
+    else
+    {
       Log("Beginning rotate at %f %f", x, y);
     }
-    
+
     _manipulator->grabBegin(x, y, pan);
   }
 
@@ -1214,9 +1406,8 @@ namespace polyvox
 
   void FilamentViewer::pick(uint32_t x, uint32_t y, EntityId *entityId)
   {
-    _view->pick(x, y, [=](filament::View::PickingQueryResult const &result) {
-        *entityId = Entity::smuggle(result.renderable);
-    });
+    _view->pick(x, y, [=](filament::View::PickingQueryResult const &result)
+                { *entityId = Entity::smuggle(result.renderable); });
   }
 
 } // namespace polyvox

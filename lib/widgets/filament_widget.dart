@@ -48,6 +48,10 @@ class _RenderResizeObserver extends RenderProxyBox {
   }
 }
 
+///
+/// Before a FilamentViewer is created, the FilamentWidget will only contain an empty Container (by default, with a solid red background).
+/// Only one FilamentWidget should be present in the widget hierarchy.
+///
 class FilamentWidget extends StatefulWidget {
   final FilamentController controller;
 
@@ -217,14 +221,18 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
         if (!_wasRenderingOnInactive) {
           _wasRenderingOnInactive = widget.controller.rendering;
         }
-        await widget.controller.setRendering(false);
+        if (widget.controller.hasViewer.value) {
+          await widget.controller.setRendering(false);
+        }
         break;
       case AppLifecycleState.hidden:
         print("Hidden");
         if (!_wasRenderingOnInactive) {
           _wasRenderingOnInactive = widget.controller.rendering;
         }
-        await widget.controller.setRendering(false);
+        if (widget.controller.hasViewer.value) {
+          await widget.controller.setRendering(false);
+        }
         break;
       case AppLifecycleState.inactive:
         print("Inactive");
@@ -240,11 +248,15 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
         if (!_wasRenderingOnInactive) {
           _wasRenderingOnInactive = widget.controller.rendering;
         }
-        await widget.controller.setRendering(false);
+        if (widget.controller.hasViewer.value) {
+          await widget.controller.setRendering(false);
+        }
         break;
       case AppLifecycleState.resumed:
         print("Resumed");
-        await widget.controller.setRendering(_wasRenderingOnInactive);
+        if (widget.controller.hasViewer.value) {
+          await widget.controller.setRendering(_wasRenderingOnInactive);
+        }
         break;
     }
   }
