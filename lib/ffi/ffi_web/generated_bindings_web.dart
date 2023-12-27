@@ -38,6 +38,16 @@ external double flutter_filament_web_get_double(
   int offset,
 );
 
+@ffi.Native<
+        ffi.Pointer<ffi.Void> Function(
+            ffi.Pointer<ffi.Pointer<ffi.Void>>, ffi.Int32)>(
+    symbol: '_flutter_filament_web_get_pointer',
+    assetId: 'flutter_filament_plugin')
+external ffi.Pointer<ffi.Void> flutter_filament_web_get_pointer(
+  ffi.Pointer<ffi.Pointer<ffi.Void>> ptr,
+  int offset,
+);
+
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Char>, ffi.Int32, ffi.Int32)>(
     symbol: '_flutter_filament_web_set', assetId: 'flutter_filament_plugin')
 external void flutter_filament_web_set(
@@ -62,6 +72,34 @@ external void flutter_filament_web_set_double(
   ffi.Pointer<ffi.Double> ptr,
   int offset,
   double val,
+);
+
+@ffi.Native<
+        ffi.Void Function(ffi.Pointer<ffi.Pointer<ffi.Void>>, ffi.Int32,
+            ffi.Pointer<ffi.Void>)>(
+    symbol: '_flutter_filament_web_set_pointer',
+    assetId: 'flutter_filament_plugin')
+external void flutter_filament_web_set_pointer(
+  ffi.Pointer<ffi.Pointer<ffi.Void>> ptr,
+  int offset,
+  ffi.Pointer<ffi.Void> val,
+);
+
+@ffi.Native<ffi.Int32 Function(ffi.Pointer<ffi.Int32>, ffi.Int32)>(
+    symbol: '_flutter_filament_web_get_int32',
+    assetId: 'flutter_filament_plugin')
+external int flutter_filament_web_get_int32(
+  ffi.Pointer<ffi.Int32> ptr,
+  int offset,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Int32>, ffi.Int32, ffi.Int32)>(
+    symbol: '_flutter_filament_web_set_int32',
+    assetId: 'flutter_filament_plugin')
+external void flutter_filament_web_set_int32(
+  ffi.Pointer<ffi.Int32> ptr,
+  int offset,
+  int value,
 );
 
 @ffi.Native<ffi.Long Function(ffi.Pointer<ffi.Pointer<ffi.Void>>)>(
@@ -210,6 +248,13 @@ external void load_ibl(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Char> iblPath,
   double intensity,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Float>)>(
+    symbol: '_rotate_ibl', assetId: 'flutter_filament_plugin')
+external void rotate_ibl(
+  ffi.Pointer<ffi.Void> viewer,
+  ffi.Pointer<ffi.Float> rotationMatrix,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
@@ -1229,6 +1274,28 @@ external void set_morph_target_weights_ffi(
   ffi.Pointer<ffi.Char> entityName,
   ffi.Pointer<ffi.Float> morphData,
   int numWeights,
+);
+
+@ffi.Native<
+        ffi.Bool Function(
+            ffi.Pointer<ffi.Void>,
+            EntityId,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Float>,
+            ffi.Pointer<ffi.Int>,
+            ffi.Int,
+            ffi.Int,
+            ffi.Float)>(
+    symbol: '_set_morph_animation_ffi', assetId: 'flutter_filament_plugin')
+external bool set_morph_animation_ffi(
+  ffi.Pointer<ffi.Void> assetManager,
+  int asset,
+  ffi.Pointer<ffi.Char> entityName,
+  ffi.Pointer<ffi.Float> morphData,
+  ffi.Pointer<ffi.Int> morphIndices,
+  int numMorphTargets,
+  int numFrames,
+  double frameLengthInMs,
 );
 
 @ffi.Native<

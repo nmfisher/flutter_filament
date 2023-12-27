@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_filament/ffi/ffi_native/generated_bindings_native.dart';
 
 import 'package:flutter_filament/filament_controller.dart';
 
@@ -698,6 +697,7 @@ class FilamentControllerFFI extends FilamentController {
     }
 
     var dataPtr = allocator<Float>(animation.data.length);
+
     for (int i = 0; i < animation.data.length; i++) {
       dataPtr.elementAt(i).value = animation.data[i];
     }
@@ -723,8 +723,7 @@ class FilamentControllerFFI extends FilamentController {
 
       var meshNamePtr =
           meshName.toNativeUtf8(allocator: allocator).cast<Char>();
-
-      set_morph_animation(
+      set_morph_animation_ffi(
           _assetManager,
           entity,
           meshNamePtr,
