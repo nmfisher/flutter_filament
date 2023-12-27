@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:vector_math/vector_math_64.dart' as v;
 import 'package:flutter/material.dart';
 import 'package:flutter_filament/filament_controller_ffi.dart';
+import 'package:flutter_filament/widgets/ibl_rotation_slider.dart';
 import 'package:flutter_filament_example/camera_matrix_overlay.dart';
 import 'package:flutter_filament_example/menus/controller_menu.dart';
 import 'package:flutter_filament_example/example_viewport.dart';
@@ -57,7 +58,7 @@ class ExampleWidgetState extends State<ExampleWidget> {
   static bool rendering = false;
   static bool recording = false;
   static int framerate = 60;
-  double _iblRotation = 0;
+
   static bool postProcessing = true;
   static bool frustumCulling = true;
   static ManipulatorMode cameraManipulatorMode = ManipulatorMode.ORBIT;
@@ -223,15 +224,9 @@ class ExampleWidgetState extends State<ExampleWidget> {
                     child: Container(
                         color: Colors.transparent, child: const Text("3.glb"))),
                 Expanded(child: Container()),
-                Slider(
-                    value: _iblRotation,
-                    onChanged: (value) {
-                      _iblRotation = value;
-                      setState(() {});
-                      var rotation = v.Matrix3.identity();
-                      Matrix4.rotationY(value * 2 * pi).copyRotation(rotation);
-                      _filamentController!.rotateIbl(rotation);
-                    }),
+                _filamentController == null
+                    ? Container()
+                    : IblRotationSliderWidget(controller: _filamentController!),
                 TextButton(
                   child: const Text("Toggle viewport size"),
                   onPressed: () {
