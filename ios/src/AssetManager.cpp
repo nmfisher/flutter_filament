@@ -303,7 +303,6 @@ namespace polyvox
 
     void AssetManager::updateAnimations()
     {
-
         std::lock_guard lock(_animationMutex);
         RenderableManager &rm = _engine->getRenderableManager();
 
@@ -406,7 +405,6 @@ namespace polyvox
     // - or is it better to add an option for "streaming" mode where we can just return a reference to a mat4 and then update the values directly?
     bool AssetManager::setBoneTransform(EntityId entityId, const char *entityName, int32_t skinIndex, const char* boneName, math::mat4f localTransform)
     {
-
         std::lock_guard lock(_animationMutex);
 
         const auto &pos = _entityIdLookup.find(entityId);
@@ -461,7 +459,6 @@ namespace polyvox
             return false;
         }
 
-
         utils::Entity joint = filamentInstance->getJointsAt(skinIndex)[boneIndex];
 
         if (joint.isNull())
@@ -472,8 +469,8 @@ namespace polyvox
 
         const auto& inverseBindMatrix = filamentInstance->getInverseBindMatricesAt(skinIndex)[boneIndex];
 
-        auto jointTransformInstance = transformManager.getInstance(joint);
-        auto globalJointTransform = transformManager.getWorldTransform(jointTransformInstance);
+        auto jointTransform = transformManager.getInstance(joint);
+        auto globalJointTransform = transformManager.getWorldTransform(jointTransform);
 
         auto inverseGlobalTransform = inverse(
             transformManager.getWorldTransform(
@@ -508,27 +505,27 @@ namespace polyvox
 
         const auto& inverseBindMatrix = filamentInstance->getInverseBindMatricesAt(animation.skinIndex)[boneIndex];
 
-        for(const auto& meshTarget : animation.meshTargets) {
+        const Entity joint = filamentInstance->getJointsAt(animation.skinIndex)[animation.boneIndex];
+        auto jointTransform = transformManager.getInstance(joint);
+        auto globalJointTransform = transformManager.getWorldTransform(jointTransform);
 
-            const Entity joint = filamentInstance->getJointsAt(animation.skinIndex)[animation.boneIndex];
-
-            auto jointInstance = transformManager.getInstance(joint);
-            auto globalJointTransform = transformManager.getWorldTransform(jointInstance);
+        for(const auto& entity : animation.meshTargets) {
             
-        
-            auto inverseGlobalTransform = inverse(
-                transformManager.getWorldTransform(
-                transformManager.getInstance(meshTarget)
-                )
-            );
-            const auto boneTransform = inverseGlobalTransform * globalJointTransform * localTransform * inverseBindMatrix;
-            const auto &renderableInstance = rm.getInstance(meshTarget);
-            rm.setBones(
-                renderableInstance,
-                &boneTransform,
-                1,
-                boneIndex
-            );
+        auto inverseGlobalTransform = inverse(
+            transformManager.getWorldTransform(
+            transformManager.getInstance(entity)
+            )
+        );
+
+        const auto boneTransform = inverseGlobalTransform * globalJointTransform * 
+        localTransform * inverseBindMatrix;
+            const auto &renderableInstance = rm.getInstance(entity);
+
+        rm.setBones(
+            renderableInstance,
+            &boneTransform,
+            1,
+            boneIndex);
         }
         
     }
@@ -759,7 +756,7 @@ namespace polyvox
         }
         auto &asset = _assets[pos->second];
         
-        asset.asset->getInstance()->getAnimator()->resetBoneMatrices();
+        // asset.asset->getInstance()->getAnimator()->resetBoneMatrices();
 
         auto filamentInstance = asset.asset->getInstance();
 
@@ -823,6 +820,7 @@ namespace polyvox
         animation.durationInSecs = (frameLengthInMs * numFrames) / 1000.0f;
         animation.lengthInFrames = numFrames;
         animation.frameLengthInMs = frameLengthInMs;
+        animation.skinIndex = 0;
         asset.boneAnimations.push_back(animation);
 
         return true;
