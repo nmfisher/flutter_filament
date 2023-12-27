@@ -5,8 +5,15 @@ import 'dart:ffi' as ffi hide Uint8Pointer, FloatPointer;
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
-export 'package:ffi/ffi.dart' hide StringUtf8Pointer, Utf8Pointer;
-export 'dart:ffi' hide Uint8Pointer, FloatPointer, DoublePointer;
+export 'package:ffi/ffi.dart' hide StringUtf8Pointer, Utf8Pointer, IntPointer;
+export 'dart:ffi'
+    hide
+        Uint8Pointer,
+        FloatPointer,
+        DoublePointer,
+        Int32Pointer,
+        Int64Pointer,
+        IntPointer;
 
 import "generated_bindings_web.dart";
 export "generated_bindings_web.dart";
@@ -44,6 +51,48 @@ extension CharPointer on ffi.Pointer<ffi.Char> {
       ffi.Pointer.fromAddress(address + ffi.sizeOf<ffi.Char>() * index);
 }
 
+extension IntPointer on ffi.Pointer<ffi.Int> {
+  int get value {
+    return flutter_filament_web_get_int32(this.cast<ffi.Int32>(), 0);
+  }
+
+  set value(int value) {
+    flutter_filament_web_set_int32(this.cast<ffi.Int32>(), 0, value);
+  }
+
+  void operator []=(int index, int value) {
+    this.elementAt(index).value = value;
+  }
+
+  int operator [](int index) {
+    return this.elementAt(index).value;
+  }
+
+  ffi.Pointer<ffi.Int> elementAt(int index) =>
+      ffi.Pointer.fromAddress(address + ffi.sizeOf<ffi.Int>() * index);
+}
+
+extension Int32Pointer on ffi.Pointer<ffi.Int32> {
+  int get value {
+    return flutter_filament_web_get_int32(this, 0);
+  }
+
+  set value(int value) {
+    flutter_filament_web_set_int32(this, 0, value);
+  }
+
+  void operator []=(int index, int value) {
+    this.elementAt(index).value = value;
+  }
+
+  int operator [](int index) {
+    return this.elementAt(index).value;
+  }
+
+  ffi.Pointer<ffi.Int32> elementAt(int index) =>
+      ffi.Pointer.fromAddress(address + ffi.sizeOf<ffi.Int32>() * index);
+}
+
 extension UInt8Pointer on ffi.Pointer<ffi.Uint8> {
   int get value {
     return flutter_filament_web_get(this.cast<ffi.Char>(), 0);
@@ -63,6 +112,26 @@ extension UInt8Pointer on ffi.Pointer<ffi.Uint8> {
 
   ffi.Pointer<ffi.Uint8> elementAt(int index) =>
       ffi.Pointer.fromAddress(address + ffi.sizeOf<ffi.Uint8>() * index);
+}
+
+extension PointerPointer<T extends ffi.NativeType>
+    on ffi.Pointer<ffi.Pointer<T>> {
+  ffi.Pointer<T> get value {
+    return flutter_filament_web_get_pointer(cast<ffi.Pointer<ffi.Void>>(), 0)
+        .cast<T>();
+  }
+
+  set value(ffi.Pointer<T> value) {
+    flutter_filament_web_set_pointer(
+        cast<ffi.Pointer<ffi.Void>>(), 0, value.cast<ffi.Void>());
+  }
+
+  void operator []=(int index, ffi.Pointer<T> value) {
+    this.elementAt(index).value = value;
+  }
+
+  ffi.Pointer<ffi.Pointer<T>> elementAt(int index) =>
+      ffi.Pointer.fromAddress(address + ffi.sizeOf<ffi.Pointer>() * index);
 }
 
 extension FloatPointer on ffi.Pointer<ffi.Float> {
