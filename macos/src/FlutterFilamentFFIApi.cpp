@@ -39,7 +39,6 @@ public:
       while (!_stop) {
 
         auto now = std::chrono::high_resolution_clock::now();
-
         float elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
 
         while(elapsed < 3 * _frameIntervalInMilliseconds / 4) {
@@ -55,11 +54,10 @@ public:
           task = std::move(_tasks.front());
           _tasks.pop_front();
           task();
-          
+              
           now = std::chrono::high_resolution_clock::now();
           elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
         }
-
         if (_rendering) {
           auto frameStart = std::chrono::high_resolution_clock::now();
           doRender();
@@ -67,7 +65,7 @@ public:
           // Log("Took %f milliseconds for render",           float(std::chrono::duration_cast<std::chrono::milliseconds>(frameEnd - frameStart).count()));
         }
 
-        last = now;
+        last = std::chrono::high_resolution_clock::now();
       }
     });
   }
@@ -84,13 +82,36 @@ public:
     _renderCallbackOwner = owner;
     std::packaged_task<FilamentViewer *()> lambda([&]() mutable {
       #ifdef __EMSCRIPTEN__
-        auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)context);
+
+        EmscriptenWebGLContextAttributes attr;
+      
+        emscripten_webgl_init_context_attributes(&attr);
+        attr.alpha = EM_FALSE;
+        attr.depth = EM_TRUE;
+        attr.stencil = EM_FALSE;
+        attr.antialias = EM_FALSE;
+        attr.explicitSwapControl = EM_FALSE;
+        attr.preserveDrawingBuffer = EM_FALSE;
+        attr.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_ALWAYS;
+        attr.enableExtensionsByDefault = EM_TRUE;
+        attr.renderViaOffscreenBackBuffer = EM_FALSE;
+        attr.majorVersion = 2;
+      
+        auto emContext = emscripten_webgl_create_context("#canvas", &attr);
+        std::cout << "Created WebGL context " << attr.majorVersion << "." << attr.minorVersion << std::endl;
+
+        auto success = emscripten_webgl_make_context_current((EMSCRIPTEN_WEBGL_CONTEXT_HANDLE)emContext);
+        if(success != EMSCRIPTEN_RESULT_SUCCESS) {
+          std::cout << "Failed to make WebGL context current"<< std::endl;
+        }
         if(success != EMSCRIPTEN_RESULT_SUCCESS) {
           std::cout << "Failed to make context current." << std::endl;
           return (FilamentViewer*)nullptr;
         }
+        return new FilamentViewer((void* const) emContext, loader, platform, uberArchivePath);
+      #else
+        return new FilamentViewer(context, loader, platform, uberArchivePath);
       #endif
-      return new FilamentViewer(context, loader, platform, uberArchivePath);
     });
     auto fut = add_task(lambda);
     fut.wait();
@@ -116,7 +137,11 @@ public:
   }
 
   void doRender() {
-    render(_viewer, 0, nullptr, nullptr, nullptr);
+    auto now = std::chrono::high_resolution_clock::now();
+    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+    render(_viewer, nanos, nullptr, nullptr, nullptr);
+    _lastRenderTime = std::chrono::high_resolution_clock::now();
+        
     #ifdef __EMSCRIPTEN__
       emscripten_webgl_commit_frame();
     #endif
@@ -150,6 +175,7 @@ private:
   std::thread *_t = nullptr;
   std::condition_variable _cond;
   std::deque<std::function<void()>> _tasks;
+  std::chrono::steady_clock::time_point _lastRenderTime = std::chrono::high_resolution_clock::now();
 };
 
 extern "C" {
@@ -482,6 +508,24 @@ void set_morph_target_weights_ffi(void *const assetManager,
       [&] { return set_morph_target_weights(assetManager, asset, entityName, morphData, numWeights); });
       auto fut = _rl->add_task(lambda);
       fut.wait();
+}
+
+bool set_morph_animation_ffi(
+		void *assetManager,
+		EntityId asset,
+		const char *const entityName,
+		const float *const morphData,
+		const int *const morphIndices,
+		int numMorphTargets,
+		int numFrames,
+		float frameLengthInMs) {
+      std::packaged_task<bool()> lambda(
+      [&] { 
+        return set_morph_animation(assetManager, asset, entityName, morphData, morphIndices, numMorphTargets, numFrames, frameLengthInMs); 
+        });
+    auto fut = _rl->add_task(lambda);
+    fut.wait();
+    return fut.get();
 }
 
 FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(

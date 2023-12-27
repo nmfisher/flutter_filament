@@ -62,7 +62,7 @@ namespace polyvox {
     // Use this to construct a dynamic (i.e. non-glTF embedded) bone/joint animation.
     //
     struct BoneAnimation : AnimationStatus {
-        uint8_t boneIndex;
+        size_t boneIndex;
         vector<utils::Entity> meshTargets;
         size_t skinIndex = 0;
         int lengthInFrames;
