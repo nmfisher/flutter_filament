@@ -84,6 +84,22 @@ extern "C"
     ptr[offset] = value;
   }
 
+  FLUTTER_PLUGIN_EXPORT int32_t flutter_filament_web_get_int32(int32_t* ptr, int32_t offset) {
+    return ptr[offset];
+  }
+
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_int32(int32_t* ptr, int32_t offset, int32_t value) {
+    ptr[offset] = value;
+  }
+
+  FLUTTER_PLUGIN_EXPORT void flutter_filament_web_set_pointer(void** ptr, int32_t offset, void* val) { 
+    ptr[offset] = val;
+  }
+
+  FLUTTER_PLUGIN_EXPORT void* flutter_filament_web_get_pointer(void** ptr, int32_t offset) { 
+    return ptr[offset];
+  }
+
   FLUTTER_PLUGIN_EXPORT char flutter_filament_web_get(char* ptr, int32_t offset) {
     return ptr[offset];
   }
@@ -106,11 +122,13 @@ extern "C"
     emscripten_webgl_init_context_attributes(&attr);
     attr.alpha = EM_FALSE;
     attr.depth = EM_TRUE;
+    attr.stencil = EM_FALSE;
     attr.antialias = EM_FALSE;
-    attr.explicitSwapControl = EM_TRUE;
+    attr.explicitSwapControl = EM_FALSE;
     attr.preserveDrawingBuffer = EM_FALSE;
     attr.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_ALWAYS;
-    // attr.renderViaOffscreenBackBuffer = EM_TRUE;
+    attr.enableExtensionsByDefault = EM_TRUE;
+    attr.renderViaOffscreenBackBuffer = EM_TRUE;
     attr.majorVersion = 2;
     
     auto context = emscripten_webgl_create_context("#canvas", &attr);
@@ -135,38 +153,28 @@ extern "C"
     // loadFlutterAsset(path, (void*)pendingCall);
     // pendingCall->Wait();
     // auto rb = ResourceBuffer { pendingCall->data, (int32_t) pendingCall->length, _lastResourceId  } ;
-    // _lastResourceId++;
+    _lastResourceId++;
     // delete pendingCall;
     // std::cout << "Deleted pending call" << std::endl;
 
-    emscripten_fetch_attr_t attr;
-    emscripten_fetch_attr_init(&attr);
-    attr.onsuccess = [](emscripten_fetch_t* fetch) {
-      
-    };
-    attr.onerror = [](emscripten_fetch_t* fetch) {
-      
-    };
-    attr.onprogress = [](emscripten_fetch_t* fetch) {
-      
-    };
-    attr.onreadystatechange = [](emscripten_fetch_t* fetch) {
-      
-    };
-    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS;
     auto pathString = std::string("../../");
     pathString += std::string(path);
     std::cout << "Fetching from path " << pathString.c_str() << std::endl;
-    auto request = emscripten_fetch(&attr, pathString.c_str());
+
+    void* data = nullptr;
+    int32_t numBytes = 0;
     
-    if(!request) {
-      std::cout << "Request failed?" << std::endl;  
-    }
-    auto data = malloc(request->numBytes);
-    memcpy(data, request->data, request->numBytes);
-    emscripten_fetch_close(request);
-    auto rb = ResourceBuffer { data, (int32_t) request->numBytes, _lastResourceId  } ;
-    return rb;
+    void** pBuffer = (void**)malloc(sizeof(void*));
+    int* pNum = (int*) malloc(sizeof(int*));
+    int* pError = (int*)malloc(sizeof(int*));
+    emscripten_wget_data(pathString.c_str(), pBuffer, pNum, pError);
+    data = *pBuffer;
+    numBytes = *pNum;
+    free(pBuffer);
+    free(pNum);
+    free(pError);
+    
+    return ResourceBuffer { data, numBytes, _lastResourceId  } ;   
   }
 
   void flutter_filament_web_free_resource(ResourceBuffer rb) {
