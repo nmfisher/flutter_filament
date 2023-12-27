@@ -69,6 +69,15 @@ FLUTTER_PLUGIN_EXPORT void set_morph_target_weights_ffi(void* const assetManager
                                                         const float *const morphData,
                                                         int numWeights
                                                         );
+FLUTTER_PLUGIN_EXPORT bool set_morph_animation_ffi(
+		void *assetManager,
+		EntityId asset,
+		const char *const entityName,
+		const float *const morphData,
+		const int *const morphIndices,
+		int numMorphTargets,
+		int numFrames,
+		float frameLengthInMs);
 FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(
 		void *assetManager,
 		EntityId asset,
