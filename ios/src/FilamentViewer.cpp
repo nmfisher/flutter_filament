@@ -1024,8 +1024,10 @@ namespace polyvox
     if (_frameCount == 60)
     {
       // Log("1 sec average for asset animation update %f", _elapsed / 60);
+      Log("Skipped frames : %d", _skippedFrames);
       _elapsed = 0;
       _frameCount = 0;
+      _skippedFrames = 0;
     }
 
     Timer tmr;
@@ -1060,7 +1062,9 @@ namespace polyvox
     // else
     // {
       // Render the scene, unless the renderer wants to skip the frame.
-      if (_renderer->beginFrame(_swapChain, frameTimeInNanos))
+      bool beginFrame = _renderer->beginFrame(_swapChain, frameTimeInNanos);
+      
+      if (beginFrame)
       {
         _renderer->render(_view);
 
