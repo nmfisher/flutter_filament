@@ -157,10 +157,37 @@ extern "C"
     // delete pendingCall;
     // std::cout << "Deleted pending call" << std::endl;
 
-    auto pathString = std::string("../../");
-    pathString += std::string(path);
+    // emscripten_fetch_attr_t attr;
+    // emscripten_fetch_attr_init(&attr);
+    // attr.onsuccess = [](emscripten_fetch_t* fetch) {
+      
+    // };
+    // attr.onerror = [](emscripten_fetch_t* fetch) {
+      
+    // };
+    // attr.onprogress = [](emscripten_fetch_t* fetch) {
+      
+    // };
+    // attr.onreadystatechange = [](emscripten_fetch_t* fetch) {
+      
+    // };
+    // attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS | EMSCRIPTEN_FETCH_PERSIST_FILE;
+
+    auto pathString = std::string(path);
+    if(pathString.rfind("https://",0) != 0) {
+      pathString = std::string("../../") + pathString;
+    }
+    
     std::cout << "Fetching from path " << pathString.c_str() << std::endl;
 
+    // auto request = emscripten_fetch(&attr, pathString.c_str());
+    // if(!request) {
+    //   std::cout << "Request failed?" << std::endl;  
+    // }
+    // auto data = malloc(request->numBytes);
+    // memcpy(data, request->data, request->numBytes);
+    // emscripten_fetch_close(request);
+    // return ResourceBuffer { data, (int32_t) request->numBytes, _lastResourceId  } ;
     void* data = nullptr;
     int32_t numBytes = 0;
     
