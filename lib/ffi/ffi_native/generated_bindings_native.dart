@@ -1009,13 +1009,21 @@ external void clear_lights_ffi(
   ffi.Pointer<ffi.Void> viewer,
 );
 
-@ffi.Native<
-    EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-        ffi.Bool)>(symbol: 'load_glb_ffi', assetId: 'flutter_filament_plugin')
+@ffi.Native<EntityId Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)>(
+    symbol: 'load_glb_ffi', assetId: 'flutter_filament_plugin')
 external int load_glb_ffi(
   ffi.Pointer<ffi.Void> assetManager,
   ffi.Pointer<ffi.Char> assetPath,
-  bool unlit,
+);
+
+@ffi.Native<
+        ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
+            ffi.Pointer<EntityId>)>(
+    symbol: 'load_glb_async_ffi', assetId: 'flutter_filament_plugin')
+external void load_glb_async_ffi(
+  ffi.Pointer<ffi.Void> assetManager,
+  ffi.Pointer<ffi.Char> assetPath,
+  ffi.Pointer<EntityId> out,
 );
 
 @ffi.Native<

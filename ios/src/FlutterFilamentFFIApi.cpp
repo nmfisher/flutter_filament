@@ -289,12 +289,25 @@ FLUTTER_PLUGIN_EXPORT EntityId load_gltf_ffi(void *const assetManager,
 }
 
 FLUTTER_PLUGIN_EXPORT EntityId load_glb_ffi(void *const assetManager,
-                                            const char *path, bool unlit) {
+                                            const char *path) {
   std::packaged_task<EntityId()> lambda(
-      [&]() mutable { return load_glb(assetManager, path, unlit); });
+      [&]() mutable { auto entityId = load_glb(assetManager, path, false); 
+      return entityId;
+  });
   auto fut = _rl->add_task(lambda);
   fut.wait();
   return fut.get();
+}
+
+FLUTTER_PLUGIN_EXPORT void load_glb_async_ffi(void *const assetManager,
+                                            const char *path, EntityId *out) {
+  // capture-by-value as the [out] variable will go out of local scope if we don't wait() the future 
+  // (even though we assume the underlying pointer address is still valid)
+  std::packaged_task<void()> lambda(
+      [=]() mutable { 
+        *out = load_glb(assetManager, path, false);
+  });
+  auto fut = _rl->add_task(lambda);
 }
 
 FLUTTER_PLUGIN_EXPORT void clear_background_image_ffi(void *const viewer) {

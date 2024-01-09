@@ -205,7 +205,8 @@ abstract class FilamentController {
   ///
   /// Load the .glb asset at the given path and insert into the scene.
   ///
-  Future<FilamentEntity> loadGlb(String path, {bool unlit = false});
+  Future<FilamentEntity> loadGlb(String path,
+      {bool unlit = false, bool async = true});
 
   ///
   /// Load the .gltf asset at the given path and insert into the scene.

@@ -537,15 +537,37 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
-  Future<FilamentEntity> loadGlb(String path, {bool unlit = false}) async {
+  Future<FilamentEntity> loadGlb(String path,
+      {bool unlit = false, bool async = false}) async {
     if (_viewer == nullptr) {
       throw Exception("No viewer available, ignoring");
     }
     if (unlit) {
       throw Exception("Not yet implemented");
     }
-    var entity = load_glb_ffi(_assetManager,
-        path.toNativeUtf8(allocator: allocator).cast<Char>(), unlit);
+    late FilamentEntity entity;
+    if (!async) {
+      entity = load_glb_ffi(
+          _assetManager, path.toNativeUtf8(allocator: allocator).cast<Char>());
+    } else {
+      print("Loading GLB async");
+      Pointer<Int32> out = allocator<EntityId>(1);
+      out.value = -1;
+      load_glb_async_ffi(_assetManager,
+          path.toNativeUtf8(allocator: allocator).cast<Char>(), out);
+      int iters = 0;
+      while (out.value == -1) {
+        await Future.delayed(const Duration(milliseconds: 10));
+        iters++;
+        if (iters > 3000) {
+          throw Exception("Failed to load async");
+        } else if (iters % 100 == 0) {
+          print("Waiting for asset load to complete");
+        }
+      }
+      print("Async GLB load completed");
+      entity = out.value;
+    }
     if (entity == _FILAMENT_ASSET_ERROR) {
       throw Exception("An error occurred loading the asset at $path");
     }
