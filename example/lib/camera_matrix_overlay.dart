@@ -36,14 +36,14 @@ class _CameraMatrixOverlayState extends State<CameraMatrixOverlay> {
         "${cameraRotation.storage.map((v) => v.toStringAsFixed(2))}";
 
     if (widget.showProjectionMatrices) {
-      var projMatrix = await widget.controller.getCameraProjectionMatrix();
-      var cullingMatrix =
-          await widget.controller.getCameraCullingProjectionMatrix();
+      // var projMatrix = await widget.controller.getCameraProjectionMatrix();
+      // var cullingMatrix =
+      //     await widget.controller.getCameraCullingProjectionMatrix();
 
-      _cameraProjectionMatrix =
-          projMatrix.storage.map((v) => v.toStringAsFixed(2)).join(",");
-      _cameraCullingProjectionMatrix =
-          cullingMatrix.storage.map((v) => v.toStringAsFixed(2)).join(",");
+      // _cameraProjectionMatrix =
+      //     projMatrix.storage.map((v) => v.toStringAsFixed(2)).join(",");
+      // _cameraCullingProjectionMatrix =
+      //     cullingMatrix.storage.map((v) => v.toStringAsFixed(2)).join(",");
       _getFrustum();
     }
 

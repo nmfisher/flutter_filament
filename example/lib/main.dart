@@ -197,7 +197,7 @@ class ExampleWidgetState extends State<ExampleWidget> {
                 GestureDetector(
                     onTap: () async {
                       await _filamentController!
-                          .loadGlb('assets/shapes/shapes.glb');
+                          .loadGlb('assets/shapes/shapes.glb', async: true);
                     },
                     child: Container(
                         color: Colors.transparent,

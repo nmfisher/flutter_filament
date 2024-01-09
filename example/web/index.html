@@ -25,6 +25,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="flutter_filament_example">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link href='https://fonts.googleapis.com/css?family=Iceland' rel='stylesheet'>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
@@ -34,18 +35,197 @@
 
   <script>
     // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
+    const serviceWorkerVersion = "3211990615";
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+  <style>
+    
+    html, body { 
+      height:100%;
+      width:100%;
+    }
+.lds-spinner {
+  color: grey;
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-spinner div {
+  transform-origin: 40px 40px;
+  animation: lds-spinner 1.2s linear infinite;
+}
+.lds-spinner div:after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 3px;
+  left: 37px;
+  width: 6px;
+  height: 18px;
+  border-radius: 20%;
+  background: #ccc;
+}
+.lds-spinner div:nth-child(1) {
+  transform: rotate(0deg);
+  animation-delay: -1.1s;
+}
+.lds-spinner div:nth-child(2) {
+  transform: rotate(30deg);
+  animation-delay: -1s;
+}
+.lds-spinner div:nth-child(3) {
+  transform: rotate(60deg);
+  animation-delay: -0.9s;
+}
+.lds-spinner div:nth-child(4) {
+  transform: rotate(90deg);
+  animation-delay: -0.8s;
+}
+.lds-spinner div:nth-child(5) {
+  transform: rotate(120deg);
+  animation-delay: -0.7s;
+}
+.lds-spinner div:nth-child(6) {
+  transform: rotate(150deg);
+  animation-delay: -0.6s;
+}
+.lds-spinner div:nth-child(7) {
+  transform: rotate(180deg);
+  animation-delay: -0.5s;
+}
+.lds-spinner div:nth-child(8) {
+  transform: rotate(210deg);
+  animation-delay: -0.4s;
+}
+.lds-spinner div:nth-child(9) {
+  transform: rotate(240deg);
+  animation-delay: -0.3s;
+}
+.lds-spinner div:nth-child(10) {
+  transform: rotate(270deg);
+  animation-delay: -0.2s;
+}
+.lds-spinner div:nth-child(11) {
+  transform: rotate(300deg);
+  animation-delay: -0.1s;
+}
+.lds-spinner div:nth-child(12) {
+  transform: rotate(330deg);
+  animation-delay: 0s;
+}
+@keyframes lds-spinner {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+p {
+  font-family:'Iceland';
+  color:#ccc;
+  font-size:24px;
+}
+  </style>
 </head>
 <body style="margin:0">
   <canvas id="canvas" style="position:absolute;left:0;top:0;width:100%;height:100%"></canvas>
   <div style="position:absolute; left:0px; top:0px;right:0px;bottom:0px" id="flutter_host"></div>
+  <div style="position:absolute;height:100%;width:100%;background:url('bg.jpeg');background-size:cover;display:flex;justify-content: center; align-items: center;flex-direction: column;">
+    <div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    <p id="loading-status"></p>
+  </div> 
   <script src="assets/assets/web/flutter_filament_plugin.js"></script>
-  <script>
-     
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+      connectAuthEmulator,
+      createUserWithEmailAndPassword,
+      getAuth,
+      onAuthStateChanged,
+      sendEmailVerification,
+      sendPasswordResetEmail,
+      signInWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    
+      const firebaseConfig = {
+        apiKey: "AIzaSyDoB3U7hxb_UU2T_6Bh1UneI8k-cK1A3U8",
+        authDomain: "capella-ab6b8.firebaseapp.com",
+        projectId: "capella-ab6b8",
+        storageBucket: "capella-ab6b8.appspot.com",
+        messagingSenderId: "548562323770",
+        appId: "1:548562323770:web:4c2ea18a0d4b2974896803",
+        measurementId: "G-174LCB63NB"
+      };
+    
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth();
+
+      if (window.location.hostname === 'localhost') {
+        connectAuthEmulator(auth, 'http://127.0.0.1:9099');
+      }
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const signInButton = document.getElementById(
+        'quickstart-sign-in',
+      ) ;
+      const signUpButton = document.getElementById(
+        'quickstart-sign-up',
+      ) ;
+      const passwordResetButton = document.getElementById(
+        'quickstart-password-reset',
+      ) ;
+      const verifyEmailButton = document.getElementById(
+        'quickstart-verify-email',
+      ) ;
+      const signInStatus = document.getElementById(
+        'quickstart-sign-in-status',
+      );
+      const accountDetails = document.getElementById(
+        'quickstart-account-details',
+      );
+
+      // Listening for auth state changes.
+      onAuthStateChanged(auth, function (user) {
+        console.log(user);
+        verifyEmailButton.disabled = true;
+        if (user) {
+          // User is signed in.
+          const displayName = user.displayName;
+          const email = user.email;
+          const emailVerified = user.emailVerified;
+          const photoURL = user.photoURL;
+          const isAnonymous = user.isAnonymous;
+          const uid = user.uid;
+          const providerData = user.providerData;
+          signInStatus.textContent = 'Signed in';
+          signInButton.textContent = 'Sign out';
+          accountDetails.textContent = JSON.stringify(user, null, '  ');
+          if (!emailVerified) {
+            verifyEmailButton.disabled = false;
+          }
+        } else {
+          // User is signed out.
+          signInStatus.textContent = 'Signed out';
+          signInButton.textContent = 'Sign in';
+          accountDetails.textContent = 'null';
+        }
+        signInButton.disabled = false;
+      });
+</script>
+<script>
     window.addEventListener('load', function(ev) {
+       var percent = 0;
+        document.getElementById("loading-status").innerText = "Loading..." + percent + "% complete";
+        var timer = setInterval(() => { 
+          percent = Math.min(percent + 1, 100);
+          document.getElementById("loading-status").innerText = "Loading..." + percent + "% complete";
+      }, 50);
       var canvas = document.getElementById("canvas")
       canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -56,7 +236,10 @@
         },
         onEntrypointLoaded: function(engineInitializer) {
           engineInitializer.initializeEngine({ hostElement: document.querySelector("#flutter_host")}).then(function(appRunner) {
+            clearInterval(timer);
+            document.getElementById("loading-status").innerText = "Loading...100% complete";
             appRunner.runApp();
+            document.getElementById("loading-status").parentElement.remove();
           });
         }
       });
