@@ -1,4 +1,4 @@
-import 'dart:ffi';
+import 'ffi/ffi.dart';
 
 void main() {
   print(RenderingSurface(

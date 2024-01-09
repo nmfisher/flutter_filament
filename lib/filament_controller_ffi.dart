@@ -1,22 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
-
-import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:developer' as dev;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-
 import 'package:flutter/widgets.dart';
-
 import 'package:flutter_filament/filament_controller.dart';
-
 import 'package:flutter_filament/animations/animation_data.dart';
-import 'ffi/ffi.dart';
-
 import 'package:flutter_filament/rendering_surface.dart';
 import 'package:vector_math/vector_math_64.dart';
+
+import 'ffi/ffi.dart';
 
 // ignore: constant_identifier_names
 const FilamentEntity _FILAMENT_ASSET_ERROR = 0;
@@ -94,18 +87,18 @@ class FilamentControllerFFI extends FilamentController {
       });
     });
     late DynamicLibrary dl;
-    if (!kIsWeb) {
-      if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
-        dl = DynamicLibrary.process();
-      } else {
-        dl = DynamicLibrary.open("libflutter_filament_android.so");
-      }
-      if (Platform.isWindows) {
-        _channel.invokeMethod("usesBackingWindow").then((result) {
-          _usesBackingWindow = result;
-        });
-      }
-    }
+    // if (!kIsWeb) {
+    //   if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
+    //     dl = DynamicLibrary.process();
+    //   } else {
+    //     dl = DynamicLibrary.open("libflutter_filament_android.so");
+    //   }
+    //   if (Platform.isWindows) {
+    //     _channel.invokeMethod("usesBackingWindow").then((result) {
+    //       _usesBackingWindow = result;
+    //     });
+    //   }
+    // }
   }
 
   bool _rendering = false;
@@ -208,10 +201,10 @@ class FilamentControllerFFI extends FilamentController {
       throw Exception("Failed to get resource loader");
     }
 
-    if (!kIsWeb && Platform.isWindows && requiresTextureWidget) {
-      _driver = Pointer<Void>.fromAddress(
-          await _channel.invokeMethod("getDriverPlatform"));
-    }
+    // if (!kIsWeb && Platform.isWindows && requiresTextureWidget) {
+    //   _driver = Pointer<Void>.fromAddress(
+    //       await _channel.invokeMethod("getDriverPlatform"));
+    // }
 
     var renderCallbackResult = await _channel.invokeMethod("getRenderCallback");
     var renderCallback =
@@ -224,12 +217,14 @@ class FilamentControllerFFI extends FilamentController {
 
     dev.log("Got rendering surface");
 
+    final uberarchivePtr = uberArchivePath != null
+        ? uberArchivePath!.toNativeUtf8(allocator: allocator).cast<Char>()
+        : nullptr.cast<Char>();
+
     _viewer = create_filament_viewer_ffi(
         Pointer<Void>.fromAddress(renderingSurface.sharedContext),
         _driver,
-        uberArchivePath != null
-            ? uberArchivePath!.toNativeUtf8(allocator: allocator).cast<Char>()
-            : nullptr,
+        uberarchivePtr,
         loader,
         renderCallback,
         renderCallbackOwner);
@@ -359,15 +354,16 @@ class FilamentControllerFFI extends FilamentController {
           await _channel.invokeMethod(
               "destroyTexture", textureDetails.value!.textureId);
         }
-      } else if (!kIsWeb && Platform.isWindows) {
-        dev.log("Resizing window with rect $_rect");
-        await _channel.invokeMethod("resizeWindow", [
-          _rect.value!.width,
-          _rect.value!.height,
-          _rect.value!.left,
-          _rect.value!.top
-        ]);
       }
+      // else if (!kIsWeb && Platform.isWindows) {
+      //   dev.log("Resizing window with rect $_rect");
+      //   await _channel.invokeMethod("resizeWindow", [
+      //     _rect.value!.width,
+      //     _rect.value!.height,
+      //     _rect.value!.left,
+      //     _rect.value!.top
+      //   ]);
+      // }
 
       var renderingSurface = await _createRenderingSurface();
 
@@ -579,10 +575,10 @@ class FilamentControllerFFI extends FilamentController {
   @override
   Future<FilamentEntity> loadGltf(String path, String relativeResourcePath,
       {bool force = false}) async {
-    if (!kIsWeb && Platform.isWindows && !force) {
-      throw Exception(
-          "loadGltf has a race condition on Windows which is likely to crash your program. If you really want to try, pass force=true to loadGltf");
-    }
+    // if (!kIsWeb && Platform.isWindows && !force) {
+    //   throw Exception(
+    //       "loadGltf has a race condition on Windows which is likely to crash your program. If you really want to try, pass force=true to loadGltf");
+    // }
     if (_viewer == nullptr) {
       throw Exception("No viewer available, ignoring");
     }
@@ -880,16 +876,14 @@ class FilamentControllerFFI extends FilamentController {
     if (_viewer == nullptr) {
       throw Exception("No viewer available, ignoring");
     }
-
-    var result = set_camera(
-        _viewer,
-        entity,
-        name != null
-            ? name.toNativeUtf8(allocator: allocator).cast<Char>()
-            : nullptr);
+    final namePtr = name != null
+        ? name.toNativeUtf8(allocator: allocator).cast<Char>()
+        : nullptr.cast<Char>();
+    var result = set_camera(_viewer, entity, namePtr);
     if (!result) {
       throw Exception("Failed to set camera");
     }
+    allocator.free(namePtr);
   }
 
   @override
@@ -1258,7 +1252,8 @@ class FilamentControllerFFI extends FilamentController {
     }
 
     var meshNamePtr = meshName.toNativeUtf8(allocator: allocator).cast<Char>();
-    var boneNamePtr = boneName.toNativeUtf8(allocator: allocator).cast<Char>();
+    Pointer<Char> boneNamePtr =
+        boneName.toNativeUtf8(allocator: allocator).cast<Char>();
 
     var result = set_bone_transform_ffi(
         _assetManager, entity, meshNamePtr, ptr, boneNamePtr);

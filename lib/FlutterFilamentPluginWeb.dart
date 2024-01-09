@@ -7,36 +7,35 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'package:flutter_filament/ffi/ffi_web/generated_bindings_web.dart';
-import 'dart:ffi';
+import 'package:flutter_filament/ffi/ffi.dart';
 
-@AbiSpecificIntegerMapping({
-  Abi.androidArm: Uint8(),
-  Abi.androidArm64: Uint8(),
-  Abi.androidIA32: Int8(),
-  Abi.androidX64: Int8(),
-  Abi.androidRiscv64: Uint8(),
-  Abi.fuchsiaArm64: Uint8(),
-  Abi.fuchsiaX64: Int8(),
-  Abi.fuchsiaRiscv64: Uint8(),
-  Abi.iosArm: Int8(),
-  Abi.iosArm64: Int8(),
-  Abi.iosX64: Int8(),
-  Abi.linuxArm: Uint8(),
-  Abi.linuxArm64: Uint8(),
-  Abi.linuxIA32: Int8(),
-  Abi.linuxX64: Int8(),
-  Abi.linuxRiscv32: Uint8(),
-  Abi.linuxRiscv64: Uint8(),
-  Abi.macosArm64: Int8(),
-  Abi.macosX64: Int8(),
-  Abi.windowsArm64: Int8(),
-  Abi.windowsIA32: Int8(),
-  Abi.windowsX64: Int8(),
-})
-final class FooChar extends AbiSpecificInteger {
-  const FooChar();
-}
+// @AbiSpecificIntegerMapping({
+//   Abi.androidArm: Uint8(),
+//   Abi.androidArm64: Uint8(),
+//   Abi.androidIA32: Int8(),
+//   Abi.androidX64: Int8(),
+//   Abi.androidRiscv64: Uint8(),
+//   Abi.fuchsiaArm64: Uint8(),
+//   Abi.fuchsiaX64: Int8(),
+//   Abi.fuchsiaRiscv64: Uint8(),
+//   Abi.iosArm: Int8(),
+//   Abi.iosArm64: Int8(),
+//   Abi.iosX64: Int8(),
+//   Abi.linuxArm: Uint8(),
+//   Abi.linuxArm64: Uint8(),
+//   Abi.linuxIA32: Int8(),
+//   Abi.linuxX64: Int8(),
+//   Abi.linuxRiscv32: Uint8(),
+//   Abi.linuxRiscv64: Uint8(),
+//   Abi.macosArm64: Int8(),
+//   Abi.macosX64: Int8(),
+//   Abi.windowsArm64: Int8(),
+//   Abi.windowsIA32: Int8(),
+//   Abi.windowsX64: Int8(),
+// })
+// final class FooChar extends AbiSpecificInteger {
+//   const FooChar();
+// }
 
 @pragma("wasm:export")
 void loadFlutterAsset(Pointer<Char> path, Pointer<Void> context) async {
@@ -68,7 +67,7 @@ void loadFlutterAsset(Pointer<Char> path, Pointer<Void> context) async {
 
 /// A web implementation of the FlutterFilamentPlatform of the FlutterFilament plugin.
 class FlutterFilamentPluginWeb {
-  final _dummy = FooChar();
+  // final _dummy = FooChar();
 
   FlutterFilamentPluginWeb() {}
   static void registerWith(Registrar registrar) {

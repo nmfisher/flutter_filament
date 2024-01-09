@@ -15,8 +15,8 @@ export 'dart:ffi'
         Int64Pointer,
         IntPointer;
 
-import "generated_bindings_web.dart";
-export "generated_bindings_web.dart";
+import "generated_bindings_wasm.dart";
+export "generated_bindings_wasm.dart";
 
 class _Allocator implements ffi.Allocator {
   const _Allocator();

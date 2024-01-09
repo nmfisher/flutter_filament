@@ -16,6 +16,8 @@ dependencies:
   plugin_platform_interface: ^2.0.0
   tuple:
   ffi:
+  wasm_ffi:
+    path: ../../wasm_ffi
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +25,8 @@ dev_dependencies:
   flutter_lints: ^1.0.0
   ffigen: #^9.0.1
     path: /Users/nickfisher/Documents/ffigen
+  build_runner: ^2.4.7
+  build_web_compilers: ^4.0.8
 
 ffigen:
   output: 'lib/ffi/ffi_native/generated_bindings_native.dart'
