@@ -67,7 +67,7 @@ namespace polyvox {
         size_t skinIndex = 0;
         int lengthInFrames;
         float frameLengthInMs = 0;
-        vector<math::quatf> frameData;
+        vector<math::mat4f> frameData;
     };
 
     struct SceneAsset {

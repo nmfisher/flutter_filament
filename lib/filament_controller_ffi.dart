@@ -767,7 +767,7 @@ class FilamentControllerFFI extends FilamentController {
       throw Exception("No viewer available, ignoring");
     }
 
-    var numFrames = animation.frameData.length;
+    var numFrames = animation.rotationFrameData.length;
 
     var meshNames = allocator<Pointer<Char>>(animation.meshNames.length);
     for (int i = 0; i < animation.meshNames.length; i++) {
@@ -776,13 +776,15 @@ class FilamentControllerFFI extends FilamentController {
           .cast<Char>();
     }
 
-    var data = allocator<Float>(numFrames * 4);
+    var data = allocator<Float>(numFrames * 16);
 
     for (int i = 0; i < numFrames; i++) {
-      data.elementAt(i * 4).value = animation.frameData[i].w;
-      data.elementAt((i * 4) + 1).value = animation.frameData[i].x;
-      data.elementAt((i * 4) + 2).value = animation.frameData[i].y;
-      data.elementAt((i * 4) + 3).value = animation.frameData[i].z;
+      var rotation = animation.rotationFrameData[i];
+      var translation = animation.translationFrameData[i];
+      var mat4 = Matrix4.compose(translation, rotation, Vector3.all(1.0));
+      for (int j = 0; j < 16; j++) {
+        data.elementAt((i * 16) + j).value = mat4.storage[j];
+      }
     }
 
     add_bone_animation(

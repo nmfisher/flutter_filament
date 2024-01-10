@@ -501,7 +501,7 @@ namespace polyvox
 
         auto boneIndex = animation.boneIndex;
 
-        math::mat4f localTransform(animation.frameData[frameNumber]);
+        math::mat4f localTransform = animation.frameData[frameNumber];
 
         const auto& inverseBindMatrix = filamentInstance->getInverseBindMatricesAt(animation.skinIndex)[boneIndex];
 
@@ -791,11 +791,23 @@ namespace polyvox
         
         animation.frameData.clear();
         for(int i = 0; i < numFrames; i++) {
-            animation.frameData.push_back(math::quatf( 
-                frameData[i*4],
-                frameData[(i*4)+1],
-                frameData[(i*4)+2],
-                frameData[(i*4)+3]
+            animation.frameData.push_back(math::mat4f( 
+                frameData[i*16],
+                frameData[(i*16)+1],
+                frameData[(i*16)+2],
+                frameData[(i*16)+3],
+                frameData[(i*16)+4],
+                frameData[(i*16)+5],
+                frameData[(i*16)+6],
+                frameData[(i*16)+7],
+                frameData[(i*16)+8],
+                frameData[(i*16)+9],
+                frameData[(i*16)+10],
+                frameData[(i*16)+11],
+                frameData[(i*16)+12],
+                frameData[(i*16)+13],
+                frameData[(i*16)+14],
+                frameData[(i*16)+15]
             ));
 
         }

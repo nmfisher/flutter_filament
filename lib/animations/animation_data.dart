@@ -45,8 +45,9 @@ class MorphAnimationData {
 class BoneAnimationData {
   final String boneName;
   final List<String> meshNames;
-  final List<Quaternion> frameData;
+  final List<Quaternion> rotationFrameData;
+  final List<Vector3> translationFrameData;
   double frameLengthInMs;
-  BoneAnimationData(
-      this.boneName, this.meshNames, this.frameData, this.frameLengthInMs);
+  BoneAnimationData(this.boneName, this.meshNames, this.rotationFrameData,
+      this.translationFrameData, this.frameLengthInMs);
 }
