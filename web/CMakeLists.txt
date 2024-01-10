@@ -23,9 +23,9 @@ set(EMCC_CFLAGS ${EMCC_CFLAGS} -sPTHREAD_POOL_SIZE=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_BLOCKING_ON_MAIN_THREAD=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sOFFSCREEN_FRAMEBUFFER)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sNO_DISABLE_EXCEPTION_CATCHING)
-set(EMCC_CFLAGS ${EMCC_CFLAGS} -sASYNCIFY=1)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sASYNCIFY=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sUSE_WEBGL2=1)
-# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sFETCH=1)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sFETCH=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMIN_WEBGL_VERSION=2)
 
 
@@ -235,8 +235,8 @@ add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
 add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/js/flutter_filament_plugin.worker.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/
     COMMAND ${CMAKE_COMMAND} -DINPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/flutter_filament_plugin.js -DOUTPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/flutter_filament_plugin.js "-DTO_REPLACE=var handlers = [];" "-DREPLACEMENT=var handlers = ['loadFlutterAsset'];" -P ${CMAKE_CURRENT_SOURCE_DIR}/replace_in_file.cmake 
-    COMMAND flutter build web --profile --wasm --wasm-opt debug WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../example/
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/js/main.dart.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/build/web_wasm/
+    # COMMAND flutter build web --profile --wasm --wasm-opt debug WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../example/
+    # COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/js/main.dart.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/build/web_wasm/
     VERBATIM
 )
 

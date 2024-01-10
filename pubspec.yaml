@@ -18,6 +18,7 @@ dependencies:
   ffi:
   wasm_ffi:
     path: ../../wasm_ffi
+  inject_js:
 
 dev_dependencies:
   flutter_test:

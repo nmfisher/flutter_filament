@@ -15,6 +15,11 @@ import 'dart:js_interop';
 export 'generated_bindings_js.dart' show EntityId;
 
 late NativeLibrary _lib;
+
+void setLibrary(DynamicLibrary dylib) {
+  _lib = NativeLibrary(dylib);
+}
+
 void flutter_filament_web_load_resource_callback(
     Pointer<Void> data, int length, Pointer<Void> context) {
   _lib.flutter_filament_web_load_resource_callback(data, length, context);

@@ -157,21 +157,21 @@ extern "C"
     // delete pendingCall;
     // std::cout << "Deleted pending call" << std::endl;
 
-    // emscripten_fetch_attr_t attr;
-    // emscripten_fetch_attr_init(&attr);
-    // attr.onsuccess = [](emscripten_fetch_t* fetch) {
+    emscripten_fetch_attr_t attr;
+    emscripten_fetch_attr_init(&attr);
+    attr.onsuccess = [](emscripten_fetch_t* fetch) {
       
-    // };
-    // attr.onerror = [](emscripten_fetch_t* fetch) {
+    };
+    attr.onerror = [](emscripten_fetch_t* fetch) {
       
-    // };
-    // attr.onprogress = [](emscripten_fetch_t* fetch) {
+    };
+    attr.onprogress = [](emscripten_fetch_t* fetch) {
       
-    // };
-    // attr.onreadystatechange = [](emscripten_fetch_t* fetch) {
+    };
+    attr.onreadystatechange = [](emscripten_fetch_t* fetch) {
       
-    // };
-    // attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS | EMSCRIPTEN_FETCH_PERSIST_FILE;
+    };
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS;
 
     auto pathString = std::string(path);
     if(pathString.rfind("https://",0) != 0) {
@@ -180,28 +180,28 @@ extern "C"
     
     std::cout << "Fetching from path " << pathString.c_str() << std::endl;
 
-    // auto request = emscripten_fetch(&attr, pathString.c_str());
-    // if(!request) {
-    //   std::cout << "Request failed?" << std::endl;  
-    // }
-    // auto data = malloc(request->numBytes);
-    // memcpy(data, request->data, request->numBytes);
-    // emscripten_fetch_close(request);
-    // return ResourceBuffer { data, (int32_t) request->numBytes, _lastResourceId  } ;
-    void* data = nullptr;
-    int32_t numBytes = 0;
+    auto request = emscripten_fetch(&attr, pathString.c_str());
+    if(!request) {
+      std::cout << "Request failed?" << std::endl;  
+    }
+    auto data = malloc(request->numBytes);
+    memcpy(data, request->data, request->numBytes);
+    emscripten_fetch_close(request);
+    return ResourceBuffer { data, (int32_t) request->numBytes, _lastResourceId  } ;
+    // void* data = nullptr;
+    // int32_t numBytes = 0;
     
-    void** pBuffer = (void**)malloc(sizeof(void*));
-    int* pNum = (int*) malloc(sizeof(int*));
-    int* pError = (int*)malloc(sizeof(int*));
-    emscripten_wget_data(pathString.c_str(), pBuffer, pNum, pError);
-    data = *pBuffer;
-    numBytes = *pNum;
-    free(pBuffer);
-    free(pNum);
-    free(pError);
+    // void** pBuffer = (void**)malloc(sizeof(void*));
+    // int* pNum = (int*) malloc(sizeof(int*));
+    // int* pError = (int*)malloc(sizeof(int*));
+    // emscripten_wget_data(pathString.c_str(), pBuffer, pNum, pError);
+    // data = *pBuffer;
+    // numBytes = *pNum;
+    // free(pBuffer);
+    // free(pNum);
+    // free(pError);
     
-    return ResourceBuffer { data, numBytes, _lastResourceId  } ;   
+    // return ResourceBuffer { data, numBytes, _lastResourceId  } ;   
   }
 
   void flutter_filament_web_free_resource(ResourceBuffer rb) {

@@ -37,44 +37,45 @@ import 'package:flutter_filament/ffi/ffi.dart';
 //   const FooChar();
 // }
 
-@pragma("wasm:export")
-void loadFlutterAsset(Pointer<Char> path, Pointer<Void> context) async {
-  final codeUnits = path.cast<Uint8>();
-  var length = 0;
-  var bytes = <int>[];
-  int i = 0;
-  while (true) {
-    var val = flutter_filament_web_get(path, i);
-    i++;
-    if (val != 0) {
-      bytes.add(val);
-    } else {
-      break;
-    }
-  }
-  var pathString = utf8.decode(bytes);
+// @pragma("wasm:export")
+// void loadFlutterAsset(Pointer<Char> path, Pointer<Void> context) async {
+//   final codeUnits = path.cast<Uint8>();
+//   var length = 0;
+//   var bytes = <int>[];
+//   int i = 0;
+//   while (true) {
+//     var val = flutter_filament_web_get(path, i);
+//     i++;
+//     if (val != 0) {
+//       bytes.add(val);
+//     } else {
+//       break;
+//     }
+//   }
+//   var pathString = utf8.decode(bytes);
 
-  var bd = await rootBundle.load(pathString);
+//   var bd = await rootBundle.load(pathString);
 
-  var dataPtr = flutter_filament_web_allocate(bd.lengthInBytes).cast<Char>();
+//   var dataPtr = flutter_filament_web_allocate(bd.lengthInBytes).cast<Char>();
 
-  for (int i = 0; i < bd.lengthInBytes; i++) {
-    flutter_filament_web_set(dataPtr, i, bd.getUint8(i));
-  }
-  flutter_filament_web_load_resource_callback(
-      dataPtr.cast<Void>(), bd.lengthInBytes, context);
-}
+//   for (int i = 0; i < bd.lengthInBytes; i++) {
+//     flutter_filament_web_set(dataPtr, i, bd.getUint8(i));
+//   }
+//   flutter_filament_web_load_resource_callback(
+//       dataPtr.cast<Void>(), bd.lengthInBytes, context);
+// }
 
 /// A web implementation of the FlutterFilamentPlatform of the FlutterFilament plugin.
 class FlutterFilamentPluginWeb {
   // final _dummy = FooChar();
 
   FlutterFilamentPluginWeb() {}
-  static void registerWith(Registrar registrar) {
+  static void registerWith(Registrar registrar) async {
     final MethodChannel channel = MethodChannel("app.polyvox.filament/event",
         const StandardMethodCodec(), registrar.messenger);
     final FlutterFilamentPluginWeb instance = FlutterFilamentPluginWeb();
     channel.setMethodCallHandler(instance.handleMethodCall);
+    await initializeBindings(rootBundle);
   }
 
   Future handleMethodCall(MethodCall call) async {

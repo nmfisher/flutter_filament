@@ -1,7 +1,12 @@
 library ffi_web_js;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/services.dart';
+
+import 'generated_bindings_js.g.dart';
+import 'package:inject_js/inject_js.dart' as Js;
 
 import 'package:wasm_ffi/wasm_ffi.dart' as ffi
     hide
@@ -11,21 +16,26 @@ import 'package:wasm_ffi/wasm_ffi.dart' as ffi
         Int32Pointer,
         Int64Pointer,
         StringUtf8Pointer,
-        Utf8Pointer;
+        Utf8Pointer,
+        PointerPointer;
 export 'package:wasm_ffi/wasm_ffi.dart' hide StringUtf8Pointer, Utf8Pointer;
 export 'generated_bindings_js.g.dart';
 
-import 'package:js/js.dart';
+// import 'package:js/js.dart';
 
-void set_view_frustum_culling(
-  ffi.Pointer<ffi.Void> viewer,
-  bool enabled,
-) {
-  throw Exception();
+late ffi.Module? _module;
+
+// ffi.Allocator getAllocator() {
+//   return _dl.boundMemory;
+// }
+
+Future initializeBindings(AssetBundle assetBundle) async {
+  ffi.Memory.init();
+  await Js.importLibrary('assets/assets/web/flutter_filament_plugin.js');
+  _module = await ffi.EmscriptenModule.process('flutter_filament_plugin');
+  setLibrary(ffi.DynamicLibrary.fromModule(
+      _module!, ffi.MemoryRegisterMode.onlyIfGlobalNotSet));
 }
-
-@JS()
-class WASMLibrary {}
 
 final nullptr = ffi.Pointer<ffi.Void>.fromAddress(0);
 
@@ -34,13 +44,12 @@ class _Allocator implements ffi.Allocator {
   @override
   ffi.Pointer<T> allocate<T extends ffi.NativeType>(int byteCount,
       {int? alignment}) {
-    // return _lib.flutter_filament_web_allocate(byteCount).cast<T>();
-    throw Exception();
+    return flutter_filament_web_allocate(byteCount).cast<T>();
   }
 
   @override
   void free(ffi.Pointer<ffi.NativeType> pointer) {
-    // _lib.flutter_filament_web_free(pointer.cast<ffi.Void>());
+    flutter_filament_web_free(pointer.cast<ffi.Void>());
   }
 }
 
@@ -48,15 +57,11 @@ const allocator = _Allocator();
 
 extension CharPointer on ffi.Pointer<ffi.Char> {
   int get value {
-    throw Exception();
-
-    // return _lib.flutter_filament_web_get(this, 0);
+    return flutter_filament_web_get(this, 0);
   }
 
   set value(int value) {
-    throw Exception();
-
-    // _lib.flutter_filament_web_set(this, 0, value);
+    flutter_filament_web_set(this, 0, value);
   }
 
   void operator []=(int index, int value) {
@@ -69,13 +74,11 @@ extension CharPointer on ffi.Pointer<ffi.Char> {
 
 extension IntPointer on ffi.Pointer<ffi.Int> {
   int get value {
-    throw Exception();
-
-    // return _lib.flutter_filament_web_get_int32(this.cast<ffi.Int32>(), 0);
+    return flutter_filament_web_get_int32(this.cast<ffi.Int32>(), 0);
   }
 
   set value(int value) {
-    // _lib.flutter_filament_web_set_int32(this.cast<ffi.Int32>(), 0, value);
+    flutter_filament_web_set_int32(this.cast<ffi.Int32>(), 0, value);
   }
 
   void operator []=(int index, int value) {
@@ -92,15 +95,11 @@ extension IntPointer on ffi.Pointer<ffi.Int> {
 
 extension Int32Pointer on ffi.Pointer<ffi.Int32> {
   int get value {
-    throw Exception();
-
-    // return _lib.flutter_filament_web_get_int32(this, 0);
+    return flutter_filament_web_get_int32(this, 0);
   }
 
   set value(int value) {
-    throw Exception();
-
-    // _lib.flutter_filament_web_set_int32(this, 0, value);
+    flutter_filament_web_set_int32(this, 0, value);
   }
 
   void operator []=(int index, int value) {
@@ -117,14 +116,11 @@ extension Int32Pointer on ffi.Pointer<ffi.Int32> {
 
 extension UInt8Pointer on ffi.Pointer<ffi.Uint8> {
   int get value {
-    throw Exception();
-
-    // return _lib.flutter_filament_web_get(this.cast<ffi.Char>(), 0);
+    return flutter_filament_web_get(this.cast<ffi.Char>(), 0);
   }
 
   set value(int value) {
-    // _lib.flutter_filament_web_set(this.cast<ffi.Char>(), 0, value);
-    throw Exception();
+    flutter_filament_web_set(this.cast<ffi.Char>(), 0, value);
   }
 
   void operator []=(int index, int value) {
@@ -142,22 +138,17 @@ extension UInt8Pointer on ffi.Pointer<ffi.Uint8> {
 extension PointerPointer<T extends ffi.NativeType>
     on ffi.Pointer<ffi.Pointer<T>> {
   ffi.Pointer<T> get value {
-    throw Exception();
-
-    // return _lib
-    //     .flutter_filament_web_get_pointer(cast<ffi.Pointer<ffi.Void>>(), 0)
-    //     .cast<T>();
+    return flutter_filament_web_get_pointer(cast<ffi.Pointer<ffi.Void>>(), 0)
+        .cast<T>();
   }
 
   set value(ffi.Pointer<T> value) {
-    throw Exception();
-
-    // _lib.flutter_filament_web_set_pointer(
-    //     cast<ffi.Pointer<ffi.Void>>(), 0, value.cast<ffi.Void>());
+    flutter_filament_web_set_pointer(
+        cast<ffi.Pointer<ffi.Void>>(), 0, value.cast<ffi.Void>());
   }
 
   void operator []=(int index, ffi.Pointer<T> value) {
-    // this.elementAt(index).value = value;
+    this.elementAt(index).value = value;
   }
 
   ffi.Pointer<ffi.Pointer<T>> elementAt(int index) =>
@@ -166,15 +157,11 @@ extension PointerPointer<T extends ffi.NativeType>
 
 extension FloatPointer on ffi.Pointer<ffi.Float> {
   double get value {
-    throw Exception();
-
-    // return _lib.flutter_filament_web_get_float(this, 0);
+    return flutter_filament_web_get_float(this, 0);
   }
 
   set value(double value) {
-    throw Exception();
-
-    // _lib.flutter_filament_web_set_float(this, 0, value);
+    flutter_filament_web_set_float(this, 0, value);
   }
 
   void operator []=(int index, double value) {
@@ -226,15 +213,11 @@ extension StringUtf8Pointer on ffi.Pointer<ffi.Utf8> {
 
 extension DoublePointer on ffi.Pointer<ffi.Double> {
   double get value {
-    throw Exception();
-
-    // return _lib.flutter_filament_web_get_double(this, 0);
+    return flutter_filament_web_get_double(this, 0);
   }
 
   set value(double value) {
-    throw Exception();
-
-    // return _lib.flutter_filament_web_set_double(this, 0, value);
+    return flutter_filament_web_set_double(this, 0, value);
   }
 
   Float64List asTypedList(int length) {
