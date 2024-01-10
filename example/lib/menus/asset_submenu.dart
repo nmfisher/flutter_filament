@@ -45,10 +45,13 @@ class _AssetSubmenuState extends State<AssetSubmenu> {
                     "Bone",
                     ["Cylinder"],
                     List.generate(
-                        60,
-                        (idx) => v.Quaternion.axisAngle(
-                                v.Vector3(0, 0, 1), pi * 8 * (idx / 60))
-                            .normalized()),
+                      60,
+                      (idx) => v.Quaternion.identity(),
+                      // v.Quaternion.axisAngle(
+                      //         v.Vector3(0, 0, 1), pi * 8 * (idx / 60))
+                      // .normalized()
+                    ),
+                    List.generate(60, (i) => v.Vector3.all(i / 60.0)),
                     1000.0 / 60.0));
           },
           child: const Text('Set bone transform animation for Cylinder')),
