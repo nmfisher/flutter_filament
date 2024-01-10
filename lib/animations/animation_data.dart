@@ -40,13 +40,14 @@ class MorphAnimationData {
 /// Model class for bone animation frame data.
 /// To create dynamic/runtime bone animations (as distinct from animations embedded in a glTF asset), create an instance containing the relevant
 /// data and pass to the [setBoneAnimation] method on a [FilamentController].
-/// [frameData] is laid out as [locX, locY, locZ, rotW, rotX, rotY, rotZ]
 ///
 class BoneAnimationData {
   final String boneName;
   final List<String> meshNames;
   final List<Quaternion> frameData;
+  final List<Vector3>? translationData;
   double frameLengthInMs;
   BoneAnimationData(
-      this.boneName, this.meshNames, this.frameData, this.frameLengthInMs);
+      this.boneName, this.meshNames, this.frameData, this.frameLengthInMs,
+      {this.translationData = null});
 }
