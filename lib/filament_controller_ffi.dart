@@ -4,6 +4,7 @@ import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_filament/ffi/ffi_native/generated_bindings_native.dart';
 import 'package:flutter_filament/filament_controller.dart';
 import 'package:flutter_filament/animations/animation_data.dart';
 import 'package:flutter_filament/rendering_surface.dart';
@@ -30,13 +31,13 @@ class FilamentControllerFFI extends FilamentController {
 
   double _pixelRatio = 1.0;
 
-  Pointer<Void> _assetManager = nullptr;
+  late Pointer<Void> _assetManager;
 
-  Pointer<Void> _viewer = nullptr.cast<Void>();
+  late Pointer<Void> _viewer;
 
   final String? uberArchivePath;
 
-  Pointer<Void> _driver = nullptr.cast<Void>();
+  late Pointer<Void> _driver;
 
   @override
   final _rect = ValueNotifier<Rect?>(null);
@@ -68,6 +69,10 @@ class FilamentControllerFFI extends FilamentController {
   /// Setting up the context/texture (since this is platform-specific) and the render ticker are platform-specific; all other methods are passed through by the platform channel to the methods specified in FlutterFilamentApi.h.
   ///
   FilamentControllerFFI({this.uberArchivePath}) {
+    _assetManager = nullptr;
+    _viewer = nullptr;
+    _driver = nullptr;
+
     // on some platforms, we ignore the resize event raised by the Flutter RenderObserver
     // in favour of a window-level event passed via the method channel.
     // (this is because there is no apparent way to exactly synchronize resizing a Flutter widget and resizing a pixel buffer, so we need
@@ -86,7 +91,7 @@ class FilamentControllerFFI extends FilamentController {
         await resize();
       });
     });
-    late DynamicLibrary dl;
+    // late DynamicLibrary dl;
     // if (!kIsWeb) {
     //   if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
     //     dl = DynamicLibrary.process();
@@ -181,7 +186,9 @@ class FilamentControllerFFI extends FilamentController {
           "An existing call to createViewer is pending completion.");
     }
     _creating = true;
+    print("Waiting for widget dimensions to become available..");
     await _rectCompleter.future;
+    print("Got widget dimensions : ${_rect.value}");
     if (_rect.value == null) {
       throw Exception(
           "Dimensions have not yet been set by FilamentWidget. You need to wait for at least one frame after FilamentWidget has been inserted into the hierarchy");
@@ -763,7 +770,7 @@ class FilamentControllerFFI extends FilamentController {
       throw Exception("No viewer available, ignoring");
     }
 
-    var numFrames = animation.frameData.length;
+    var numFrames = animation.rotationFrameData.length;
 
     var meshNames = allocator<Pointer<Char>>(animation.meshNames.length);
     for (int i = 0; i < animation.meshNames.length; i++) {
@@ -772,13 +779,15 @@ class FilamentControllerFFI extends FilamentController {
           .cast<Char>();
     }
 
-    var data = allocator<Float>(numFrames * 4);
+    var data = allocator<Float>(numFrames * 16);
 
     for (int i = 0; i < numFrames; i++) {
-      data.elementAt(i * 4).value = animation.frameData[i].w;
-      data.elementAt((i * 4) + 1).value = animation.frameData[i].x;
-      data.elementAt((i * 4) + 2).value = animation.frameData[i].y;
-      data.elementAt((i * 4) + 3).value = animation.frameData[i].z;
+      var rotation = animation.rotationFrameData[i];
+      var translation = animation.translationFrameData[i];
+      var mat4 = Matrix4.compose(translation, rotation, Vector3.all(1.0));
+      for (int j = 0; j < 16; j++) {
+        data.elementAt((i * 16) + j).value = mat4.storage[j];
+      }
     }
 
     add_bone_animation(
@@ -1282,6 +1291,20 @@ class FilamentControllerFFI extends FilamentController {
     } finally {
       allocator.free(childNamePtr);
     }
+  }
+
+  @override
+  Future<List<String>> getMeshNames(FilamentEntity entity) async {
+    var count = get_entity_count(_assetManager, entity, true);
+    var names = <String>[];
+    for (int i = 0; i < count; i++) {
+      var name = get_entity_name_at(_assetManager, entity, i, true);
+      if (name == nullptr) {
+        throw Exception("Failed to find mesh at index $i");
+      }
+      names.add(name.cast<Utf8>().toDartString());
+    }
+    return names;
   }
 
   @override
