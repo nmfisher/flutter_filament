@@ -26,6 +26,22 @@ class _AssetSubmenuState extends State<AssetSubmenu> {
   Widget _shapesSubmenu() {
     var children = [
       MenuItemButton(
+          closeOnActivate: false,
+          onPressed: () async {
+            var meshNames = await widget.controller
+                .getMeshNames(ExampleWidgetState.assets.last);
+            await showDialog(
+                context: context,
+                builder: (ctx) {
+                  return Container(
+                      height: 100,
+                      width: 100,
+                      color: Colors.white,
+                      child: Text(meshNames.join(",")));
+                });
+          },
+          child: const Text('Get mesh names in entity')),
+      MenuItemButton(
           onPressed: () async {
             Timer.periodic(Duration(milliseconds: 50), (_) async {
               await widget.controller.setBoneTransform(
@@ -49,7 +65,8 @@ class _AssetSubmenuState extends State<AssetSubmenu> {
                         (idx) => v.Quaternion.axisAngle(
                                 v.Vector3(0, 0, 1), pi * 8 * (idx / 60))
                             .normalized()),
-                    1000.0 / 60.0));
+                    List.generate(60, (idx) => v.Vector3.zero()),
+                    1000 / 60.0));
           },
           child: const Text('Set bone transform animation for Cylinder')),
       MenuItemButton(
