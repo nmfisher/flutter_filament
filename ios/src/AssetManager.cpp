@@ -1195,4 +1195,63 @@ namespace polyvox
         return _ncm->getName(nameInstance);
     }
 
+    int AssetManager::getEntityCount(EntityId entityId, bool renderableOnly) {
+        const auto &pos = _entityIdLookup.find(entityId);
+        if (pos == _entityIdLookup.end())
+        {
+            Log("ERROR: asset not found for entity.");
+            return 0;
+        }
+        auto &asset = _assets[pos->second];
+        if(renderableOnly) {
+            int count = 0;
+            const auto& rm = _engine->getRenderableManager();
+            const Entity *entities = asset.asset->getEntities();
+            for(int i=0; i < asset.asset->getEntityCount(); i++) {
+                if(rm.hasComponent(entities[i])) { 
+                    count++;
+                }
+            }
+            return count;
+        } 
+        return asset.asset->getEntityCount();
+    }
+
+    const char* AssetManager::getEntityNameAt(EntityId entityId, int index, bool renderableOnly) {
+        const auto &pos = _entityIdLookup.find(entityId);
+        if (pos == _entityIdLookup.end())
+        {
+            Log("ERROR: asset not found for entity.");
+            return nullptr;
+        }
+        auto &asset = _assets[pos->second];
+        int found = -1;
+
+        if(renderableOnly) {
+            int count = 0;
+            const auto& rm = _engine->getRenderableManager();
+            const Entity *entities = asset.asset->getEntities();
+            for(int i=0; i < asset.asset->getEntityCount(); i++) {
+                if(rm.hasComponent(entities[i])) { 
+                    if(count == index) {
+                        found = i;
+                        break;
+                    }
+                    count++;
+                }
+            }
+        } else { 
+            found = index;
+        }
+
+        if(found >= asset.asset->getEntityCount()) { 
+            Log("ERROR: index %d greater than number of child entities.", found);
+            return nullptr;
+        }
+        
+        const utils::Entity entity = asset.asset->getEntities()[found];    
+        auto inst = _ncm->getInstance(entity);
+        return _ncm->getName(inst);
+    }
+
 } // namespace polyvox

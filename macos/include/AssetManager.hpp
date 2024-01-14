@@ -95,6 +95,8 @@ namespace polyvox
         utils::Entity findChildEntityByName(
             EntityId entityId,
             const char *entityName);
+        int getEntityCount(EntityId entity, bool renderableOnly);
+        const char* getEntityNameAt(EntityId entity, int index, bool renderableOnly);
 
     private:
         AssetLoader *_assetLoader = nullptr;

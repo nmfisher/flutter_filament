@@ -505,6 +505,15 @@ extern "C"
         return ((AssetManager *)assetManager)->getNameForEntity(entityId);
     }
 
+    FLUTTER_PLUGIN_EXPORT int get_entity_count(void *const assetManager, const EntityId target, bool renderableOnly) {
+        return ((AssetManager *)assetManager)->getEntityCount(target, renderableOnly);
+    }
+
+    FLUTTER_PLUGIN_EXPORT const char* get_entity_name_at(void *const assetManager, const EntityId target, int index, bool renderableOnly) {
+        return ((AssetManager *)assetManager)->getEntityNameAt(target, index, renderableOnly);
+    }
+
+
     FLUTTER_PLUGIN_EXPORT void set_recording(void *const viewer, bool recording) {
         ((FilamentViewer*)viewer)->setRecording(recording);
     }
