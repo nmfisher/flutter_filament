@@ -765,6 +765,25 @@ external int find_child_entity_by_name(
   ffi.Pointer<ffi.Char> name,
 );
 
+@ffi.Native<ffi.Int Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Bool)>(
+    symbol: 'get_entity_count', assetId: 'flutter_filament_plugin')
+external int get_entity_count(
+  ffi.Pointer<ffi.Void> assetManager,
+  int target,
+  bool renderableOnly,
+);
+
+@ffi.Native<
+        ffi.Pointer<ffi.Char> Function(
+            ffi.Pointer<ffi.Void>, EntityId, ffi.Int, ffi.Bool)>(
+    symbol: 'get_entity_name_at', assetId: 'flutter_filament_plugin')
+external ffi.Pointer<ffi.Char> get_entity_name_at(
+  ffi.Pointer<ffi.Void> assetManager,
+  int target,
+  int index,
+  bool renderableOnly,
+);
+
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
     symbol: 'set_recording', assetId: 'flutter_filament_plugin')
 external void set_recording(
