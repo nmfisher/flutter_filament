@@ -18,11 +18,11 @@ import 'package:wasm_ffi/wasm_ffi.dart' as ffi
         StringUtf8Pointer,
         Utf8Pointer,
         PointerPointer;
-export 'package:wasm_ffi/wasm_ffi.dart' hide StringUtf8Pointer, Utf8Pointer;
+export 'package:wasm_ffi/wasm_ffi.dart'
+    hide StringUtf8Pointer, Utf8Pointer, nullptr;
 export 'generated_bindings_js.g.dart';
 
-// import 'package:js/js.dart';
-
+ffi.Pointer<Never> nullptr = ffi.nullptr;
 late ffi.Module? _module;
 
 // ffi.Allocator getAllocator() {
@@ -30,11 +30,13 @@ late ffi.Module? _module;
 // }
 
 Future initializeBindings(AssetBundle assetBundle) async {
+  print("Initializing FFI bindings");
   ffi.Memory.init();
   await Js.importLibrary('assets/assets/web/flutter_filament_plugin.js');
   _module = await ffi.EmscriptenModule.process('flutter_filament_plugin');
   setLibrary(ffi.DynamicLibrary.fromModule(
       _module!, ffi.MemoryRegisterMode.onlyIfGlobalNotSet));
+  print("Bindings initialized");
 }
 
 final nullptr = ffi.Pointer<ffi.Void>.fromAddress(0);
