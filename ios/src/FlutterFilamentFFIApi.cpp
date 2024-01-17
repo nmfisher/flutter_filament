@@ -554,5 +554,13 @@ FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(
       return fut.get();
 }
 
+FLUTTER_PLUGIN_EXPORT void reset_to_rest_pose_ffi(void* const assetManager, EntityId entityId) {
+  std::packaged_task<void()> lambda(
+      [&] { return reset_to_rest_pose(assetManager, entityId); });
+      auto fut = _rl->add_task(lambda);
+      fut.wait();
+}
+
+
 FLUTTER_PLUGIN_EXPORT void ios_dummy_ffi() { Log("Dummy called"); }
 }

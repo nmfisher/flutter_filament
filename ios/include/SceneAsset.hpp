@@ -67,12 +67,12 @@ namespace polyvox {
         size_t skinIndex = 0;
         int lengthInFrames;
         float frameLengthInMs = 0;
-        vector<math::quatf> frameData;
+        vector<math::mat4f> frameData;
     };
 
     struct SceneAsset {
         FilamentAsset* asset = nullptr;
-        
+        vector<math::mat4f> initialJointTransforms;
         vector<GltfAnimation> gltfAnimations;
         vector<MorphAnimation> morphAnimations;
         vector<BoneAnimation> boneAnimations;

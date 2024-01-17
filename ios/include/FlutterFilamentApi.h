@@ -114,6 +114,10 @@ extern "C"
 		int numMorphTargets,
 		int numFrames,
 		float frameLengthInMs);
+	
+	FLUTTER_PLUGIN_EXPORT void reset_to_rest_pose(
+		void *assetManager,
+		EntityId asset);
 	FLUTTER_PLUGIN_EXPORT void add_bone_animation(
 		void *assetManager,
 		EntityId asset,
@@ -122,7 +126,8 @@ extern "C"
 		const char *const boneName,
 		const char **const meshNames,
 		int numMeshTargets,
-		float frameLengthInMs);
+		float frameLengthInMs,
+		bool isModelSpace);
 	FLUTTER_PLUGIN_EXPORT bool set_bone_transform(
 		void *assetManager,
 		EntityId asset,

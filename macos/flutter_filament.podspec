@@ -39,7 +39,7 @@ A new Flutter plugin project.
     'USER_HEADER_SEARCH_PATHS' => '"${PODS_TARGET_SRCROOT}/include" "${PODS_TARGET_SRCROOT}/include/filament" "$(inherited)"',
     'ALWAYS_SEARCH_USER_PATHS' => 'YES',
     "OTHER_LDFLAGS" =>  '-lfilament -lbackend -lfilameshio -lviewer -lfilamat -lgeometry -lutils -lfilabridge -lgltfio_core -lfilament-iblprefilter -limage -limageio -ltinyexr -lgltfio_core -lfilaflat -ldracodec -libl -lktxreader -lpng -lz -lstb -luberzlib -lsmol-v -luberarchive -lzstd -lvkshaders -lbluegl -lbluevk -lbasis_transcoder -lmeshoptimizer',
-    'LIBRARY_SEARCH_PATHS' => '"${PODS_TARGET_SRCROOT}/lib" "$(inherited)"',
+    'LIBRARY_SEARCH_PATHS' => '"${PODS_TARGET_SRCROOT}/lib/debug" "$(inherited)"',
   }
   s.swift_version = '5.0'
   

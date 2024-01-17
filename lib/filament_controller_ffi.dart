@@ -4,6 +4,7 @@ import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_filament/ffi/ffi_native/ffi_native.dart';
 import 'package:flutter_filament/ffi/ffi_native/generated_bindings_native.dart';
 import 'package:flutter_filament/filament_controller.dart';
 import 'package:flutter_filament/animations/animation_data.dart';
@@ -141,7 +142,9 @@ class FilamentControllerFFI extends FilamentController {
         rect.top * _pixelRatio.floor().toDouble(),
         (rect.width * _pixelRatio).ceil().toDouble(),
         (rect.height * _pixelRatio).ceil().toDouble());
-    _rectCompleter.complete(this._rect.value);
+    if (!_rectCompleter.isCompleted) {
+      _rectCompleter.complete(this._rect.value);
+    }
     _pixelRatio = pixelRatio;
   }
 
@@ -764,6 +767,14 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
+  Future resetBones(FilamentEntity entity) async {
+    if (_viewer == nullptr) {
+      throw Exception("No viewer available, ignoring");
+    }
+    reset_to_rest_pose_ffi(_assetManager, entity);
+  }
+
+  @override
   Future addBoneAnimation(
       FilamentEntity entity, BoneAnimationData animation) async {
     if (_viewer == nullptr) {
@@ -781,24 +792,31 @@ class FilamentControllerFFI extends FilamentController {
 
     var data = allocator<Float>(numFrames * 16);
 
-    for (int i = 0; i < numFrames; i++) {
-      var rotation = animation.rotationFrameData[i];
-      var translation = animation.translationFrameData[i];
-      var mat4 = Matrix4.compose(translation, rotation, Vector3.all(1.0));
-      for (int j = 0; j < 16; j++) {
-        data.elementAt((i * 16) + j).value = mat4.storage[j];
-      }
-    }
+    for (var boneIndex = 0; boneIndex < animation.bones.length; boneIndex++) {
+      var bone = animation.bones[boneIndex];
+      var boneNamePtr = bone.toNativeUtf8(allocator: allocator).cast<Char>();
 
-    add_bone_animation(
-        _assetManager,
-        entity,
-        data,
-        numFrames,
-        animation.boneName.toNativeUtf8(allocator: allocator).cast<Char>(),
-        meshNames,
-        animation.meshNames.length,
-        animation.frameLengthInMs);
+      for (int i = 0; i < numFrames; i++) {
+        var rotation = animation.rotationFrameData[i][boneIndex];
+        var translation = animation.translationFrameData[i][boneIndex];
+        var mat4 = Matrix4.compose(translation, rotation, Vector3.all(1.0));
+        for (int j = 0; j < 16; j++) {
+          data.elementAt((i * 16) + j).value = mat4.storage[j];
+        }
+      }
+
+      add_bone_animation(
+          _assetManager,
+          entity,
+          data,
+          numFrames,
+          boneNamePtr,
+          meshNames,
+          animation.meshNames.length,
+          animation.frameLengthInMs,
+          animation.isModelSpace);
+      allocator.free(boneNamePtr);
+    }
     allocator.free(data);
     allocator.free(meshNames);
   }

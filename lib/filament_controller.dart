@@ -275,6 +275,12 @@ abstract class FilamentController {
       FilamentEntity entity, MorphAnimationData animation);
 
   ///
+  /// Resets all bones in the given entity to their rest pose.
+  /// This should be done before every call to addBoneAnimation.
+  ///
+  Future resetBones(FilamentEntity entity);
+
+  ///
   /// Starts animating a bone (joint) according to the specified [animation].
   ///
   Future addBoneAnimation(FilamentEntity entity, BoneAnimationData animation);

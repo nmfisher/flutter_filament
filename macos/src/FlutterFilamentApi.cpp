@@ -343,6 +343,10 @@ extern "C"
         return ((AssetManager *)assetManager)->setMorphAnimationBuffer(asset, entityName, morphData, morphIndices, numMorphTargets, numFrames, frameLengthInMs);
     }
 
+    FLUTTER_PLUGIN_EXPORT void reset_to_rest_pose(void *assetManager, EntityId entityId) {
+        ((AssetManager*)assetManager)->resetBones(entityId);
+    }
+
     FLUTTER_PLUGIN_EXPORT void add_bone_animation(
         void *assetManager,
         EntityId asset,
@@ -351,9 +355,10 @@ extern "C"
         const char *const boneName,
         const char **const meshNames,
         int numMeshTargets,
-        float frameLengthInMs)
+        float frameLengthInMs,
+        bool isModelSpace)
     {
-        ((AssetManager *)assetManager)->addBoneAnimation(asset, frameData, numFrames, boneName, meshNames, numMeshTargets, frameLengthInMs);
+        ((AssetManager *)assetManager)->addBoneAnimation(asset, frameData, numFrames, boneName, meshNames, numMeshTargets, frameLengthInMs, isModelSpace);
     }
 
     FLUTTER_PLUGIN_EXPORT void set_post_processing(void *const viewer, bool enabled)

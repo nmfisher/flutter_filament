@@ -87,6 +87,7 @@ FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(
 		const char *boneName);
 FLUTTER_PLUGIN_EXPORT void set_post_processing_ffi(void* const viewer, bool enabled);
 FLUTTER_PLUGIN_EXPORT void pick_ffi(void* const viewer, int x, int y, EntityId* entityId);
+FLUTTER_PLUGIN_EXPORT void reset_to_rest_pose_ffi(void* const assetManager, EntityId entityId);
 FLUTTER_PLUGIN_EXPORT void ios_dummy_ffi();
 
 #ifdef __cplusplus
