@@ -32,6 +32,7 @@ class BVHParser {
       {Map<String, String>? remap,
       RegExp? boneRegex,
       RotationMode rotationMode = RotationMode.ZYX,
+      Vector3? rootTranslationOffset,
       axes = Axes.Filament}) {
     // parse the list/hierarchy of bones
     final bones = <String>[];
@@ -71,7 +72,8 @@ class BVHParser {
       if (line.isEmpty) {
         break;
       }
-      var parseResult = _parseFrameData(line, axes: axes);
+      var parseResult = _parseFrameData(line,
+          axes: axes, rootTranslationOffset: rootTranslationOffset);
 
       rotationData.add(
           boneIndices.map((idx) => parseResult.rotationData[idx]).toList());
@@ -85,7 +87,8 @@ class BVHParser {
   }
 
   static ({List<Quaternion> rotationData, Vector3 translationData})
-      _parseFrameData(String frameLine, {axes = Axes.Filament}) {
+      _parseFrameData(String frameLine,
+          {Vector3? rootTranslationOffset, axes = Axes.Filament}) {
     final frameValues = <double>[];
     for (final entry in frameLine.split(RegExp(r'\s+'))) {
       if (entry.isNotEmpty) {
@@ -114,6 +117,9 @@ class BVHParser {
       Z = Vector3(0, 0, 1);
       Y = Vector3(0, 1, 0);
       X = Vector3(1, 0, 0);
+    }
+    if (rootTranslationOffset != null) {
+      rootTranslation -= rootTranslationOffset;
     }
 
     List<Quaternion> frameData = [];
