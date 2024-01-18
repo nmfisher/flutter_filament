@@ -59,7 +59,7 @@ class _ControllerMenuState extends State<ControllerMenu> {
           onPressed: _filamentController == null
               ? null
               : () {
-                  _filamentController!.createViewer();
+                  _filamentController!.createViewer(async: true);
                 },
         ),
         MenuItemButton(
