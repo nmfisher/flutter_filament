@@ -844,6 +844,34 @@ external ffi.Pointer<ffi.Void> create_filament_viewer_ffi(
 );
 
 @ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Void>,
+            ffi
+                .Pointer<
+                    ffi.NativeFunction<
+                        ffi.Void Function(
+                            ffi.Pointer<ffi.Void> renderCallbackOwner)>>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Pointer<ffi.Void>>)>(
+    symbol: 'create_filament_viewer_async_ffi',
+    assetId: 'flutter_filament_plugin')
+external void create_filament_viewer_async_ffi(
+  ffi.Pointer<ffi.Void> context,
+  ffi.Pointer<ffi.Void> platform,
+  ffi.Pointer<ffi.Char> uberArchivePath,
+  ffi.Pointer<ffi.Void> loader,
+  ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<ffi.Void> renderCallbackOwner)>>
+      renderCallback,
+  ffi.Pointer<ffi.Void> renderCallbackOwner,
+  ffi.Pointer<ffi.Pointer<ffi.Void>> out,
+);
+
+@ffi.Native<
         ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>,
             ffi.Uint32, ffi.Uint32)>(
     symbol: 'create_swap_chain_ffi', assetId: 'flutter_filament_plugin')
@@ -969,20 +997,24 @@ external void set_bloom_ffi(
   double strength,
 );
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)>(
+@ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Bool)>(
     symbol: 'load_skybox_ffi', assetId: 'flutter_filament_plugin')
 external void load_skybox_ffi(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Char> skyboxPath,
+  bool async1,
 );
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-        ffi.Float)>(symbol: 'load_ibl_ffi', assetId: 'flutter_filament_plugin')
+    ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Float,
+        ffi.Bool)>(symbol: 'load_ibl_ffi', assetId: 'flutter_filament_plugin')
 external void load_ibl_ffi(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Char> iblPath,
   double intensity,
+  bool async1,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(

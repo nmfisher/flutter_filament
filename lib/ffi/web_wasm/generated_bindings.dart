@@ -499,6 +499,13 @@ external bool set_morph_animation(
   double frameLengthInMs,
 );
 
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
+    symbol: '_reset_to_rest_pose', assetId: 'flutter_filament_plugin')
+external void reset_to_rest_pose(
+  ffi.Pointer<ffi.Void> assetManager,
+  int asset,
+);
+
 @ffi.Native<
         ffi.Void Function(
             ffi.Pointer<ffi.Void>,
@@ -508,7 +515,8 @@ external bool set_morph_animation(
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Pointer<ffi.Char>>,
             ffi.Int,
-            ffi.Float)>(
+            ffi.Float,
+            ffi.Bool)>(
     symbol: '_add_bone_animation', assetId: 'flutter_filament_plugin')
 external void add_bone_animation(
   ffi.Pointer<ffi.Void> assetManager,
@@ -519,6 +527,7 @@ external void add_bone_animation(
   ffi.Pointer<ffi.Pointer<ffi.Char>> meshNames,
   int numMeshTargets,
   double frameLengthInMs,
+  bool isModelSpace,
 );
 
 @ffi.Native<
@@ -893,6 +902,25 @@ external int find_child_entity_by_name(
   ffi.Pointer<ffi.Char> name,
 );
 
+@ffi.Native<ffi.Int Function(ffi.Pointer<ffi.Void>, EntityId, ffi.Bool)>(
+    symbol: '_get_entity_count', assetId: 'flutter_filament_plugin')
+external int get_entity_count(
+  ffi.Pointer<ffi.Void> assetManager,
+  int target,
+  bool renderableOnly,
+);
+
+@ffi.Native<
+        ffi.Pointer<ffi.Char> Function(
+            ffi.Pointer<ffi.Void>, EntityId, ffi.Int, ffi.Bool)>(
+    symbol: '_get_entity_name_at', assetId: 'flutter_filament_plugin')
+external ffi.Pointer<ffi.Char> get_entity_name_at(
+  ffi.Pointer<ffi.Void> assetManager,
+  int target,
+  int index,
+  bool renderableOnly,
+);
+
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
     symbol: '_set_recording', assetId: 'flutter_filament_plugin')
 external void set_recording(
@@ -941,6 +969,34 @@ external ffi.Pointer<ffi.Void> create_filament_viewer_ffi(
               ffi.Void Function(ffi.Pointer<ffi.Void> renderCallbackOwner)>>
       renderCallback,
   ffi.Pointer<ffi.Void> renderCallbackOwner,
+);
+
+@ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Void>,
+            ffi
+                .Pointer<
+                    ffi.NativeFunction<
+                        ffi.Void Function(
+                            ffi.Pointer<ffi.Void> renderCallbackOwner)>>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Pointer<ffi.Void>>)>(
+    symbol: '_create_filament_viewer_async_ffi',
+    assetId: 'flutter_filament_plugin')
+external void create_filament_viewer_async_ffi(
+  ffi.Pointer<ffi.Void> context,
+  ffi.Pointer<ffi.Void> platform,
+  ffi.Pointer<ffi.Char> uberArchivePath,
+  ffi.Pointer<ffi.Void> loader,
+  ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<ffi.Void> renderCallbackOwner)>>
+      renderCallback,
+  ffi.Pointer<ffi.Void> renderCallbackOwner,
+  ffi.Pointer<ffi.Pointer<ffi.Void>> out,
 );
 
 @ffi.Native<
@@ -1069,20 +1125,24 @@ external void set_bloom_ffi(
   double strength,
 );
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)>(
+@ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Bool)>(
     symbol: '_load_skybox_ffi', assetId: 'flutter_filament_plugin')
 external void load_skybox_ffi(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Char> skyboxPath,
+  bool async1,
 );
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-        ffi.Float)>(symbol: '_load_ibl_ffi', assetId: 'flutter_filament_plugin')
+    ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Float,
+        ffi.Bool)>(symbol: '_load_ibl_ffi', assetId: 'flutter_filament_plugin')
 external void load_ibl_ffi(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Char> iblPath,
   double intensity,
+  bool async1,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
@@ -1338,6 +1398,13 @@ external void pick_ffi(
   int x,
   int y,
   ffi.Pointer<EntityId> entityId,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
+    symbol: '_reset_to_rest_pose_ffi', assetId: 'flutter_filament_plugin')
+external void reset_to_rest_pose_ffi(
+  ffi.Pointer<ffi.Void> assetManager,
+  int entityId,
 );
 
 @ffi.Native<ffi.Void Function()>(

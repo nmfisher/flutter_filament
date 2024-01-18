@@ -1,10 +1,23 @@
-output: '../lib/ffi/ffi_web/generated_bindings_js.dart'
+output: '../lib/ffi/web_js/generated_bindings.dart'
 headers:
   entry-points:
     - 'include/FlutterFilamentWebApi.h'
     - '../ios/include/FlutterFilamentFFIApi.h'
+  include-directives:
+    - 'include/FlutterFilamentWebApi.h'
+    - '../ios/include/FlutterFilamentFFIApi.h'
+    - '../ios/include/FlutterFilamentApi.h'
 compiler-opts:
   - "-D__EMSCRIPTEN__"
+functions:
+  exclude:
+    - "make_resource_loader*"
+type-map:
+  'structs':
+    'ResourceLoaderWrapper':
+      'lib': 'ffi'
+      'c-type': 'Void'
+      'dart-type': 'ffi.Pointer<ffi.Void>'
 structs:
   exclude: 
     - '.*'
@@ -14,3 +27,4 @@ unions:
 globals:
   exclude: 
     - '.*'
+    - 'INT64_MAX'

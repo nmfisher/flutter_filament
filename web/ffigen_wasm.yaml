@@ -1,4 +1,4 @@
-output: '../lib/ffi/ffi_web/generated_bindings_web.dart'
+output: '../lib/ffi/web_wasm/generated_bindings.dart'
 headers:
   entry-points:
     - 'include/FlutterFilamentWebApi.h'

@@ -3,9 +3,10 @@ library ffi_web_js;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'generated_bindings_js.g.dart';
+import 'generated_bindings.g.dart';
 import 'package:inject_js/inject_js.dart' as Js;
 
 import 'package:wasm_ffi/wasm_ffi.dart' as ffi
@@ -20,26 +21,34 @@ import 'package:wasm_ffi/wasm_ffi.dart' as ffi
         PointerPointer;
 export 'package:wasm_ffi/wasm_ffi.dart'
     hide StringUtf8Pointer, Utf8Pointer, nullptr;
-export 'generated_bindings_js.g.dart';
+export 'generated_bindings.g.dart';
 
 ffi.Pointer<Never> nullptr = ffi.nullptr;
 late ffi.Module? _module;
+
+typedef EntityId = ffi.Int32;
 
 // ffi.Allocator getAllocator() {
 //   return _dl.boundMemory;
 // }
 
 Future initializeBindings(AssetBundle assetBundle) async {
+  WidgetsFlutterBinding.ensureInitialized();
   print("Initializing FFI bindings");
   ffi.Memory.init();
-  await Js.importLibrary('assets/assets/web/flutter_filament_plugin.js');
-  _module = await ffi.EmscriptenModule.process('flutter_filament_plugin');
-  setLibrary(ffi.DynamicLibrary.fromModule(
-      _module!, ffi.MemoryRegisterMode.onlyIfGlobalNotSet));
-  print("Bindings initialized");
+  try {
+    await Js.importLibrary('assets/assets/web/flutter_filament_plugin.js');
+    _module = await ffi.EmscriptenModule.process("flutter_filament_plugin");
+    setLibrary(ffi.DynamicLibrary.fromModule(
+        _module!, ffi.MemoryRegisterMode.onlyIfGlobalNotSet));
+    print("Bindings initialized");
+  } catch (err, st) {
+    print(err);
+    print(st);
+    throw Exception(
+        "Failed to initialize WASM<->JS bindings. Check logs for details");
+  }
 }
-
-final nullptr = ffi.Pointer<ffi.Void>.fromAddress(0);
 
 class _Allocator implements ffi.Allocator {
   const _Allocator();
