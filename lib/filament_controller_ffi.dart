@@ -249,9 +249,9 @@ class FilamentControllerFFI extends FilamentController {
           throw Exception("Timeout trying to instantiate async viewer");
         }
         iter++;
-        _viewer = out.value;
-        allocator.free(out);
       }
+      _viewer = out.value;
+      allocator.free(out);
     } else {
       _viewer = create_filament_viewer_ffi(
           Pointer<Void>.fromAddress(renderingSurface.sharedContext),
