@@ -30,18 +30,25 @@ class FilamentGestureDetectorMobile extends StatefulWidget {
   ///
   /// If false, all gestures will be ignored.
   ///
-  final bool listenerEnabled;
+  final bool enableGestures;
+
+  final bool enablePick;
 
   final double zoomDelta;
 
-  const FilamentGestureDetectorMobile(
+  FilamentGestureDetectorMobile(
       {Key? key,
       required this.controller,
       this.child,
       this.showControlOverlay = false,
-      this.listenerEnabled = true,
-      this.zoomDelta = 1})
-      : super(key: key);
+      this.enableGestures = true,
+      this.zoomDelta = 1,
+      required this.enablePick})
+      : super(key: key) {
+    if (enablePick) {
+      throw Exception("TODO");
+    }
+  }
 
   @override
   State<StatefulWidget> createState() => _FilamentGestureDetectorMobileState();
@@ -102,7 +109,7 @@ class _FilamentGestureDetectorMobileState
   @override
   void didUpdateWidget(FilamentGestureDetectorMobile oldWidget) {
     if (widget.showControlOverlay != oldWidget.showControlOverlay ||
-        widget.listenerEnabled != oldWidget.listenerEnabled) {
+        widget.enableGestures != oldWidget.enableGestures) {
       setState(() {});
     }
 
@@ -118,7 +125,7 @@ class _FilamentGestureDetectorMobileState
   // - inner is a Listener for all other gestures (including scroll zoom on desktop)
   @override
   Widget build(BuildContext context) {
-    if (!widget.listenerEnabled) {
+    if (!widget.enableGestures) {
       return widget.child ?? Container();
     }
 

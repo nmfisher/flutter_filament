@@ -30,14 +30,17 @@ class FilamentGestureDetectorDesktop extends StatefulWidget {
   ///
   /// If false, all gestures will be ignored.
   ///
-  final bool listenerEnabled;
+  final bool enableGestures;
+
+  final bool enablePick;
 
   const FilamentGestureDetectorDesktop(
       {Key? key,
       required this.controller,
       this.child,
       this.showControlOverlay = false,
-      this.listenerEnabled = true})
+      this.enableGestures = true,
+      required this.enablePick})
       : super(key: key);
 
   @override
@@ -56,7 +59,7 @@ class _FilamentGestureDetectorDesktopState
   @override
   void didUpdateWidget(FilamentGestureDetectorDesktop oldWidget) {
     if (widget.showControlOverlay != oldWidget.showControlOverlay ||
-        widget.listenerEnabled != oldWidget.listenerEnabled) {
+        widget.enableGestures != oldWidget.enableGestures) {
       setState(() {});
     }
 
@@ -85,7 +88,7 @@ class _FilamentGestureDetectorDesktopState
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.listenerEnabled) {
+    if (!widget.enableGestures) {
       return widget.child ?? Container();
     }
     return Listener(
@@ -135,7 +138,7 @@ class _FilamentGestureDetectorDesktopState
           } else {
             if (_pointerMoving) {
               widget.controller.panEnd();
-            } else {
+            } else if (widget.enablePick) {
               widget.controller
                   .pick(d.localPosition.dx.toInt(), d.localPosition.dy.toInt());
             }
