@@ -4,8 +4,6 @@ import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_filament/ffi/ffi_native/ffi_native.dart';
-import 'package:flutter_filament/ffi/ffi_native/generated_bindings_native.dart';
 import 'package:flutter_filament/filament_controller.dart';
 import 'package:flutter_filament/animations/animation_data.dart';
 import 'package:flutter_filament/rendering_surface.dart';
@@ -132,7 +130,7 @@ class FilamentControllerFFI extends FilamentController {
   Future setFrameRate(int framerate) async {
     final interval = 1000.0 / framerate;
     set_frame_interval_ffi(interval);
-    dev.log("Set frame interval to $interval");
+    print("Set frame interval to $interval");
   }
 
   @override
@@ -174,7 +172,7 @@ class FilamentControllerFFI extends FilamentController {
       await _channel.invokeMethod(
           "destroyTexture", textureDetails.value!.textureId);
     }
-    dev.log("Texture destroyed");
+    print("Texture destroyed");
   }
 
   bool _creating = false;
@@ -183,7 +181,7 @@ class FilamentControllerFFI extends FilamentController {
   /// Called by `FilamentWidget`. You do not need to call this yourself.
   ///
   @override
-  Future createViewer() async {
+  Future createViewer({bool async = false}) async {
     if (_creating) {
       throw Exception(
           "An existing call to createViewer is pending completion.");
@@ -205,11 +203,15 @@ class FilamentControllerFFI extends FilamentController {
           "Texture already exists, make sure you call destroyTexture first");
     }
 
+    print("Getting resource loader address");
+
     var loader = Pointer<Void>.fromAddress(
         await _channel.invokeMethod("getResourceLoaderWrapper"));
     if (loader == nullptr) {
       throw Exception("Failed to get resource loader");
     }
+
+    print("Got resource loader address, getting render callback");
 
     // if (!kIsWeb && Platform.isWindows && requiresTextureWidget) {
     //   _driver = Pointer<Void>.fromAddress(
@@ -225,20 +227,41 @@ class FilamentControllerFFI extends FilamentController {
 
     var renderingSurface = await _createRenderingSurface();
 
-    dev.log("Got rendering surface");
-
     final uberarchivePtr = uberArchivePath != null
         ? uberArchivePath!.toNativeUtf8(allocator: allocator).cast<Char>()
         : nullptr.cast<Char>();
 
-    _viewer = create_filament_viewer_ffi(
-        Pointer<Void>.fromAddress(renderingSurface.sharedContext),
-        _driver,
-        uberarchivePtr,
-        loader,
-        renderCallback,
-        renderCallbackOwner);
-    dev.log("Created viewer");
+    if (async) {
+      final out = allocator<Pointer<Void>>();
+
+      create_filament_viewer_async_ffi(
+          Pointer<Void>.fromAddress(renderingSurface.sharedContext),
+          _driver,
+          uberarchivePtr,
+          loader,
+          renderCallback,
+          renderCallbackOwner,
+          out);
+      int iter = 0;
+      while (out.value == nullptr) {
+        await Future.delayed(const Duration(milliseconds: 20));
+        if (iter > 100) {
+          throw Exception("Timeout trying to instantiate async viewer");
+        }
+        iter++;
+        _viewer = out.value;
+        allocator.free(out);
+      }
+    } else {
+      _viewer = create_filament_viewer_ffi(
+          Pointer<Void>.fromAddress(renderingSurface.sharedContext),
+          _driver,
+          uberarchivePtr,
+          loader,
+          renderCallback,
+          renderCallbackOwner);
+    }
+    print("Created viewer");
     if (_viewer == nullptr) {
       throw Exception("Failed to create viewer. Check logs for details");
     }
@@ -247,10 +270,8 @@ class FilamentControllerFFI extends FilamentController {
 
     create_swap_chain_ffi(_viewer, renderingSurface.surface,
         _rect.value!.width.toInt(), _rect.value!.height.toInt());
-    dev.log("Created swap chain");
+
     if (renderingSurface.textureHandle != 0) {
-      dev.log(
-          "Creating render target from native texture  ${renderingSurface.textureHandle}");
       create_render_target_ffi(_viewer, renderingSurface.textureHandle,
           _rect.value!.width.toInt(), _rect.value!.height.toInt());
     }
@@ -259,7 +280,7 @@ class FilamentControllerFFI extends FilamentController {
         textureId: renderingSurface.flutterTextureId,
         width: _rect.value!.width.toInt(),
         height: _rect.value!.height.toInt());
-    dev.log("texture details ${textureDetails.value}");
+
     update_viewport_and_camera_projection_ffi(
         _viewer, _rect.value!.width.toInt(), _rect.value!.height.toInt(), 1.0);
     hasViewer.value = true;
@@ -345,12 +366,17 @@ class FilamentControllerFFI extends FilamentController {
     if (_viewer == nullptr) {
       throw Exception("Cannot resize without active viewer");
     }
-
+    int iter = 0;
     while (_resizing) {
       await Future.delayed(Duration(milliseconds: 100));
+      if (iter > 10) {
+        throw Exception("Timed out waiting for previous resize to complete");
+      }
+      iter++;
     }
 
     try {
+      print("Resizing to ${_rect.value}");
       _resizing = true;
 
       set_rendering_ffi(_viewer, false);
@@ -366,7 +392,7 @@ class FilamentControllerFFI extends FilamentController {
         }
       }
       // else if (!kIsWeb && Platform.isWindows) {
-      //   dev.log("Resizing window with rect $_rect");
+      //   print("Resizing window with rect $_rect");
       //   await _channel.invokeMethod("resizeWindow", [
       //     _rect.value!.width,
       //     _rect.value!.height,
@@ -389,7 +415,7 @@ class FilamentControllerFFI extends FilamentController {
       }
 
       if (renderingSurface.textureHandle != 0) {
-        dev.log(
+        print(
             "Creating render target from native texture  ${renderingSurface.textureHandle}");
         create_render_target_ffi(_viewer, renderingSurface.textureHandle,
             _rect.value!.width.toInt(), _rect.value!.height.toInt());
@@ -449,24 +475,27 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
-  Future loadSkybox(String skyboxPath) async {
+  Future loadSkybox(String skyboxPath, {bool async = false}) async {
     if (_viewer == nullptr) {
       throw Exception("No viewer available, ignoring");
     }
+
     var ptr = skyboxPath.toNativeUtf8(allocator: allocator);
-    load_skybox_ffi(_viewer, ptr.cast<Char>());
+    load_skybox_ffi(_viewer, ptr.cast<Char>(), async);
     allocator.free(ptr);
   }
 
   @override
-  Future loadIbl(String lightingPath, {double intensity = 30000}) async {
+  Future loadIbl(String lightingPath,
+      {double intensity = 30000, bool async = false}) async {
     if (_viewer == nullptr) {
       throw Exception("No viewer available, ignoring");
     }
     load_ibl_ffi(
         _viewer,
         lightingPath.toNativeUtf8(allocator: allocator).cast<Char>(),
-        intensity);
+        intensity,
+        async);
   }
 
   @override

@@ -109,7 +109,7 @@ abstract class FilamentController {
   /// When the dimensions are available, [createViewer] will then dispatch a request to the native platform to create a hardware texture (Metal on iOS, OpenGL on Linux, GLES on Android and Windows) and a FilamentViewer (the main interface for manipulating the 3D scene) .
   /// [FilamentWidget] will be notified that a rendering surface is available and will replace the empty Container with the appropriate widget (Texture on iOS/MacOS/Android, transparency on Windows and WebGL to show the underlying window/canvas).
   ///
-  Future createViewer();
+  Future createViewer({bool async = false});
 
   ///
   /// Sets the dimensions of the viewport and pixel ratio (obtained from [MediaQuery]) to be used the next time [resize] or [createViewer] is called.
@@ -150,7 +150,7 @@ abstract class FilamentController {
   ///
   /// Load a skybox from [skyboxPath] (which must be a .ktx file)
   ///
-  Future loadSkybox(String skyboxPath);
+  Future loadSkybox(String skyboxPath, {bool async});
 
   ///
   /// Removes the skybox from the scene.
@@ -161,7 +161,7 @@ abstract class FilamentController {
   /// Loads an image-based light from the specified path at the given intensity.
   /// Only one IBL can be active at any given time; if an IBL has already been loaded, it will be replaced.
   ///
-  Future loadIbl(String lightingPath, {double intensity = 30000});
+  Future loadIbl(String lightingPath, {double intensity = 30000, bool async});
 
   ///
   /// Rotates the IBL & skybox.
