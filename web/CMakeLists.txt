@@ -12,6 +12,7 @@ set(PLUGIN_NAME "flutter_filament_plugin")
 set(EMCC_CFLAGS --bind)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_TABLE_GROWTH=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_MEMORY_GROWTH=1)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sINITIAL_MEMORY=128MB)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sEXPORT_NAME=${PLUGIN_NAME})
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMAIN_MODULE)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMODULARIZE)
@@ -20,6 +21,7 @@ set(EMCC_CFLAGS ${EMCC_CFLAGS} -sEXPORTED_RUNTIME_METHODS=wasmExports,wasmTable)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sFULL_ES3)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sASSERTIONS)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sPTHREAD_POOL_SIZE=1)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sPROXY_TO_PTHREAD=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_BLOCKING_ON_MAIN_THREAD=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sOFFSCREEN_FRAMEBUFFER)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sNO_DISABLE_EXCEPTION_CATCHING)
@@ -227,16 +229,20 @@ target_link_libraries(${PLUGIN_NAME}
 )
 
 add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
-    COMMAND dart run ffigen --config ${CMAKE_CURRENT_SOURCE_DIR}/ffigen.yaml WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../
-    COMMAND ${CMAKE_COMMAND} -DINPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/ffi/ffi_web/generated_bindings_web.dart -DOUTPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/ffi/ffi_web/generated_bindings_web.dart "-DTO_REPLACE=symbol: '" "-DREPLACEMENT=symbol: '_" -P ${CMAKE_CURRENT_SOURCE_DIR}/replace_in_file.cmake 
-    VERBATIM
+    COMMAND dart run ffigen --config ${CMAKE_CURRENT_SOURCE_DIR}/ffigen_wasm.yaml WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../
+    COMMAND dart run ffigen --config ${CMAKE_CURRENT_SOURCE_DIR}/ffigen_js.yaml WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../
+    COMMAND ${CMAKE_COMMAND} -DINPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/ffi/web_wasm/generated_bindings.dart -DOUTPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/ffi/web_wasm/generated_bindings.dart "-DTO_REPLACE=symbol: '" "-DREPLACEMENT=symbol: '_" -P ${CMAKE_CURRENT_SOURCE_DIR}/replace_in_file.cmake 
+    COMMAND ${CMAKE_COMMAND} -DINPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/ffi/web_js/generated_bindings.dart -DOUTPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../lib/ffi/web_js/generated_bindings.dart "-DTO_REPLACE=import 'dart:ffi' as ffi;" "-DREPLACEMENT=import 'package:wasm_ffi/wasm_ffi.dart' as ffi;" -P ${CMAKE_CURRENT_SOURCE_DIR}/replace_in_file.cmake VERBATIM
+    COMMAND dart run build_runner build WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../
 )
 
 add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/js/flutter_filament_plugin.worker.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/
-    COMMAND ${CMAKE_COMMAND} -DINPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/flutter_filament_plugin.js -DOUTPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/flutter_filament_plugin.js "-DTO_REPLACE=var handlers = [];" "-DREPLACEMENT=var handlers = ['loadFlutterAsset'];" -P ${CMAKE_CURRENT_SOURCE_DIR}/replace_in_file.cmake 
-    # COMMAND flutter build web --profile --wasm --wasm-opt debug WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../example/
-    # COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/js/main.dart.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/build/web_wasm/
+    #COMMAND ${CMAKE_COMMAND} -DINPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/flutter_filament_plugin.js -DOUTPUTFILE=${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/flutter_filament_plugin.js "-DTO_REPLACE=var handlers = [];" "-DREPLACEMENT=var handlers = ['loadFlutterAsset'];" -P ${CMAKE_CURRENT_SOURCE_DIR}/replace_in_file.cmake 
+    #COMMAND flutter build web --profile --wasm --wasm-opt debug WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../example/
+    #COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/js/flutter_filament_plugin.worker.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/assets/web/
+    #COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/js/main.dart.js ${CMAKE_CURRENT_SOURCE_DIR}/../example/build/web_wasm/
+    COMMAND flutter build web --profile WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../example/
+    
     VERBATIM
 )
 
