@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_filament/animations/animation_data.dart';
 import 'package:flutter_filament/filament_controller.dart';
 import 'package:flutter_filament_example/main.dart';
@@ -58,14 +57,16 @@ class _AssetSubmenuState extends State<AssetSubmenu> {
             await widget.controller.addBoneAnimation(
                 ExampleWidgetState.assets.last,
                 BoneAnimationData(
-                    "Bone",
+                    ["Bone"],
                     ["Cylinder"],
                     List.generate(
                         60,
-                        (idx) => v.Quaternion.axisAngle(
-                                v.Vector3(0, 0, 1), pi * 8 * (idx / 60))
-                            .normalized()),
-                    List.generate(60, (idx) => v.Vector3.zero()),
+                        (idx) => [
+                              v.Quaternion.axisAngle(
+                                      v.Vector3(0, 0, 1), pi * 8 * (idx / 60))
+                                  .normalized()
+                            ]),
+                    List.generate(60, (idx) => [v.Vector3.zero()]),
                     1000 / 60.0));
           },
           child: const Text('Set bone transform animation for Cylinder')),
@@ -229,8 +230,9 @@ class _AssetSubmenuState extends State<AssetSubmenu> {
               if (ExampleWidgetState.hasSkybox) {
                 widget.controller.removeSkybox();
               } else {
-                widget.controller
-                    .loadSkybox('assets/default_env/default_env_skybox.ktx');
+                widget.controller.loadSkybox(
+                    'assets/default_env/default_env_skybox.ktx',
+                    async: true);
               }
               ExampleWidgetState.hasSkybox = !ExampleWidgetState.hasSkybox;
             },
@@ -239,8 +241,9 @@ class _AssetSubmenuState extends State<AssetSubmenu> {
                 : 'Load skybox')),
         MenuItemButton(
             onPressed: () {
-              widget.controller
-                  .loadIbl('assets/default_env/default_env_ibl.ktx');
+              widget.controller.loadIbl(
+                  'assets/default_env/default_env_ibl.ktx',
+                  async: true);
             },
             child: const Text('Load IBL')),
         MenuItemButton(
