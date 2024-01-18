@@ -1,0 +1,15 @@
+targets:
+  flutter_filament:
+    sources: 
+      - $package$
+      - lib/$lib$
+      - lib/ffi/web_js/generated_bindings.dart
+      - lib/ffi/build/builder.dart
+    builders:
+builders:
+  'flutter_filament:ffiBuilder':
+    import: "package:flutter_filament/ffi/build/builder.dart"
+    builder_factories: ["ffiBuilder"]
+    build_extensions: {"lib/ffi/web_js/generated_bindings.dart": ["lib/ffi/web_js/generated_bindings.g.dart"]}
+    build_to: source
+    auto_apply: root_package
