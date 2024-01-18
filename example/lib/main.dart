@@ -94,13 +94,14 @@ class ExampleWidgetState extends State<ExampleWidget> {
         await Future.delayed(const Duration(milliseconds: 100));
 
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-          await _filamentController!.createViewer();
-          await _filamentController!
-              .loadSkybox("assets/default_env/default_env_skybox.ktx");
+          await _filamentController!.createViewer(async: true);
+          await _filamentController!.loadSkybox(
+              "assets/default_env/default_env_skybox.ktx",
+              async: true);
 
           await _filamentController!.setRendering(true);
-          assets.add(
-              await _filamentController!.loadGlb("assets/shapes/shapes.glb"));
+          assets.add(await _filamentController!
+              .loadGlb("assets/shapes/shapes.glb", async: true));
           ExampleWidgetState.animations =
               await _filamentController!.getAnimationNames(assets.first);
           hasSkybox = true;
@@ -151,7 +152,7 @@ class ExampleWidgetState extends State<ExampleWidget> {
           height: 200,
           width: 300,
           child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
               height: 100,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
@@ -197,7 +198,7 @@ class ExampleWidgetState extends State<ExampleWidget> {
                 GestureDetector(
                     onTap: () async {
                       await _filamentController!
-                          .loadGlb('assets/shapes/shapes.glb');
+                          .loadGlb('assets/shapes/shapes.glb', async: true);
                     },
                     child: Container(
                         color: Colors.transparent,
