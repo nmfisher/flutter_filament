@@ -11,7 +11,6 @@ extern "C" {
 /// This header replicates most of the methods in FlutterFilamentApi.h, and is only intended to be used to generate client FFI bindings.
 /// The intention is that calling one of these methods will call its respective method in FlutterFilamentApi.h, but wrapped in some kind of thread runner to ensure thread safety. 
 /// 
-
 typedef int32_t EntityId;
 typedef void (*FilamentRenderCallback)(void* const owner);
 
@@ -21,6 +20,13 @@ FLUTTER_PLUGIN_EXPORT void* const create_filament_viewer_ffi(
     const char* uberArchivePath, 
     const void* const loader, // should be const ResourceLoaderWrapper* const
     void (*renderCallback)(void* const renderCallbackOwner), void* const renderCallbackOwner);
+FLUTTER_PLUGIN_EXPORT void create_filament_viewer_async_ffi(
+    void* const context, 
+    void* const platform, 
+    const char* uberArchivePath, 
+    const void* const loader, // should be const ResourceLoaderWrapper* const
+    void (*renderCallback)(void* const renderCallbackOwner), void* const renderCallbackOwner,
+    void **out);
 FLUTTER_PLUGIN_EXPORT void create_swap_chain_ffi(void* const viewer, void* const surface, uint32_t width, uint32_t height);
 FLUTTER_PLUGIN_EXPORT void destroy_swap_chain_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT void create_render_target_ffi(void* const viewer, intptr_t nativeTextureId, uint32_t width, uint32_t height);
@@ -36,8 +42,8 @@ FLUTTER_PLUGIN_EXPORT void set_background_image_ffi(void* const viewer, const ch
 FLUTTER_PLUGIN_EXPORT void set_background_image_position_ffi(void* const viewer, float x, float y, bool clamp);
 FLUTTER_PLUGIN_EXPORT void set_tone_mapping_ffi(void* const viewer, int toneMapping);
 FLUTTER_PLUGIN_EXPORT void set_bloom_ffi(void* const viewer, float strength);
-FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void* const viewer, const char *skyboxPath);
-FLUTTER_PLUGIN_EXPORT void load_ibl_ffi(void* const viewer, const char *iblPath, float intensity);
+FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void* const viewer, const char *skyboxPath, bool async);
+FLUTTER_PLUGIN_EXPORT void load_ibl_ffi(void* const viewer, const char *iblPath, float intensity, bool async);
 FLUTTER_PLUGIN_EXPORT void remove_skybox_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT void remove_ibl_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT EntityId add_light_ffi(void* const viewer, uint8_t type, float colour, float intensity, float posX, float posY, float posZ, float dirX, float dirY, float dirZ, bool shadows);

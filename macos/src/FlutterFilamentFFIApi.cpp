@@ -77,10 +77,13 @@ public:
   void *const createViewer(void *const context, void *const platform,
                            const char *uberArchivePath,
                            const ResourceLoaderWrapper *const loader,
-                           void (*renderCallback)(void *), void *const owner) {
+                           void (*renderCallback)(void *), 
+                           void *const owner,
+                           void **out) {
+                            Log("Out is %lu", out);
     _renderCallback = renderCallback;
     _renderCallbackOwner = owner;
-    std::packaged_task<FilamentViewer *()> lambda([&]() mutable {
+    std::packaged_task<FilamentViewer *()> lambda([=]() mutable {
       #ifdef __EMSCRIPTEN__
 
         EmscriptenWebGLContextAttributes attr;
@@ -108,12 +111,19 @@ public:
           std::cout << "Failed to make context current." << std::endl;
           return (FilamentViewer*)nullptr;
         }
-        return new FilamentViewer((void* const) emContext, loader, platform, uberArchivePath);
+        _viewer = new FilamentViewer((void* const) emContext, loader, platform, uberArchivePath);
       #else
-        return new FilamentViewer(context, loader, platform, uberArchivePath);
+        _viewer = new FilamentViewer(context, loader, platform, uberArchivePath);
       #endif
+      if(out) {
+          *out = _viewer;
+      }
+      return _viewer;
     });
     auto fut = add_task(lambda);
+    if(out) {
+      return nullptr;
+    }
     fut.wait();
     _viewer = fut.get();
     return (void *const)_viewer;
@@ -139,7 +149,7 @@ public:
   void doRender() {
     auto now = std::chrono::high_resolution_clock::now();
     auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-    render(_viewer, nanos, nullptr, nullptr, nullptr);
+    render(_viewer, 0, nullptr, nullptr, nullptr);
     _lastRenderTime = std::chrono::high_resolution_clock::now();
         
     #ifdef __EMSCRIPTEN__
@@ -193,7 +203,22 @@ FLUTTER_PLUGIN_EXPORT void *const create_filament_viewer_ffi(
     _rl = new RenderLoop();
   }
   return _rl->createViewer(context, platform, uberArchivePath, (const ResourceLoaderWrapper* const)loader,
-                           renderCallback, renderCallbackOwner);
+                           renderCallback, renderCallbackOwner, nullptr);
+}
+
+FLUTTER_PLUGIN_EXPORT void create_filament_viewer_async_ffi(
+    void *const context, 
+    void *const platform, 
+    const char *uberArchivePath,
+    const void* const loader, // must be const ResourceLoaderWrapper *const loader,
+    void (*renderCallback)(void *const renderCallbackOwner),
+    void *const renderCallbackOwner,
+    void **out) {
+  if (!_rl) {
+    _rl = new RenderLoop();
+  }
+  _rl->createViewer(context, platform, uberArchivePath, (const ResourceLoaderWrapper* const)loader,
+                           renderCallback, renderCallbackOwner, out);
 }
 
 FLUTTER_PLUGIN_EXPORT void destroy_filament_viewer_ffi(void *const viewer) {
@@ -345,18 +370,24 @@ FLUTTER_PLUGIN_EXPORT void set_bloom_ffi(void *const viewer, float strength) {
   fut.wait();
 }
 FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void *const viewer,
-                                           const char *skyboxPath) {
-  std::packaged_task<void()> lambda([&] { load_skybox(viewer, skyboxPath); });
+                                           const char *skyboxPath, bool async) {
+  std::string skyboxPathString(skyboxPath);
+  std::packaged_task<void()> lambda([=] { load_skybox(viewer, skyboxPathString.c_str()); });
   auto fut = _rl->add_task(lambda);
-  fut.wait();
+  if(!async) {
+    fut.wait();
+  }
 }
 FLUTTER_PLUGIN_EXPORT void load_ibl_ffi(void *const viewer, const char *iblPath,
-                                        float intensity) {
+                                        float intensity, bool async) {
   std::packaged_task<void()> lambda(
-      [&] { load_ibl(viewer, iblPath, intensity); });
+      [=] { load_ibl(viewer, iblPath, intensity); });
   auto fut = _rl->add_task(lambda);
-  fut.wait();
+  if(!async) {
+    fut.wait();
+  }
 }
+
 FLUTTER_PLUGIN_EXPORT void remove_skybox_ffi(void *const viewer) {
   std::packaged_task<void()> lambda([&] { remove_skybox(viewer); });
   auto fut = _rl->add_task(lambda);
