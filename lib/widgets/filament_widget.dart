@@ -165,7 +165,6 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
   bool _resizing = false;
 
   Future _resize() {
-    print("Resizing widget");
     final completer = Completer();
     // resizing the window can be sluggish (particular in debug mode), exacerbated when simultaneously recreating the swapchain and resize the window.
     // to address this, whenever the widget is resized, we set a timer for Xms in the future.
@@ -182,8 +181,12 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
       if (!mounted) {
         return;
       }
+      int iter = 0;
       while (_resizing) {
         await Future.delayed(const Duration(milliseconds: 20));
+        if (iter > 10) {
+          throw Exception("Timed out waiting for previous resize to complete");
+        }
       }
 
       _resizing = true;
