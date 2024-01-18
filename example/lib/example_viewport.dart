@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_filament/filament_controller.dart';
 import 'package:flutter_filament/widgets/filament_gesture_detector.dart';
@@ -18,6 +19,7 @@ class ExampleViewport extends StatelessWidget {
             child: FilamentGestureDetector(
                 showControlOverlay: true,
                 controller: controller!,
+                enablePick: !kIsWeb,
                 child: FilamentWidget(
                   controller: controller!,
                 )))
