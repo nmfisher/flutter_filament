@@ -71,6 +71,8 @@ class FilamentControllerFFI extends FilamentController {
 
     if (kIsWeb) {
       requiresTextureWidget = false;
+    } else {
+      requiresTextureWidget = true;
     }
 
     // on some platforms, we ignore the resize event raised by the Flutter RenderObserver
@@ -483,7 +485,16 @@ class FilamentControllerFFI extends FilamentController {
     }
 
     var ptr = skyboxPath.toNativeUtf8(allocator: allocator);
-    load_skybox_ffi(_viewer, ptr.cast<Char>(), async);
+    if (async) {
+      final done = allocator<Bool>();
+      load_skybox_ffi(_viewer, ptr.cast<Char>(), done);
+      while (done.value != true) {
+        await Future.delayed(const Duration(milliseconds: 5));
+      }
+      allocator.free(done);
+    } else {
+      load_skybox_ffi(_viewer, ptr.cast<Char>(), nullptr);
+    }
     allocator.free(ptr);
   }
 
@@ -493,11 +504,22 @@ class FilamentControllerFFI extends FilamentController {
     if (_viewer == nullptr) {
       throw Exception("No viewer available, ignoring");
     }
-    load_ibl_ffi(
-        _viewer,
-        lightingPath.toNativeUtf8(allocator: allocator).cast<Char>(),
-        intensity,
-        async);
+    var ptr = lightingPath.toNativeUtf8(allocator: allocator).cast<Char>();
+    if (async) {
+      final done = allocator<Bool>();
+      load_ibl_ffi(_viewer, ptr, intensity, done);
+      while (done.value != true) {
+        await Future.delayed(const Duration(milliseconds: 5));
+      }
+      allocator.free(done);
+    } else {
+      load_ibl_ffi(
+          _viewer,
+          lightingPath.toNativeUtf8(allocator: allocator).cast<Char>(),
+          intensity,
+          nullptr);
+    }
+    allocator.free(ptr);
   }
 
   @override
