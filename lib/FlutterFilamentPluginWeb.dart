@@ -27,10 +27,9 @@ class FlutterFilamentPluginWeb {
   Future handleMethodCall(MethodCall call) async {
     switch (call.method) {
       case "createTexture":
-        // we could create the WebGL context here (i.e. on the main/Flutter thread):
         // var context = flutter_filament_web_create_gl_context();
-        // however, this leads to unstable behaviour
-        // which seem to be avoided if we create the context on the FFI thread (see FlutterFilamentFFIApi.cpp)
+        // creating the WebGL context here (i.e. on the main/Flutter thread) leads to unstable behaviour
+        //  which seem to be avoided if we create the context on the FFI thread (see FlutterFilamentFFIApi.cpp)
         // (it's uglier, but it works)
         // so here, we just return nullptr
         var context = 0;
