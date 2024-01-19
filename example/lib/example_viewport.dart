@@ -20,6 +20,7 @@ class ExampleViewport extends StatelessWidget {
                 showControlOverlay: true,
                 controller: controller!,
                 enablePick: !kIsWeb,
+                enableGestures: true,
                 child: FilamentWidget(
                   controller: controller!,
                 )))
