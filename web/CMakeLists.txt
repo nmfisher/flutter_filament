@@ -11,8 +11,8 @@ set(PLUGIN_NAME "flutter_filament_plugin")
 
 set(EMCC_CFLAGS --bind)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_TABLE_GROWTH=1)
-set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_MEMORY_GROWTH=1)
-# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sINITIAL_MEMORY=128MB)
+# set(EMCC_CFLAGS ${EMCC_CFLAGS} -sALLOW_MEMORY_GROWTH=1)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -sINITIAL_MEMORY=256MB)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sEXPORT_NAME=${PLUGIN_NAME})
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMAIN_MODULE)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMODULARIZE)
@@ -29,10 +29,13 @@ set(EMCC_CFLAGS ${EMCC_CFLAGS} -sNO_DISABLE_EXCEPTION_CATCHING)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sUSE_WEBGL2=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sFETCH=1)
 set(EMCC_CFLAGS ${EMCC_CFLAGS} -sMIN_WEBGL_VERSION=2)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} -g0)
+set(EMCC_CFLAGS ${EMCC_CFLAGS} --closure 0)
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-literal-operator -stdlib=libc++ -std=c++17 -fPIC -pthread -O3")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-literal-operator -stdlib=libc++ -std=c++17 -fPIC -pthread -Oz -g0")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Oz -g0")
 
 add_link_options(${EMCC_CFLAGS})
 
