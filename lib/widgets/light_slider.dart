@@ -14,6 +14,7 @@ class LightSliderWidget extends StatefulWidget {
   final double initialColor;
   final double initialIntensity;
   final bool initialCastShadows;
+  final bool showControls;
 
   LightSliderWidget(
       {super.key,
@@ -22,6 +23,7 @@ class LightSliderWidget extends StatefulWidget {
       this.initialColor = 6500,
       this.initialIntensity = 100000,
       this.initialCastShadows = true,
+      this.showControls = false,
       v.Vector3? initialDirection,
       v.Vector3? initialPosition}) {
     this.initialDirection = initialDirection ?? v.Vector3(0, 0.5, -1);
@@ -73,7 +75,7 @@ class _IblRotationSliderWidgetState extends State<LightSliderWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_light == null) {
+    if (_light == null || !widget.showControls) {
       return Container();
     }
     return Theme(
