@@ -80,7 +80,6 @@ public:
                            void (*renderCallback)(void *), 
                            void *const owner,
                            void **out) {
-                            Log("Out is %lu", out);
     _renderCallback = renderCallback;
     _renderCallbackOwner = owner;
     std::packaged_task<FilamentViewer *()> lambda([=]() mutable {
