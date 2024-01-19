@@ -8,3 +8,5 @@ export 'package:ffi/ffi.dart';
 export "generated_bindings_native.dart";
 
 const allocator = calloc;
+
+final ffiInitialization = Future.value(true);

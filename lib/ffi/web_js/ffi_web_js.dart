@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_filament/FlutterFilamentPluginWeb.dart';
 
 import 'generated_bindings.g.dart';
 import 'package:inject_js/inject_js.dart' as Js;
@@ -28,9 +29,7 @@ late ffi.Module? _module;
 
 typedef EntityId = ffi.Int32;
 
-// ffi.Allocator getAllocator() {
-//   return _dl.boundMemory;
-// }
+Future get ffiInitialization => FlutterFilamentPluginWeb.isInitialized;
 
 Future initializeBindings(AssetBundle assetBundle) async {
   WidgetsFlutterBinding.ensureInitialized();
