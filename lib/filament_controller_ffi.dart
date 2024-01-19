@@ -20,13 +20,10 @@ class FilamentControllerFFI extends FilamentController {
   ///
   /// This will be set on constructor invocation.
   /// On Windows, this will be set to the value returned by the [usesBackingWindow] method call.
-  /// On Web, this will always be true;
   /// On other platforms, this will always be false.
   ///
-  bool _usesBackingWindow = false;
-
   @override
-  bool get requiresTextureWidget => !_usesBackingWindow;
+  bool requiresTextureWidget = false;
 
   double _pixelRatio = 1.0;
 
@@ -72,6 +69,10 @@ class FilamentControllerFFI extends FilamentController {
     _viewer = nullptr;
     _driver = nullptr;
 
+    if (kIsWeb) {
+      requiresTextureWidget = false;
+    }
+
     // on some platforms, we ignore the resize event raised by the Flutter RenderObserver
     // in favour of a window-level event passed via the method channel.
     // (this is because there is no apparent way to exactly synchronize resizing a Flutter widget and resizing a pixel buffer, so we need
@@ -99,7 +100,7 @@ class FilamentControllerFFI extends FilamentController {
     //   }
     //   if (Platform.isWindows) {
     //     _channel.invokeMethod("usesBackingWindow").then((result) {
-    //       _usesBackingWindow = result;
+    //       requiresTextureWidget = !result;
     //     });
     //   }
     // }
@@ -182,6 +183,10 @@ class FilamentControllerFFI extends FilamentController {
   ///
   @override
   Future createViewer({bool async = false}) async {
+    if (kIsWeb) {
+      await ffiInitialization;
+    }
+
     if (_creating) {
       throw Exception(
           "An existing call to createViewer is pending completion.");
@@ -381,11 +386,8 @@ class FilamentControllerFFI extends FilamentController {
 
       set_rendering_ffi(_viewer, false);
 
-      if (!_usesBackingWindow) {
+      if (requiresTextureWidget || kIsWeb) {
         destroy_swap_chain_ffi(_viewer);
-      }
-
-      if (requiresTextureWidget) {
         if (textureDetails.value != null) {
           await _channel.invokeMethod(
               "destroyTexture", textureDetails.value!.textureId);
@@ -409,7 +411,7 @@ class FilamentControllerFFI extends FilamentController {
 
       _assetManager = get_asset_manager(_viewer);
 
-      if (!_usesBackingWindow) {
+      if (requiresTextureWidget || kIsWeb) {
         create_swap_chain_ffi(_viewer, renderingSurface.surface,
             _rect.value!.width.toInt(), _rect.value!.height.toInt());
       }

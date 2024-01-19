@@ -292,6 +292,7 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
                   child: widget.initial ?? Container(color: Colors.red))
             ]);
           }
+
           // see [FilamentControllerFFI.resize] for an explanation of how we deal with resizing
           var texture = Texture(
             key: ObjectKey(
@@ -303,8 +304,7 @@ class _SizedFilamentWidgetState extends State<_SizedFilamentWidget> {
 
           return Stack(children: [
             Positioned.fill(
-                child: kIsWeb == false &&
-                        (Platform.isLinux || Platform.isWindows)
+                child: Platform.isLinux || Platform.isWindows
                     ? Transform(
                         alignment: Alignment.center,
                         transform: Matrix4.rotationX(
