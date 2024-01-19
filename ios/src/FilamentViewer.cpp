@@ -236,7 +236,7 @@ namespace polyvox
               .package(IMAGE_IMAGE_DATA, IMAGE_IMAGE_SIZE)
               .build(*_engine);
       _imageMaterial->setDefaultParameter("showImage", 0);
-      _imageMaterial->setDefaultParameter("backgroundColor", RgbaType::sRGB, float4(0.5f, 0.5f, 0.5f, 1.0f));
+      _imageMaterial->setDefaultParameter("backgroundColor", RgbaType::sRGB, float4(1.0f, 1.0f, 1.0f, 0.0f));
       _imageMaterial->setDefaultParameter("image", _imageTexture, _imageSampler);
     }
     catch (...)
@@ -506,6 +506,7 @@ namespace polyvox
 
   void FilamentViewer::setBackgroundColor(const float r, const float g, const float b, const float a)
   {
+    Log("Setting background color to rgba(%f,%f,%f,%f)", r, g, b, a);
     _imageMaterial->setDefaultParameter("showImage", 0);
     _imageMaterial->setDefaultParameter("backgroundColor", RgbaType::sRGB, float4(r, g, b, a));
     _imageMaterial->setDefaultParameter("transform", _imageScale);
