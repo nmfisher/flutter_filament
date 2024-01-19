@@ -65,6 +65,23 @@ class _Allocator implements ffi.Allocator {
 
 const allocator = _Allocator();
 
+extension BoolPointer on ffi.Pointer<ffi.Bool> {
+  bool get value {
+    return flutter_filament_web_get(this.cast<ffi.Char>(), 0) == 1;
+  }
+
+  set value(bool value) {
+    flutter_filament_web_set(this.cast<ffi.Char>(), 0, value ? 1 : 0);
+  }
+
+  void operator []=(int index, bool value) {
+    this.elementAt(index).value = value;
+  }
+
+  ffi.Pointer<ffi.Bool> elementAt(int index) =>
+      ffi.Pointer.fromAddress(address + ffi.sizeOf<ffi.Char>() * index);
+}
+
 extension CharPointer on ffi.Pointer<ffi.Char> {
   int get value {
     return flutter_filament_web_get(this, 0);
