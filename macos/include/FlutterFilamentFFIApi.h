@@ -42,8 +42,8 @@ FLUTTER_PLUGIN_EXPORT void set_background_image_ffi(void* const viewer, const ch
 FLUTTER_PLUGIN_EXPORT void set_background_image_position_ffi(void* const viewer, float x, float y, bool clamp);
 FLUTTER_PLUGIN_EXPORT void set_tone_mapping_ffi(void* const viewer, int toneMapping);
 FLUTTER_PLUGIN_EXPORT void set_bloom_ffi(void* const viewer, float strength);
-FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void* const viewer, const char *skyboxPath, bool async);
-FLUTTER_PLUGIN_EXPORT void load_ibl_ffi(void* const viewer, const char *iblPath, float intensity, bool async);
+FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void* const viewer, const char *skyboxPath, bool* done);
+FLUTTER_PLUGIN_EXPORT void load_ibl_ffi(void* const viewer, const char *iblPath, float intensity, bool* done);
 FLUTTER_PLUGIN_EXPORT void remove_skybox_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT void remove_ibl_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT EntityId add_light_ffi(void* const viewer, uint8_t type, float colour, float intensity, float posX, float posY, float posZ, float dirX, float dirY, float dirZ, bool shadows);
