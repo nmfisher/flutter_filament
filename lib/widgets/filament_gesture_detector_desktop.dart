@@ -145,6 +145,9 @@ class _FilamentGestureDetectorDesktopState
           }
           _pointerMoving = false;
         },
-        child: widget.child);
+        child: Container(
+            color: Colors
+                .transparent, // we need explicit transparency here otherwise a FilamentWidget that doesn't use a Texture widget (e.g. on web) won't register hit tests.
+            child: widget.child));
   }
 }
