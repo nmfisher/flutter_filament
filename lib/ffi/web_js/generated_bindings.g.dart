@@ -480,12 +480,12 @@ void set_bloom_ffi(Pointer<Void> viewer, double strength) {
    _lib.set_bloom_ffi(viewer, strength);
 }
 
-void load_skybox_ffi(Pointer<Void> viewer, Pointer<Char> skyboxPath, bool async1) {
-   _lib.load_skybox_ffi(viewer, skyboxPath, async1);
+void load_skybox_ffi(Pointer<Void> viewer, Pointer<Char> skyboxPath, Pointer<Bool> done) {
+   _lib.load_skybox_ffi(viewer, skyboxPath, done);
 }
 
-void load_ibl_ffi(Pointer<Void> viewer, Pointer<Char> iblPath, double intensity, bool async1) {
-   _lib.load_ibl_ffi(viewer, iblPath, intensity, async1);
+void load_ibl_ffi(Pointer<Void> viewer, Pointer<Char> iblPath, double intensity, Pointer<Bool> done) {
+   _lib.load_ibl_ffi(viewer, iblPath, intensity, done);
 }
 
 void remove_skybox_ffi(Pointer<Void> viewer) {

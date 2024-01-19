@@ -1126,23 +1126,24 @@ external void set_bloom_ffi(
 );
 
 @ffi.Native<
-        ffi.Void Function(
-            ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Bool)>(
+        ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Bool>)>(
     symbol: '_load_skybox_ffi', assetId: 'flutter_filament_plugin')
 external void load_skybox_ffi(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Char> skyboxPath,
-  bool async1,
+  ffi.Pointer<ffi.Bool> done,
 );
 
 @ffi.Native<
-    ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, ffi.Float,
-        ffi.Bool)>(symbol: '_load_ibl_ffi', assetId: 'flutter_filament_plugin')
+        ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
+            ffi.Float, ffi.Pointer<ffi.Bool>)>(
+    symbol: '_load_ibl_ffi', assetId: 'flutter_filament_plugin')
 external void load_ibl_ffi(
   ffi.Pointer<ffi.Void> viewer,
   ffi.Pointer<ffi.Char> iblPath,
   double intensity,
-  bool async1,
+  ffi.Pointer<ffi.Bool> done,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(

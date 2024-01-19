@@ -2340,43 +2340,44 @@ class NativeLibrary {
   void load_skybox_ffi(
     ffi.Pointer<ffi.Void> viewer,
     ffi.Pointer<ffi.Char> skyboxPath,
-    bool async1,
+    ffi.Pointer<ffi.Bool> done,
   ) {
     return _load_skybox_ffi(
       viewer,
       skyboxPath,
-      async1,
+      done,
     );
   }
 
   late final _load_skybox_ffiPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-              ffi.Bool)>>('load_skybox_ffi');
+              ffi.Pointer<ffi.Bool>)>>('load_skybox_ffi');
   late final _load_skybox_ffi = _load_skybox_ffiPtr.asFunction<
-      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, bool)>();
+      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Bool>)>();
 
   void load_ibl_ffi(
     ffi.Pointer<ffi.Void> viewer,
     ffi.Pointer<ffi.Char> iblPath,
     double intensity,
-    bool async1,
+    ffi.Pointer<ffi.Bool> done,
   ) {
     return _load_ibl_ffi(
       viewer,
       iblPath,
       intensity,
-      async1,
+      done,
     );
   }
 
   late final _load_ibl_ffiPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>,
-              ffi.Float, ffi.Bool)>>('load_ibl_ffi');
+              ffi.Float, ffi.Pointer<ffi.Bool>)>>('load_ibl_ffi');
   late final _load_ibl_ffi = _load_ibl_ffiPtr.asFunction<
-      void Function(
-          ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, double, bool)>();
+      void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>, double,
+          ffi.Pointer<ffi.Bool>)>();
 
   void remove_skybox_ffi(
     ffi.Pointer<ffi.Void> viewer,
