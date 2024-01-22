@@ -402,20 +402,45 @@ namespace polyvox
                     asset.boneAnimations.erase(asset.boneAnimations.begin() + i);
                     continue;
                 }
-
-                float frameLengthInMs = animationStatus.frameLengthInMs;
                 
-                int frameNumber = static_cast<int>(elapsedInSecs * 1000.0f / frameLengthInMs) % animationStatus.lengthInFrames;
+                float elapsedFrames = elapsedInSecs * 1000.0f / animationStatus.frameLengthInMs;
+                
+                int currFrame = static_cast<int>(elapsedFrames) % animationStatus.lengthInFrames;
+                float delta = elapsedFrames - currFrame;
+                int nextFrame = currFrame;
+                auto restLocalTransform = asset.initialJointTransforms[animationStatus.boneIndex];
 
                 // offset from the end if reverse
                 if (animationStatus.reverse)
                 {
-                    frameNumber = animationStatus.lengthInFrames - frameNumber;
+                    currFrame = animationStatus.lengthInFrames - currFrame;
+                    if(currFrame > 0) {
+                        nextFrame = currFrame - 1;
+                    } else { 
+                        nextFrame = 0;
+                    }
+                } else { 
+                    if(currFrame < animationStatus.lengthInFrames - 1) {
+                        nextFrame = currFrame + 1;
+                    } else { 
+                        nextFrame = currFrame;
+                    }
                 }
-                updateBoneTransformFromAnimationBuffer(
-                    animationStatus,
-                    frameNumber,
-                    asset);
+                
+                // simple linear interpolation
+                math::mat4f curr = (1 - delta) * (restLocalTransform * animationStatus.frameData[currFrame]);
+                math::mat4f next = delta * (restLocalTransform * animationStatus.frameData[nextFrame]);
+                math::mat4f localTransform = curr + next;
+
+                auto filamentInstance = asset.asset->getInstance();
+                TransformManager &transformManager = _engine->getTransformManager();
+
+                const Entity joint = filamentInstance->getJointsAt(animationStatus.skinIndex)[animationStatus.boneIndex];
+
+                auto jointTransform = transformManager.getInstance(joint);
+        
+                transformManager.setTransform(jointTransform, localTransform);
+        
                 asset.asset->getInstance()->getAnimator()->updateBoneMatrices();
 
                 if (animationStatus.loop && elapsedInSecs >= animationStatus.durationInSecs)
@@ -514,48 +539,6 @@ namespace polyvox
             boneIndex);
         return true;
     }   
-
-    void AssetManager::updateBoneTransformFromAnimationBuffer(
-        const BoneAnimation& animation, 
-        int frameNumber,
-        const SceneAsset& sceneAsset)
-    {
-        auto filamentInstance = sceneAsset.asset->getInstance();
-        TransformManager &transformManager = _engine->getTransformManager();
-
-//        RenderableManager &rm = _engine->getRenderableManager();
-//
-//        auto boneIndex = animation.boneIndex;
-
-        const Entity joint = filamentInstance->getJointsAt(animation.skinIndex)[animation.boneIndex];
-        auto restLocalTransform = sceneAsset.initialJointTransforms[animation.boneIndex];
-
-        math::mat4f localTransform = restLocalTransform * animation.frameData[frameNumber];
-//        math::mat4f localTransform = animation.frameData[frameNumber];
-        auto jointTransform = transformManager.getInstance(joint);
-        transformManager.setTransform(jointTransform, localTransform);
-        // auto globalJointTransform = transformManager.getWorldTransform(jointTransform);
-
-        // for(const auto& entity : animation.meshTargets) {
-
-        //     auto renderableInstance = rm.getInstance(entity);
-            
-        //     math::mat4 inverseGlobalTransform;
-        //     auto xformable = transformManager.getInstance(entity);
-        //     if (xformable) {
-        //         inverseGlobalTransform = inverse(transformManager.getWorldTransformAccurate(xformable));
-        //     }
-            
-        //     auto boneTransform =
-        //                 math::mat4f{ inverseGlobalTransform * globalJointTransform } *
-        //                 inverseBindMatrix;
-        //             rm.setBones(
-        //     renderableInstance,
-        //     &boneTransform,
-        //     1,
-        //     boneIndex);
-        // }        
-    }
 
     void AssetManager::remove(EntityId entityId)
     {

@@ -60,12 +60,11 @@ public:
           elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
         }
         if (_rendering) {
-          auto frameStart = std::chrono::high_resolution_clock::now();
+          // auto frameStart = std::chrono::high_resolution_clock::now();
           doRender();
-          auto frameEnd = std::chrono::high_resolution_clock::now();
+          // auto frameEnd = std::chrono::high_resolution_clock::now();
           // Log("Took %f milliseconds for render",           float(std::chrono::duration_cast<std::chrono::milliseconds>(frameEnd - frameStart).count()));
         }
-
         last = std::chrono::high_resolution_clock::now();
       }
     });
