@@ -2090,6 +2090,35 @@ class NativeLibrary {
   late final _create_swap_chain_ffi = _create_swap_chain_ffiPtr.asFunction<
       void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>, int, int)>();
 
+  void create_swap_chain_async_ffi(
+    ffi.Pointer<ffi.Void> viewer,
+    ffi.Pointer<ffi.Void> surface,
+    int width,
+    int height,
+    ffi.Pointer<ffi.Bool> complete,
+  ) {
+    return _create_swap_chain_async_ffi(
+      viewer,
+      surface,
+      width,
+      height,
+      complete,
+    );
+  }
+
+  late final _create_swap_chain_async_ffiPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Uint32,
+              ffi.Uint32,
+              ffi.Pointer<ffi.Bool>)>>('create_swap_chain_async_ffi');
+  late final _create_swap_chain_async_ffi =
+      _create_swap_chain_async_ffiPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>, int, int,
+              ffi.Pointer<ffi.Bool>)>();
+
   void destroy_swap_chain_ffi(
     ffi.Pointer<ffi.Void> viewer,
   ) {
@@ -2452,6 +2481,55 @@ class NativeLibrary {
   late final _add_light_ffi = _add_light_ffiPtr.asFunction<
       int Function(ffi.Pointer<ffi.Void>, int, double, double, double, double,
           double, double, double, double, bool)>();
+
+  void add_light_async_ffi(
+    ffi.Pointer<ffi.Void> viewer,
+    int type,
+    double colour,
+    double intensity,
+    double posX,
+    double posY,
+    double posZ,
+    double dirX,
+    double dirY,
+    double dirZ,
+    bool shadows,
+    ffi.Pointer<EntityId> out,
+  ) {
+    return _add_light_async_ffi(
+      viewer,
+      type,
+      colour,
+      intensity,
+      posX,
+      posY,
+      posZ,
+      dirX,
+      dirY,
+      dirZ,
+      shadows,
+      out,
+    );
+  }
+
+  late final _add_light_async_ffiPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              ffi.Uint8,
+              ffi.Float,
+              ffi.Float,
+              ffi.Float,
+              ffi.Float,
+              ffi.Float,
+              ffi.Float,
+              ffi.Float,
+              ffi.Float,
+              ffi.Bool,
+              ffi.Pointer<EntityId>)>>('add_light_async_ffi');
+  late final _add_light_async_ffi = _add_light_async_ffiPtr.asFunction<
+      void Function(ffi.Pointer<ffi.Void>, int, double, double, double, double,
+          double, double, double, double, bool, ffi.Pointer<EntityId>)>();
 
   void remove_light_ffi(
     ffi.Pointer<ffi.Void> viewer,
@@ -2867,6 +2945,58 @@ class NativeLibrary {
   late final _set_bone_transform_ffi = _set_bone_transform_ffiPtr.asFunction<
       bool Function(ffi.Pointer<ffi.Void>, int, ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Float>, ffi.Pointer<ffi.Char>)>();
+
+  void add_bone_animation_ffi(
+    ffi.Pointer<ffi.Void> assetManager,
+    int asset,
+    ffi.Pointer<ffi.Float> frameData,
+    int numFrames,
+    ffi.Pointer<ffi.Char> boneName,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> meshNames,
+    int numMeshTargets,
+    double frameLengthInMs,
+    bool isModelSpace,
+    ffi.Pointer<ffi.Bool> completed,
+  ) {
+    return _add_bone_animation_ffi(
+      assetManager,
+      asset,
+      frameData,
+      numFrames,
+      boneName,
+      meshNames,
+      numMeshTargets,
+      frameLengthInMs,
+      isModelSpace,
+      completed,
+    );
+  }
+
+  late final _add_bone_animation_ffiPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Pointer<ffi.Void>,
+              EntityId,
+              ffi.Pointer<ffi.Float>,
+              ffi.Int,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>,
+              ffi.Int,
+              ffi.Float,
+              ffi.Bool,
+              ffi.Pointer<ffi.Bool>)>>('add_bone_animation_ffi');
+  late final _add_bone_animation_ffi = _add_bone_animation_ffiPtr.asFunction<
+      void Function(
+          ffi.Pointer<ffi.Void>,
+          int,
+          ffi.Pointer<ffi.Float>,
+          int,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Pointer<ffi.Char>>,
+          int,
+          double,
+          bool,
+          ffi.Pointer<ffi.Bool>)>();
 
   void set_post_processing_ffi(
     ffi.Pointer<ffi.Void> viewer,

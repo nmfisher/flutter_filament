@@ -424,6 +424,10 @@ void create_swap_chain_ffi(Pointer<Void> viewer, Pointer<Void> surface, int widt
    _lib.create_swap_chain_ffi(viewer, surface, width, height);
 }
 
+void create_swap_chain_async_ffi(Pointer<Void> viewer, Pointer<Void> surface, int width, int height, Pointer<Bool> complete) {
+   _lib.create_swap_chain_async_ffi(viewer, surface, width, height, complete);
+}
+
 void destroy_swap_chain_ffi(Pointer<Void> viewer) {
    _lib.destroy_swap_chain_ffi(viewer);
 }
@@ -500,6 +504,10 @@ int add_light_ffi(Pointer<Void> viewer, int type, double colour, double intensit
   return _lib.add_light_ffi(viewer, type, colour, intensity, posX, posY, posZ, dirX, dirY, dirZ, shadows);
 }
 
+void add_light_async_ffi(Pointer<Void> viewer, int type, double colour, double intensity, double posX, double posY, double posZ, double dirX, double dirY, double dirZ, bool shadows, Pointer<Int32> out) {
+   _lib.add_light_async_ffi(viewer, type, colour, intensity, posX, posY, posZ, dirX, dirY, dirZ, shadows, out);
+}
+
 void remove_light_ffi(Pointer<Void> viewer, int entityId) {
    _lib.remove_light_ffi(viewer, entityId);
 }
@@ -574,6 +582,10 @@ bool set_morph_animation_ffi(Pointer<Void> assetManager, int asset, Pointer<Char
 
 bool set_bone_transform_ffi(Pointer<Void> assetManager, int asset, Pointer<Char> entityName, Pointer<Float> transform, Pointer<Char> boneName) {
   return _lib.set_bone_transform_ffi(assetManager, asset, entityName, transform, boneName);
+}
+
+void add_bone_animation_ffi(Pointer<Void> assetManager, int asset, Pointer<Float> frameData, int numFrames, Pointer<Char> boneName, Pointer<Pointer<Char>> meshNames, int numMeshTargets, double frameLengthInMs, bool isModelSpace, Pointer<Bool> completed) {
+   _lib.add_bone_animation_ffi(assetManager, asset, frameData, numFrames, boneName, meshNames, numMeshTargets, frameLengthInMs, isModelSpace, completed);
 }
 
 void set_post_processing_ffi(Pointer<Void> viewer, bool enabled) {

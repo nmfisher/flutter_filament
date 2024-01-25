@@ -882,6 +882,18 @@ external void create_swap_chain_ffi(
   int height,
 );
 
+@ffi.Native<
+        ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>,
+            ffi.Uint32, ffi.Uint32, ffi.Pointer<ffi.Bool>)>(
+    symbol: 'create_swap_chain_async_ffi', assetId: 'flutter_filament_plugin')
+external void create_swap_chain_async_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+  ffi.Pointer<ffi.Void> surface,
+  int width,
+  int height,
+  ffi.Pointer<ffi.Bool> complete,
+);
+
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(
     symbol: 'destroy_swap_chain_ffi', assetId: 'flutter_filament_plugin')
 external void destroy_swap_chain_ffi(
@@ -1055,6 +1067,36 @@ external int add_light_ffi(
   double dirY,
   double dirZ,
   bool shadows,
+);
+
+@ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>,
+            ffi.Uint8,
+            ffi.Float,
+            ffi.Float,
+            ffi.Float,
+            ffi.Float,
+            ffi.Float,
+            ffi.Float,
+            ffi.Float,
+            ffi.Float,
+            ffi.Bool,
+            ffi.Pointer<EntityId>)>(
+    symbol: 'add_light_async_ffi', assetId: 'flutter_filament_plugin')
+external void add_light_async_ffi(
+  ffi.Pointer<ffi.Void> viewer,
+  int type,
+  double colour,
+  double intensity,
+  double posX,
+  double posY,
+  double posZ,
+  double dirX,
+  double dirY,
+  double dirZ,
+  bool shadows,
+  ffi.Pointer<EntityId> out,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, EntityId)>(
@@ -1253,6 +1295,32 @@ external bool set_bone_transform_ffi(
   ffi.Pointer<ffi.Char> entityName,
   ffi.Pointer<ffi.Float> transform,
   ffi.Pointer<ffi.Char> boneName,
+);
+
+@ffi.Native<
+        ffi.Void Function(
+            ffi.Pointer<ffi.Void>,
+            EntityId,
+            ffi.Pointer<ffi.Float>,
+            ffi.Int,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Int,
+            ffi.Float,
+            ffi.Bool,
+            ffi.Pointer<ffi.Bool>)>(
+    symbol: 'add_bone_animation_ffi', assetId: 'flutter_filament_plugin')
+external void add_bone_animation_ffi(
+  ffi.Pointer<ffi.Void> assetManager,
+  int asset,
+  ffi.Pointer<ffi.Float> frameData,
+  int numFrames,
+  ffi.Pointer<ffi.Char> boneName,
+  ffi.Pointer<ffi.Pointer<ffi.Char>> meshNames,
+  int numMeshTargets,
+  double frameLengthInMs,
+  bool isModelSpace,
+  ffi.Pointer<ffi.Bool> completed,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Bool)>(
