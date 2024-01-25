@@ -28,6 +28,7 @@ FLUTTER_PLUGIN_EXPORT void create_filament_viewer_async_ffi(
     void (*renderCallback)(void* const renderCallbackOwner), void* const renderCallbackOwner,
     void **out);
 FLUTTER_PLUGIN_EXPORT void create_swap_chain_ffi(void* const viewer, void* const surface, uint32_t width, uint32_t height);
+FLUTTER_PLUGIN_EXPORT void create_swap_chain_async_ffi(void* const viewer, void* const surface, uint32_t width, uint32_t height, bool* complete);
 FLUTTER_PLUGIN_EXPORT void destroy_swap_chain_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT void create_render_target_ffi(void* const viewer, intptr_t nativeTextureId, uint32_t width, uint32_t height);
 FLUTTER_PLUGIN_EXPORT void destroy_filament_viewer_ffi(void* const viewer);
@@ -47,6 +48,11 @@ FLUTTER_PLUGIN_EXPORT void load_ibl_ffi(void* const viewer, const char *iblPath,
 FLUTTER_PLUGIN_EXPORT void remove_skybox_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT void remove_ibl_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT EntityId add_light_ffi(void* const viewer, uint8_t type, float colour, float intensity, float posX, float posY, float posZ, float dirX, float dirY, float dirZ, bool shadows);
+FLUTTER_PLUGIN_EXPORT EntityId add_light_ffi(void* const viewer, uint8_t type, float colour, float intensity, float posX, float posY, float posZ, float dirX, float dirY, float dirZ, bool shadows);
+FLUTTER_PLUGIN_EXPORT void add_light_async_ffi(void *const viewer, uint8_t type, float colour,
+                       float intensity, float posX, float posY, float posZ,
+                       float dirX, float dirY, float dirZ, bool shadows, EntityId* out);
+                       
 FLUTTER_PLUGIN_EXPORT void remove_light_ffi(void* const viewer, EntityId entityId);
 FLUTTER_PLUGIN_EXPORT void clear_lights_ffi(void* const viewer);
 FLUTTER_PLUGIN_EXPORT EntityId load_glb_ffi(void* const assetManager, const char *assetPath);
@@ -91,6 +97,17 @@ FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(
 		const char *entityName,
 		const float *const transform,
 		const char *boneName);
+FLUTTER_PLUGIN_EXPORT void add_bone_animation_ffi(
+		void *assetManager,
+		EntityId asset,
+		const float *const frameData,
+		int numFrames,
+		const char *const boneName,
+		const char **const meshNames,
+		int numMeshTargets,
+		float frameLengthInMs,
+		bool isModelSpace, 
+        bool* completed);
 FLUTTER_PLUGIN_EXPORT void set_post_processing_ffi(void* const viewer, bool enabled);
 FLUTTER_PLUGIN_EXPORT void pick_ffi(void* const viewer, int x, int y, EntityId* entityId);
 FLUTTER_PLUGIN_EXPORT void reset_to_rest_pose_ffi(void* const assetManager, EntityId entityId);

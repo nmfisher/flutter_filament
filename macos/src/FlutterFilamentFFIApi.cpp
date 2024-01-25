@@ -21,7 +21,6 @@
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
 
-
 extern "C"
 {
   extern FLUTTER_PLUGIN_EXPORT EMSCRIPTEN_WEBGL_CONTEXT_HANDLE flutter_filament_web_create_gl_context();
@@ -31,6 +30,7 @@ extern "C"
 #include <pthread.h>
 
 using namespace polyvox;
+using namespace std::chrono_literals;
 
 class RenderLoop {
 public:
@@ -42,12 +42,13 @@ public:
         auto now = std::chrono::high_resolution_clock::now();
         float elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
 
-        while(elapsed < 3 * _frameIntervalInMilliseconds / 4) {
+        while(_frameIntervalInMilliseconds - elapsed > 5) {
           
           std::function<void()> task;
           std::unique_lock<std::mutex> lock(_access);
           if (_tasks.empty()) {
-            _cond.wait_for(lock, std::chrono::duration<float, std::milli>(1));
+            std::this_thread::sleep_for(5ms);
+            // _cond.wait_for(lock, std::chrono::duration<float, std::milli>(1));
             now = std::chrono::high_resolution_clock::now();
             elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
             continue;
@@ -60,11 +61,16 @@ public:
           elapsed = float(std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count());
         }
         if (_rendering) {
+          // Log("Rendering with %d tasks still pending",  _tasks.size());
           // auto frameStart = std::chrono::high_resolution_clock::now();
           doRender();
           // auto frameEnd = std::chrono::high_resolution_clock::now();
           // Log("Took %f milliseconds for render",           float(std::chrono::duration_cast<std::chrono::milliseconds>(frameEnd - frameStart).count()));
+          
+        } else { 
+          Log("SKIP");
         }
+
         last = std::chrono::high_resolution_clock::now();
       }
     });
@@ -123,7 +129,7 @@ public:
     std::packaged_task<void()> lambda(
         [&]() mutable { this->_rendering = rendering; });
     auto fut = add_task(lambda);
-    fut.wait();
+    fut.wait();   
   }
 
   void doRender() {
@@ -131,10 +137,11 @@ public:
     auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
     render(_viewer, 0, nullptr, nullptr, nullptr);
     _lastRenderTime = std::chrono::high_resolution_clock::now();
-        
+
     #ifdef __EMSCRIPTEN__
       emscripten_webgl_commit_frame();
     #endif
+        
     if(_renderCallback) {
       _renderCallback(_renderCallbackOwner);
     }
@@ -150,7 +157,8 @@ public:
     auto ret = pt.get_future();
     _tasks.push_back([pt = std::make_shared<std::packaged_task<Rt()>>(
                           std::move(pt))] { (*pt)(); });
-    _cond.notify_one();
+    // _cond.notify_one();
+    // Log("Added task");
     return ret;
   }
 
@@ -216,6 +224,19 @@ FLUTTER_PLUGIN_EXPORT void create_swap_chain_ffi(void *const viewer,
   fut.wait();
 }
 
+FLUTTER_PLUGIN_EXPORT void create_swap_chain_async_ffi(void *const viewer,
+                                                 void *const surface,
+                                                 uint32_t width,
+                                                 uint32_t height, bool* complete) {
+  Log("Creating swapchain %dx%d", width, height);
+  std::packaged_task<void()> lambda(
+      [=]() mutable { 
+        create_swap_chain(viewer, surface, width, height); 
+        *complete = true;
+    });
+  auto fut = _rl->add_task(lambda);
+}
+
 FLUTTER_PLUGIN_EXPORT void destroy_swap_chain_ffi(void *const viewer) {
   Log("Destroying swapchain");
   std::packaged_task<void()> lambda(
@@ -240,7 +261,6 @@ FLUTTER_PLUGIN_EXPORT void create_render_target_ffi(void *const viewer,
 FLUTTER_PLUGIN_EXPORT void update_viewport_and_camera_projection_ffi(
     void *const viewer, const uint32_t width, const uint32_t height,
     const float scaleFactor) {
-  Log("Update viewport  %dx%d", width, height);
   std::packaged_task<void()> lambda([&]() mutable {
     update_viewport_and_camera_projection(viewer, width, height, scaleFactor);
   });
@@ -359,6 +379,8 @@ FLUTTER_PLUGIN_EXPORT void load_skybox_ffi(void *const viewer,
     }
   });
   auto fut = _rl->add_task(lambda);
+  fut.wait();
+
   if(!complete) {
     fut.wait();
   }
@@ -401,6 +423,17 @@ EntityId add_light_ffi(void *const viewer, uint8_t type, float colour,
   auto fut = _rl->add_task(lambda);
   fut.wait();
   return fut.get();
+}
+
+void add_light_async_ffi(void *const viewer, uint8_t type, float colour,
+                       float intensity, float posX, float posY, float posZ,
+                       float dirX, float dirY, float dirZ, bool shadows, EntityId* out) {
+  std::packaged_task<void()> lambda([&] {
+    *out = add_light(viewer, type, colour, intensity, posX, posY, posZ, dirX,
+                     dirY, dirZ, shadows);
+  });
+  auto fut = _rl->add_task(lambda);
+
 }
 
 FLUTTER_PLUGIN_EXPORT void remove_light_ffi(void *const viewer,
@@ -579,10 +612,32 @@ FLUTTER_PLUGIN_EXPORT bool set_bone_transform_ffi(
 FLUTTER_PLUGIN_EXPORT void reset_to_rest_pose_ffi(void* const assetManager, EntityId entityId) {
   std::packaged_task<void()> lambda(
       [&] { return reset_to_rest_pose(assetManager, entityId); });
-      auto fut = _rl->add_task(lambda);
-      fut.wait();
+  auto fut = _rl->add_task(lambda);
+  fut.wait();
 }
 
+FLUTTER_PLUGIN_EXPORT void add_bone_animation_ffi(
+		void *assetManager,
+		EntityId asset,
+		const float *const frameData,
+		int numFrames,
+		const char *const boneName,
+		const char **const meshNames,
+		int numMeshTargets,
+		float frameLengthInMs,
+		bool isModelSpace,
+    bool* completed) {
+
+        std::packaged_task<void()> lambda(
+      [=] { 
+        add_bone_animation(assetManager, asset, frameData, numFrames, boneName, meshNames, numMeshTargets, frameLengthInMs, isModelSpace); 
+        *completed = true;
+        });
+      auto fut = _rl->add_task(lambda);
+    if(!completed) {
+      fut.wait();
+    }
+}
 
 FLUTTER_PLUGIN_EXPORT void ios_dummy_ffi() { Log("Dummy called"); }
 }
