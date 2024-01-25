@@ -154,6 +154,12 @@ extern "C"
     // pendingCall->Wait();
     // auto rb = ResourceBuffer { pendingCall->data, (int32_t) pendingCall->length, _lastResourceId  } ;
     _lastResourceId++;
+
+    auto pathString = std::string(path);
+    if(pathString.rfind("https://",0) != 0) {
+      pathString = std::string("../../") + pathString;
+    }
+
     // delete pendingCall;
     // std::cout << "Deleted pending call" << std::endl;
 
@@ -173,11 +179,6 @@ extern "C"
     };
     attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS;
 
-    auto pathString = std::string(path);
-    if(pathString.rfind("https://",0) != 0) {
-      pathString = std::string("../../") + pathString;
-    }
-    
     std::cout << "Fetching from path " << pathString.c_str() << std::endl;
 
     auto request = emscripten_fetch(&attr, pathString.c_str());
