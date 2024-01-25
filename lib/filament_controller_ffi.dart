@@ -112,6 +112,10 @@ class FilamentControllerFFI extends FilamentController {
   @override
   bool get rendering => _rendering;
 
+  Future iosDummy() async {
+    ios_dummy();
+  }
+
   @override
   Future setRendering(bool render) async {
     if (_viewer == nullptr) {
@@ -188,6 +192,8 @@ class FilamentControllerFFI extends FilamentController {
     if (kIsWeb) {
       await ffiInitialization;
     }
+
+    ios_dummy();
 
     if (_creating) {
       throw Exception(
@@ -275,8 +281,24 @@ class FilamentControllerFFI extends FilamentController {
 
     _assetManager = get_asset_manager(_viewer);
 
-    create_swap_chain_ffi(_viewer, renderingSurface.surface,
-        _rect.value!.width.toInt(), _rect.value!.height.toInt());
+    if (async) {
+      final out = allocator<Bool>();
+
+      create_swap_chain_async_ffi(_viewer, renderingSurface.surface,
+          _rect.value!.width.toInt(), _rect.value!.height.toInt(), out);
+      int iter = 0;
+      while (!out.value) {
+        await Future.delayed(const Duration(milliseconds: 5));
+        if (iter > 100) {
+          throw Exception("Timeout trying to instantiate async viewer");
+        }
+        iter++;
+      }
+      allocator.free(out);
+    } else {
+      create_swap_chain_ffi(_viewer, renderingSurface.surface,
+          _rect.value!.width.toInt(), _rect.value!.height.toInt());
+    }
 
     if (renderingSurface.textureHandle != 0) {
       create_render_target_ffi(_viewer, renderingSurface.textureHandle,
@@ -562,15 +584,34 @@ class FilamentControllerFFI extends FilamentController {
       double dirX,
       double dirY,
       double dirZ,
-      bool castShadows) async {
+      bool castShadows,
+      {bool async = false}) async {
     if (_viewer == nullptr) {
       throw Exception("No viewer available, ignoring");
     }
-    var entity = add_light_ffi(_viewer, type, colour, intensity, posX, posY,
-        posZ, dirX, dirY, dirZ, castShadows);
-    _onLoadController.sink.add(entity);
-    _lights.add(entity);
-    return entity;
+    late FilamentEntity light;
+    if (async) {
+      final out = allocator<Int32>(1);
+      add_light_async_ffi(_viewer, type, colour, intensity, posX, posY, posZ,
+          dirX, dirY, dirZ, castShadows, out);
+      int iter = 0;
+      while (out.value == 0) {
+        await Future.delayed(const Duration(milliseconds: 5));
+        iter++;
+        if (iter > 10) {
+          allocator.free(out);
+          throw Exception("Timed out adding entity");
+        }
+      }
+      light = out.value;
+      allocator.free(out);
+    } else {
+      light = add_light_ffi(_viewer, type, colour, intensity, posX, posY, posZ,
+          dirX, dirY, dirZ, castShadows);
+    }
+    _onLoadController.sink.add(light);
+    _lights.add(light);
+    return light;
   }
 
   @override
@@ -828,8 +869,8 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
-  Future addBoneAnimation(
-      FilamentEntity entity, BoneAnimationData animation) async {
+  Future addBoneAnimation(FilamentEntity entity, BoneAnimationData animation,
+      {bool async = false}) async {
     if (_viewer == nullptr) {
       throw Exception("No viewer available, ignoring");
     }
@@ -844,8 +885,12 @@ class FilamentControllerFFI extends FilamentController {
     }
 
     var data = allocator<Float>(numFrames * 16);
+    DateTime start = DateTime.now();
+
+    Pointer<Bool>? completed = async ? allocator<Bool>(1) : nullptr;
 
     for (var boneIndex = 0; boneIndex < animation.bones.length; boneIndex++) {
+      completed.value = false;
       var bone = animation.bones[boneIndex];
       var boneNamePtr = bone.toNativeUtf8(allocator: allocator).cast<Char>();
 
@@ -858,7 +903,7 @@ class FilamentControllerFFI extends FilamentController {
         }
       }
 
-      add_bone_animation(
+      add_bone_animation_ffi(
           _assetManager,
           entity,
           data,
@@ -867,11 +912,32 @@ class FilamentControllerFFI extends FilamentController {
           meshNames,
           animation.meshNames.length,
           animation.frameLengthInMs,
-          animation.isModelSpace);
+          animation.isModelSpace,
+          completed);
+      if (async) {
+        var iter = 0;
+        while (!completed.value) {
+          await Future.delayed(Duration(milliseconds: 1));
+          iter++;
+          if (iter > 10) {
+            allocator.free(completed);
+            allocator.free(boneNamePtr);
+            allocator.free(data);
+            allocator.free(meshNames);
+            throw Exception("Timed out async");
+          }
+        }
+      }
       allocator.free(boneNamePtr);
     }
+    // DateTime end = DateTime.now();
+    // print(
+    //     "Took ${end.millisecondsSinceEpoch - start.millisecondsSinceEpoch}ms for bone animation");
     allocator.free(data);
     allocator.free(meshNames);
+    if (completed != nullptr) {
+      allocator.free(completed);
+    }
   }
 
   @override
@@ -1365,7 +1431,8 @@ class FilamentControllerFFI extends FilamentController {
   }
 
   @override
-  Future<List<String>> getMeshNames(FilamentEntity entity) async {
+  Future<List<String>> getMeshNames(FilamentEntity entity,
+      {bool async = false}) async {
     var count = get_entity_count(_assetManager, entity, true);
     var names = <String>[];
     for (int i = 0; i < count; i++) {

@@ -193,7 +193,8 @@ abstract class FilamentController {
       double dirX,
       double dirY,
       double dirZ,
-      bool castShadows);
+      bool castShadows,
+      {bool async = false});
 
   Future removeLight(FilamentEntity light);
 
@@ -283,7 +284,8 @@ abstract class FilamentController {
   ///
   /// Starts animating a bone (joint) according to the specified [animation].
   ///
-  Future addBoneAnimation(FilamentEntity entity, BoneAnimationData animation);
+  Future addBoneAnimation(FilamentEntity entity, BoneAnimationData animation,
+      {bool async = true});
 
   ///
   /// Sets the local joint transform for the bone at the given index in [entity] for the mesh under [meshName].
@@ -513,7 +515,7 @@ abstract class FilamentController {
   ///
   /// Lists all child meshes under the given entity.
   ///
-  Future<List<String>> getMeshNames(FilamentEntity entity);
+  Future<List<String>> getMeshNames(FilamentEntity entity, {bool async = true});
 
   ///
   /// If [recording] is set to true, each frame the framebuffer/texture will be written to /tmp/output_*.png.
