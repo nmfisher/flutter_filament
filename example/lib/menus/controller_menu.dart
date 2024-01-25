@@ -28,6 +28,7 @@ class _ControllerMenuState extends State<ControllerMenu> {
     if (_filamentController != null) {
       throw Exception("Controller already exists");
     }
+
     _filamentController =
         FilamentControllerFFI(uberArchivePath: uberArchivePath);
     widget.onControllerCreated(_filamentController!);
@@ -58,8 +59,20 @@ class _ControllerMenuState extends State<ControllerMenu> {
           child: const Text("Create FilamentViewer"),
           onPressed: _filamentController == null
               ? null
-              : () {
-                  _filamentController!.createViewer(async: true);
+              : () async {
+                  try {
+                    await _filamentController!.createViewer(async: true);
+                  } catch (err) {
+                    print(err.toString());
+                    await showDialog(
+                        builder: (BuildContext ctx) {
+                          return Center(
+                              child: Container(
+                                  color: Colors.white,
+                                  child: Text(err.toString())));
+                        },
+                        context: context);
+                  }
                 },
         ),
         MenuItemButton(
