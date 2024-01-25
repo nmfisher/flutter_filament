@@ -68,7 +68,8 @@ class _IblRotationSliderWidgetState extends State<LightSliderWidget> {
         lightDir.x,
         lightDir.y,
         lightDir.z,
-        castShadows);
+        castShadows,
+        async: false);
 
     setState(() {});
   }
