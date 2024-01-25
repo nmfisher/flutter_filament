@@ -36,7 +36,7 @@ class FilamentGestureDetectorMobile extends StatefulWidget {
 
   final double zoomDelta;
 
-  FilamentGestureDetectorMobile(
+  const FilamentGestureDetectorMobile(
       {Key? key,
       required this.controller,
       this.child,
@@ -44,11 +44,7 @@ class FilamentGestureDetectorMobile extends StatefulWidget {
       this.enableGestures = true,
       this.zoomDelta = 1,
       required this.enablePick})
-      : super(key: key) {
-    if (enablePick) {
-      throw Exception("TODO");
-    }
-  }
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _FilamentGestureDetectorMobileState();
@@ -133,6 +129,12 @@ class _FilamentGestureDetectorMobileState
       Positioned.fill(
           child: GestureDetector(
               behavior: HitTestBehavior.opaque,
+              onTapDown: (details) {
+                if (widget.enablePick) {
+                  widget.controller.pick(details.localPosition.dx.toInt(),
+                      details.localPosition.dy.toInt());
+                }
+              },
               onDoubleTap: () {
                 setState(() {
                   _rotateOnPointerMove = !_rotateOnPointerMove;
