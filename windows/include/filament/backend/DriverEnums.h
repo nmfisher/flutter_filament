@@ -28,7 +28,8 @@
 
 #include <math/vec4.h>
 
-#include <array>    // FIXME: STL headers are not allowed in public headers
+#include <array>        // FIXME: STL headers are not allowed in public headers
+#include <type_traits>  // FIXME: STL headers are not allowed in public headers
 
 #include <stddef.h>
 #include <stdint.h>
@@ -77,6 +78,11 @@ static constexpr uint64_t SWAP_CHAIN_CONFIG_APPLE_CVPIXELBUFFER = 0x8;
  */
 static constexpr uint64_t SWAP_CHAIN_CONFIG_SRGB_COLORSPACE     = 0x10;
 
+/**
+ * Indicates that the SwapChain should also contain a stencil component.
+ */
+static constexpr uint64_t SWAP_CHAIN_HAS_STENCIL_BUFFER         = 0x20;
+
 
 static constexpr size_t MAX_VERTEX_ATTRIBUTE_COUNT  = 16;   // This is guaranteed by OpenGL ES.
 static constexpr size_t MAX_SAMPLER_COUNT           = 62;   // Maximum needed at feature level 3.
@@ -106,7 +112,8 @@ static constexpr size_t CONFIG_SAMPLER_BINDING_COUNT = 4;   // This is guarantee
  * Defines the backend's feature levels.
  */
 enum class FeatureLevel : uint8_t {
-    FEATURE_LEVEL_1 = 1,  //!< OpenGL ES 3.0 features (default)
+    FEATURE_LEVEL_0 = 0,  //!< OpenGL ES 2.0 features
+    FEATURE_LEVEL_1,      //!< OpenGL ES 3.0 features (default)
     FEATURE_LEVEL_2,      //!< OpenGL ES 3.1 features + 16 textures units + cubemap arrays
     FEATURE_LEVEL_3       //!< OpenGL ES 3.1 features + 31 textures units + cubemap arrays
 };
@@ -134,6 +141,30 @@ static constexpr const char* backendToString(Backend backend) {
             return "Metal";
         default:
             return "Unknown";
+    }
+}
+
+/**
+ * Defines the shader language. Similar to the above backend enum, but the OpenGL backend can select
+ * between two shader languages: ESSL 1.0 and ESSL 3.0.
+ */
+enum class ShaderLanguage {
+    ESSL1 = 0,
+    ESSL3 = 1,
+    SPIRV = 2,
+    MSL = 3,
+};
+
+static constexpr const char* shaderLanguageToString(ShaderLanguage shaderLanguage) {
+    switch (shaderLanguage) {
+        case ShaderLanguage::ESSL1:
+            return "ESSL 1.0";
+        case ShaderLanguage::ESSL3:
+            return "ESSL 3.0";
+        case ShaderLanguage::SPIRV:
+            return "SPIR-V";
+        case ShaderLanguage::MSL:
+            return "MSL";
     }
 }
 
@@ -196,6 +227,7 @@ struct Viewport {
     //! get the top coordinate in window space of the viewport
     int32_t top() const noexcept { return bottom + int32_t(height); }
 };
+
 
 /**
  * Specifies the mapping of the near and far clipping plane to window coordinates.
@@ -293,6 +325,14 @@ enum class Precision : uint8_t {
     MEDIUM,
     HIGH,
     DEFAULT
+};
+
+/**
+ * Shader compiler priority queue
+ */
+enum class CompilerPriorityQueue : uint8_t {
+    HIGH,
+    LOW
 };
 
 //! Texture sampler type
@@ -620,13 +660,15 @@ enum class TextureFormat : uint16_t {
 
 //! Bitmask describing the intended Texture Usage
 enum class TextureUsage : uint8_t {
-    NONE                = 0x0,
-    COLOR_ATTACHMENT    = 0x1,                      //!< Texture can be used as a color attachment
-    DEPTH_ATTACHMENT    = 0x2,                      //!< Texture can be used as a depth attachment
-    STENCIL_ATTACHMENT  = 0x4,                      //!< Texture can be used as a stencil attachment
-    UPLOADABLE          = 0x8,                      //!< Data can be uploaded into this texture (default)
+    NONE                = 0x00,
+    COLOR_ATTACHMENT    = 0x01,                     //!< Texture can be used as a color attachment
+    DEPTH_ATTACHMENT    = 0x02,                     //!< Texture can be used as a depth attachment
+    STENCIL_ATTACHMENT  = 0x04,                     //!< Texture can be used as a stencil attachment
+    UPLOADABLE          = 0x08,                     //!< Data can be uploaded into this texture (default)
     SAMPLEABLE          = 0x10,                     //!< Texture can be sampled (default)
     SUBPASS_INPUT       = 0x20,                     //!< Texture can be used as a subpass input
+    BLIT_SRC            = 0x40,                     //!< Texture can be used the source of a blit()
+    BLIT_DST            = 0x80,                     //!< Texture can be used the destination of a blit()
     DEFAULT             = UPLOADABLE | SAMPLEABLE   //!< Default texture usage
 };
 
@@ -648,6 +690,17 @@ static constexpr bool isDepthFormat(TextureFormat format) noexcept {
         case TextureFormat::DEPTH16:
         case TextureFormat::DEPTH32F_STENCIL8:
         case TextureFormat::DEPTH24_STENCIL8:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static constexpr bool isStencilFormat(TextureFormat format) noexcept {
+    switch (format) {
+        case TextureFormat::STENCIL8:
+        case TextureFormat::DEPTH24_STENCIL8:
+        case TextureFormat::DEPTH32F_STENCIL8:
             return true;
         default:
             return false;
@@ -787,32 +840,54 @@ enum class SamplerCompareFunc : uint8_t {
 
 //! Sampler parameters
 struct SamplerParams { // NOLINT
-    union {
-        struct {
-            SamplerMagFilter filterMag      : 1;    //!< magnification filter (NEAREST)
-            SamplerMinFilter filterMin      : 3;    //!< minification filter  (NEAREST)
-            SamplerWrapMode wrapS           : 2;    //!< s-coordinate wrap mode (CLAMP_TO_EDGE)
-            SamplerWrapMode wrapT           : 2;    //!< t-coordinate wrap mode (CLAMP_TO_EDGE)
+    SamplerMagFilter filterMag      : 1;    //!< magnification filter (NEAREST)
+    SamplerMinFilter filterMin      : 3;    //!< minification filter  (NEAREST)
+    SamplerWrapMode wrapS           : 2;    //!< s-coordinate wrap mode (CLAMP_TO_EDGE)
+    SamplerWrapMode wrapT           : 2;    //!< t-coordinate wrap mode (CLAMP_TO_EDGE)
 
-            SamplerWrapMode wrapR           : 2;    //!< r-coordinate wrap mode (CLAMP_TO_EDGE)
-            uint8_t anisotropyLog2          : 3;    //!< anisotropy level (0)
-            SamplerCompareMode compareMode  : 1;    //!< sampler compare mode (NONE)
-            uint8_t padding0                : 2;    //!< reserved. must be 0.
+    SamplerWrapMode wrapR           : 2;    //!< r-coordinate wrap mode (CLAMP_TO_EDGE)
+    uint8_t anisotropyLog2          : 3;    //!< anisotropy level (0)
+    SamplerCompareMode compareMode  : 1;    //!< sampler compare mode (NONE)
+    uint8_t padding0                : 2;    //!< reserved. must be 0.
 
-            SamplerCompareFunc compareFunc  : 3;    //!< sampler comparison function (LE)
-            uint8_t padding1                : 5;    //!< reserved. must be 0.
+    SamplerCompareFunc compareFunc  : 3;    //!< sampler comparison function (LE)
+    uint8_t padding1                : 5;    //!< reserved. must be 0.
+    uint8_t padding2                : 8;    //!< reserved. must be 0.
 
-            uint8_t padding2                : 8;    //!< reserved. must be 0.
-        };
-        uint32_t u;
+    struct Hasher {
+        size_t operator()(SamplerParams p) const noexcept {
+            // we don't use std::hash<> here, so we don't have to include <functional>
+            return *reinterpret_cast<uint32_t const*>(reinterpret_cast<char const*>(&p));
+        }
     };
+
+    struct EqualTo {
+        bool operator()(SamplerParams lhs, SamplerParams rhs) const noexcept {
+            auto* pLhs = reinterpret_cast<uint32_t const*>(reinterpret_cast<char const*>(&lhs));
+            auto* pRhs = reinterpret_cast<uint32_t const*>(reinterpret_cast<char const*>(&rhs));
+            return *pLhs == *pRhs;
+        }
+    };
+
+    struct LessThan {
+        bool operator()(SamplerParams lhs, SamplerParams rhs) const noexcept {
+            auto* pLhs = reinterpret_cast<uint32_t const*>(reinterpret_cast<char const*>(&lhs));
+            auto* pRhs = reinterpret_cast<uint32_t const*>(reinterpret_cast<char const*>(&rhs));
+            return *pLhs == *pRhs;
+        }
+    };
+
 private:
-    friend inline bool operator < (SamplerParams lhs, SamplerParams rhs) {
-        return lhs.u < rhs.u;
+    friend inline bool operator < (SamplerParams lhs, SamplerParams rhs) noexcept {
+        return SamplerParams::LessThan{}(lhs, rhs);
     }
 };
+static_assert(sizeof(SamplerParams) == 4);
 
-static_assert(sizeof(SamplerParams) == sizeof(uint32_t), "SamplerParams must be 32 bits");
+// The limitation to 64-bits max comes from how we store a SamplerParams in our JNI code
+// see android/.../TextureSampler.cpp
+static_assert(sizeof(SamplerParams) <= sizeof(uint64_t),
+        "SamplerParams must be no more than 64 bits");
 
 //! blending equation function
 enum class BlendEquation : uint8_t {
@@ -1117,19 +1192,32 @@ static_assert(sizeof(StencilState) == 12u,
 
 using FrameScheduledCallback = void(*)(PresentCallable callable, void* user);
 
-using FrameCompletedCallback = void(*)(void* user);
-
 enum class Workaround : uint16_t {
     // The EASU pass must split because shader compiler flattens early-exit branch
     SPLIT_EASU,
-    // Backend allows feedback loop with ancillary buffers (depth/stencil) as long as they're read-only for
-    // the whole render pass.
+    // Backend allows feedback loop with ancillary buffers (depth/stencil) as long as they're
+    // read-only for the whole render pass.
     ALLOW_READ_ONLY_ANCILLARY_FEEDBACK_LOOP,
     // for some uniform arrays, it's needed to do an initialization to avoid crash on adreno gpu
     ADRENO_UNIFORM_ARRAY_CRASH,
     // Workaround a Metal pipeline compilation error with the message:
     // "Could not statically determine the target of a texture". See light_indirect.fs
-    A8X_STATIC_TEXTURE_TARGET_ERROR
+    A8X_STATIC_TEXTURE_TARGET_ERROR,
+    // Adreno drivers sometimes aren't able to blit into a layer of a texture array.
+    DISABLE_BLIT_INTO_TEXTURE_ARRAY,
+    // Multiple workarounds needed for PowerVR GPUs
+    POWER_VR_SHADER_WORKAROUNDS,
+    // The driver has some threads pinned, and we can't easily know on which core, it can hurt
+    // performance more if we end-up pinned on the same one.
+    DISABLE_THREAD_AFFINITY
+};
+
+//! The type of technique for stereoscopic rendering
+enum class StereoscopicType : uint8_t {
+    // Stereoscopic rendering is performed using instanced rendering technique.
+    INSTANCED,
+    // Stereoscopic rendering is performed using the multiview feature from the graphics backend.
+    MULTIVIEW,
 };
 
 } // namespace filament::backend

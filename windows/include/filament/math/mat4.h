@@ -272,24 +272,6 @@ public:
     template<typename U, typename V>
     constexpr TMat44(const TMat33<U>& matrix, const TVec4<V>& column3) noexcept;
 
-    /*
-     *  helpers
-     */
-
-    // returns false if the two matrices are different. May return false if they're the
-    // same, with some elements only differing by +0 or -0. Behaviour is undefined with NaNs.
-    static constexpr bool fuzzyEqual(TMat44 const& l, TMat44 const& r) noexcept {
-        uint64_t const* const li = reinterpret_cast<uint64_t const*>(&l);
-        uint64_t const* const ri = reinterpret_cast<uint64_t const*>(&r);
-        uint64_t result = 0;
-        // For some reason clang is not able to vectorize this loop when the number of iteration
-        // is known and constant (!?!?!). Still this is better than operator==.
-        for (size_t i = 0; i < sizeof(TMat44) / sizeof(uint64_t); i++) {
-            result |= li[i] ^ ri[i];
-        }
-        return result != 0;
-    }
-
     static constexpr TMat44 ortho(T left, T right, T bottom, T top, T near, T far) noexcept;
 
     static constexpr TMat44 frustum(T left, T right, T bottom, T top, T near, T far) noexcept;
@@ -302,6 +284,9 @@ public:
 
     template<typename A, typename B, typename C>
     static TMat44 lookAt(const TVec3<A>& eye, const TVec3<B>& center, const TVec3<C>& up) noexcept;
+
+    template<typename A, typename B, typename C>
+    static TMat44 lookTo(const TVec3<A>& direction, const TVec3<B>& position, const TVec3<C>& up) noexcept;
 
     template<typename A>
     static constexpr TVec3<A> project(const TMat44& projectionMatrix, TVec3<A> vertice) noexcept{
@@ -535,19 +520,19 @@ template<typename T>
 template<typename A, typename B, typename C>
 TMat44<T> TMat44<T>::lookAt(const TVec3<A>& eye, const TVec3<B>& center,
         const TVec3<C>& up) noexcept {
-    TVec3<T> z_axis(normalize(center - eye));
-    TVec3<T> norm_up(normalize(up));
-    if (std::abs(dot(z_axis, norm_up)) > T(0.999)) {
-        // Fix up vector if we're degenerate (looking straight up, basically)
-        norm_up = { norm_up.z, norm_up.x, norm_up.y };
-    }
-    TVec3<T> x_axis(normalize(cross(z_axis, norm_up)));
-    TVec3<T> y_axis(cross(x_axis, z_axis));
-    return TMat44<T>(
-            TVec4<T>(x_axis, 0),
-            TVec4<T>(y_axis, 0),
-            TVec4<T>(-z_axis, 0),
-            TVec4<T>(eye, 1));
+    return lookTo(normalize(center - eye), eye, normalize(up));
+}
+
+template<typename T>
+template<typename A, typename B, typename C>
+TMat44<T> TMat44<T>::lookTo(const TVec3<A>& direction, const TVec3<B>& position,
+        const TVec3<C>& up) noexcept {
+    auto r = TMat33<T>::lookTo(direction, up);
+    return TMat44<T>{
+            TVec4<T>{     r[0], 0 },
+            TVec4<T>{     r[1], 0 },
+            TVec4<T>{     r[2], 0 },
+            TVec4<T>{ position, 1 } };
 }
 
 // ----------------------------------------------------------------------------------------

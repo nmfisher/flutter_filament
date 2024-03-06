@@ -17,13 +17,10 @@
 #ifndef TNT_UTILS_BITMASKENUM_H
 #define TNT_UTILS_BITMASKENUM_H
 
-#include <utils/compiler.h>
-
 #include <type_traits> // for std::false_type
 
 #include <assert.h>
 #include <stddef.h>
-#include <stdint.h>
 
 namespace utils {
 
@@ -140,6 +137,5 @@ template<typename Enum, typename std::enable_if_t<
 inline constexpr bool any(Enum lhs) noexcept {
     return !none(lhs);
 }
-
 
 #endif // TNT_UTILS_BITMASKENUM_H

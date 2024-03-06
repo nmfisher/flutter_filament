@@ -17,8 +17,6 @@
 #ifndef TNT_FILAMENT_BACKEND_CALLBACKHANDLER_H
 #define TNT_FILAMENT_BACKEND_CALLBACKHANDLER_H
 
-#include <utils/compiler.h>
-
 namespace filament::backend {
 
 /**
@@ -66,7 +64,7 @@ public:
     virtual void post(void* user, Callback callback) = 0;
 
 protected:
-    virtual ~CallbackHandler();
+    virtual ~CallbackHandler() = default;
 };
 
 } // namespace filament::backend

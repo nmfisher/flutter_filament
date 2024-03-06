@@ -30,7 +30,7 @@ struct PlatformCocoaTouchGLImpl;
 class PlatformCocoaTouchGL : public OpenGLPlatform {
 public:
     PlatformCocoaTouchGL();
-    ~PlatformCocoaTouchGL() noexcept;
+    ~PlatformCocoaTouchGL() noexcept override;
 
     // --------------------------------------------------------------------------------------------
     // Platform Interface
@@ -46,6 +46,9 @@ public:
     void terminate() noexcept override;
 
     uint32_t createDefaultRenderTarget() noexcept override;
+
+    bool isExtraContextSupported() const noexcept override;
+    void createContext(bool shared) override;
 
     SwapChain* createSwapChain(void* nativewindow, uint64_t flags) noexcept override;
     SwapChain* createSwapChain(uint32_t width, uint32_t height, uint64_t flags) noexcept override;

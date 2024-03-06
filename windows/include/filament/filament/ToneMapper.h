@@ -21,6 +21,8 @@
 
 #include <math/mathfwd.h>
 
+#include <stdint.h>
+
 namespace filament {
 
 /**
@@ -113,6 +115,30 @@ struct UTILS_PUBLIC FilmicToneMapper final : public ToneMapper {
     ~FilmicToneMapper() noexcept final;
 
     math::float3 operator()(math::float3 x) const noexcept override;
+};
+
+/**
+ * AgX tone mapping operator.
+ */
+struct UTILS_PUBLIC AgxToneMapper final : public ToneMapper {
+
+    enum class AgxLook : uint8_t {
+        NONE = 0,   //!< Base contrast with no look applied
+        PUNCHY,     //!< A punchy and more chroma laden look for sRGB displays
+        GOLDEN      //!< A golden tinted, slightly washed look for BT.1886 displays
+    };
+
+    /**
+     * Builds a new AgX tone mapper.
+     *
+     * @param look an optional creative adjustment to contrast and saturation
+     */
+    explicit AgxToneMapper(AgxLook look = AgxLook::NONE) noexcept;
+    ~AgxToneMapper() noexcept final;
+
+    math::float3 operator()(math::float3 x) const noexcept override;
+
+    AgxLook look;
 };
 
 /**
